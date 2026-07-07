@@ -1,25 +1,36 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
+import { MenuList } from '@/components/profile/MenuList';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
+import { StatsRow } from '@/components/profile/StatsRow';
 import { colors } from '@/constants/colors';
+import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 
 export default function ProfileScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>마이</Text>
-    </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <ProfileHeader
+        name={mockProfile.name}
+        initial={mockProfile.initial}
+        joinedLabel={mockProfile.joinedLabel}
+        careerLabel={mockProfile.careerLabel}
+      />
+      <StatsRow stats={mockProfileStats} />
+      <MenuList items={mockMenuItems} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: colors.background,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
+  content: {
+    paddingBottom: 24,
   },
 });

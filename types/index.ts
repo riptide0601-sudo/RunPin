@@ -1,3 +1,6 @@
+import type { ComponentProps } from 'react';
+import type { Ionicons } from '@expo/vector-icons';
+
 export interface LatLng {
   latitude: number;
   longitude: number;
@@ -33,4 +36,38 @@ export interface Match {
   status: 'pending' | 'accepted' | 'declined';
   participantIds: string[];
   radiusMeters: number;
+}
+
+export type RankingPeriod = 'monthly' | 'yearly' | 'all';
+
+export interface RankingEntry {
+  id: string;
+  rank: number;
+  courseId: string;
+  courseName: string;
+  uploaderName: string;
+  likeCount: number;
+}
+
+export type PaceComparison = 'faster' | 'similar' | 'slower';
+
+export interface RunnerMapDot {
+  id: string;
+  nickname: string;
+  position: LatLng;
+  paceLabel: string;
+  distanceLabel: string;
+  paceComparison: PaceComparison;
+}
+
+export interface ProfileStats {
+  totalDistanceKm: number;
+  uploadedCourseCount: number;
+  runMatesCount: number;
+}
+
+export interface MenuItemData {
+  id: string;
+  label: string;
+  icon: ComponentProps<typeof Ionicons>['name'];
 }

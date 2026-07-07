@@ -1,10 +1,14 @@
 export const colors = {
-  primary: '#E63946',
-  secondary: '#1D3557',
-  background: '#FFFFFF',
-  surface: '#F5F5F5',
+  background: '#F5F5F5',
+  surface: '#FFFFFF',
+  surfaceAlt: '#EAEAEA',
   border: '#E0E0E0',
-  text: '#1A1A1A',
-  textMuted: '#6B7280',
-  success: '#2A9D8F',
+  text: '#111111',
+  textMuted: '#767676',
+  textInverse: '#FFFFFF',
+  ink: '#1A1A1A',
+  accentMe: '#B5544A',
+  accentMatch: '#5B7C99',
+  // Monotone 원칙의 예외: 좋아요(추천) 하트 전용 색상
+  like: '#E63946',
 } as const;
