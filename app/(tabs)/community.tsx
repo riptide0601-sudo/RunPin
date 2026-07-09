@@ -1,21 +1,25 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CommunityMap } from '@/components/community/CommunityMap';
 import { MatchProposalCard } from '@/components/community/MatchProposalCard';
+import { RunFinishModal, type SaveCourseResult } from '@/components/community/RunFinishModal';
 import { RunningStatusBar } from '@/components/community/RunningStatusBar';
+import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
-import { mockRunnerDots } from '@/data/mock';
+import { mockMyRunningRoute, mockRunnerDots } from '@/data/mock';
+import { useAppData } from '@/lib/appData';
+import { buildFinishedRunLog } from '@/lib/runSummary';
 
 type ProposalStatus = 'pending' | 'accepted' | 'declined';
 
-const SELECTED_COURSE_NAME = '경의선숲길 3K';
-
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
+  const { courses, addCourse, addRunLog } = useAppData();
   const [proposalStatus, setProposalStatus] = useState<ProposalStatus>('pending');
   const [isRunning, setIsRunning] = useState(false);
+  const [finishVisible, setFinishVisible] = useState(false);
 
   const handleAccept = () => {
     setProposalStatus('accepted');
@@ -29,20 +33,24 @@ export default function CommunityScreen() {
   const handleEndRun = () => {
     setIsRunning(false);
     setProposalStatus('pending');
+    setFinishVisible(true);
+  };
+
+  const handleSaveCourse = (result: SaveCourseResult) => {
+    if (result.newCourse) {
+      addCourse(result.newCourse);
+    }
+    addRunLog(buildFinishedRunLog(result.courseName, mockMyRunningRoute, result.difficulty, true));
+    setFinishVisible(false);
+  };
+
+  const handleSkipSaveCourse = (difficulty: 1 | 2 | 3 | 4 | 5) => {
+    addRunLog(buildFinishedRunLog('이름 없는 러닝', mockMyRunningRoute, difficulty, false));
+    setFinishVisible(false);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Text style={styles.title}>{SELECTED_COURSE_NAME}</Text>
-        {isRunning ? (
-          <View style={styles.runningBadge}>
-            <View style={styles.runningDot} />
-            <Text style={styles.runningBadgeText}>러닝 중</Text>
-          </View>
-        ) : null}
-      </View>
-
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.mapWrapper}>
         <CommunityMap runners={mockRunnerDots} isRunning={isRunning} />
 
@@ -51,9 +59,9 @@ export default function CommunityScreen() {
             <RunningStatusBar onEndRun={handleEndRun} />
           </View>
         ) : (
-          <Pressable style={styles.testStartButton} onPress={() => setIsRunning(true)}>
-            <Text style={styles.testStartButtonText}>러닝 시작</Text>
-          </Pressable>
+          <View style={styles.startButtonWrapper}>
+            <Pill label="러닝 시작" variant="graySolid" size="lg" onPress={() => setIsRunning(true)} />
+          </View>
         )}
 
         <View style={styles.bottomOverlay} pointerEvents="box-none">
@@ -70,6 +78,14 @@ export default function CommunityScreen() {
           ) : null}
         </View>
       </View>
+
+      <RunFinishModal
+        visible={finishVisible}
+        myRoute={mockMyRunningRoute}
+        courses={courses}
+        onSave={handleSaveCourse}
+        onSkip={handleSkipSaveCourse}
+      />
     </View>
   );
 }
@@ -78,34 +94,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  runningBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  runningDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.accentMe,
-  },
-  runningBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.accentMe,
   },
   mapWrapper: {
     flex: 1,
@@ -123,19 +111,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  testStartButton: {
+  startButtonWrapper: {
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: colors.surfaceAlt,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  testStartButtonText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
   },
   notice: {
     flexDirection: 'row',

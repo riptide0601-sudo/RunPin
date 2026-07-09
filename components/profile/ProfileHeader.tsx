@@ -7,10 +7,9 @@ interface ProfileHeaderProps {
   name: string;
   initial: string;
   joinedLabel: string;
-  careerLabel: string;
 }
 
-export function ProfileHeader({ name, initial, joinedLabel, careerLabel }: ProfileHeaderProps) {
+export function ProfileHeader({ name, initial, joinedLabel }: ProfileHeaderProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -20,9 +19,7 @@ export function ProfileHeader({ name, initial, joinedLabel, careerLabel }: Profi
       </View>
       <View style={styles.info}>
         <Text style={styles.name}>{name}</Text>
-        <Text style={styles.meta}>
-          {joinedLabel} · {careerLabel}
-        </Text>
+        <Text style={styles.meta}>{joinedLabel}</Text>
       </View>
     </View>
   );

@@ -26,7 +26,6 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
       width: 14px;
       height: 14px;
       border-radius: 7px;
-      box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
       animation: me-pulse 2s ease-in-out infinite;
     }
     @keyframes me-pulse {
@@ -38,8 +37,77 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
 </head>
 <body>
   <div id="map"></div>
+  <svg width="0" height="0" style="position:absolute">
+    <defs id="dotGradients"></defs>
+  </svg>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    function hexToRgb(hex) {
+      var h = hex.replace('#', '');
+      if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
+      var num = parseInt(h, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(function (v) {
+        var s = Math.max(0, Math.min(255, Math.round(v))).toString(16);
+        return s.length === 1 ? '0' + s : s;
+      }).join('');
+    }
+
+    function lighten(hex, amount) {
+      var rgb = hexToRgb(hex);
+      return rgbToHex(
+        rgb.r + (255 - rgb.r) * amount,
+        rgb.g + (255 - rgb.g) * amount,
+        rgb.b + (255 - rgb.b) * amount
+      );
+    }
+
+    var dotGradientCache = {};
+
+    // A radial highlight centered on the dot, fading evenly outward into
+    // the marker's true color, reads as a subtle 3D bead at small dot sizes
+    // without shifting the color the eye perceives at a glance.
+    function dotGradientUrl(color) {
+      if (dotGradientCache[color]) return dotGradientCache[color];
+      var id = 'dot-grad-' + color.replace(/[^a-zA-Z0-9]/g, '');
+      var defs = document.getElementById('dotGradients');
+      var gradient = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
+      gradient.setAttribute('id', id);
+      gradient.setAttribute('cx', '50%');
+      gradient.setAttribute('cy', '50%');
+      gradient.setAttribute('r', '65%');
+      var stopStart = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      stopStart.setAttribute('offset', '0%');
+      stopStart.setAttribute('stop-color', lighten(color, 0.12));
+      var stopEnd = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      stopEnd.setAttribute('offset', '100%');
+      stopEnd.setAttribute('stop-color', color);
+      gradient.appendChild(stopStart);
+      gradient.appendChild(stopEnd);
+      defs.appendChild(gradient);
+      var url = 'url(#' + id + ')';
+      dotGradientCache[color] = url;
+      return url;
+    }
+
+    // Runner dots are drawn with L.circleMarker (pixel radius, not
+    // meter radius), so pinch-zoom never scales them geographically.
+    // This clamp exists to make that guarantee explicit and keep the
+    // on-screen size within a tight, deliberate range regardless of
+    // zoom level rather than relying on the implicit default.
+    var MARKER_RADIUS_MIN = 8;
+    var MARKER_RADIUS_MAX = 13;
+    var MARKER_RADIUS_BASE_ZOOM = 16;
+    var MARKER_RADIUS_BASE = 10;
+
+    function radiusForZoom(zoom) {
+      var raw = MARKER_RADIUS_BASE + (zoom - MARKER_RADIUS_BASE_ZOOM) * 0.5;
+      return Math.min(MARKER_RADIUS_MAX, Math.max(MARKER_RADIUS_MIN, raw));
+    }
+
     var map = L.map('map', {
       zoomControl: false,
       attributionControl: true,
@@ -56,6 +124,13 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
       if (!applyingFitBounds && keepCenterOnZoom && fixedCenter) {
         map.setView(fixedCenter, map.getZoom(), { animate: false });
       }
+      var zoomRadius = radiusForZoom(map.getZoom());
+      Object.keys(markerLayers).forEach(function (id) {
+        var layer = markerLayers[id];
+        if (typeof layer.setRadius === 'function') {
+          layer.setRadius(zoomRadius);
+        }
+      });
       notifyZoomChange(map.getZoom());
     });
 
@@ -183,10 +258,9 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
           });
         } else {
           layer = L.circleMarker([marker.position.latitude, marker.position.longitude], {
-            radius: 7,
-            color: '#FFFFFF',
-            weight: 2,
-            fillColor: marker.color,
+            radius: radiusForZoom(map.getZoom()),
+            stroke: false,
+            fillColor: dotGradientUrl(marker.color),
             fillOpacity: 1,
           });
           layer.on('click', function (e) {

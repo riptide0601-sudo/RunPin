@@ -5,28 +5,41 @@ import { colors } from '@/constants/colors';
 
 interface PillProps {
   label: string;
-  variant?: 'filled' | 'outline' | 'subtle';
+  variant?: 'filled' | 'outline' | 'subtle' | 'graySolid';
+  size?: 'sm' | 'md' | 'lg';
   icon?: ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
   disabled?: boolean;
   style?: ViewStyle;
 }
 
-export function Pill({ label, variant = 'subtle', icon, onPress, disabled, style }: PillProps) {
+export function Pill({ label, variant = 'subtle', size = 'md', icon, onPress, disabled, style }: PillProps) {
   if (!onPress) {
     return (
       <View
         style={[
           styles.base,
+          size === 'lg' && styles.baseLg,
+          size === 'sm' && styles.baseSm,
           variant === 'filled' && styles.filled,
           variant === 'outline' && styles.outline,
           variant === 'subtle' && styles.subtle,
+          variant === 'graySolid' && styles.graySolid,
           disabled && styles.disabled,
           style,
         ]}
       >
         {icon}
-        <Text style={[styles.label, variant === 'filled' && styles.labelInverse]}>{label}</Text>
+        <Text
+          style={[
+            styles.label,
+            size === 'lg' && styles.labelLg,
+            size === 'sm' && styles.labelSm,
+            (variant === 'filled' || variant === 'graySolid') && styles.labelInverse,
+          ]}
+        >
+          {label}
+        </Text>
       </View>
     );
   }
@@ -38,16 +51,28 @@ export function Pill({ label, variant = 'subtle', icon, onPress, disabled, style
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
+        size === 'lg' && styles.baseLg,
+        size === 'sm' && styles.baseSm,
         variant === 'filled' && styles.filled,
         variant === 'outline' && styles.outline,
         variant === 'subtle' && styles.subtle,
+        variant === 'graySolid' && styles.graySolid,
         disabled && styles.disabled,
         pressed && styles.pressed,
         style,
       ]}
     >
       {icon}
-      <Text style={[styles.label, variant === 'filled' && styles.labelInverse]}>{label}</Text>
+      <Text
+        style={[
+          styles.label,
+          size === 'lg' && styles.labelLg,
+          size === 'sm' && styles.labelSm,
+          (variant === 'filled' || variant === 'graySolid') && styles.labelInverse,
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -61,6 +86,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
+  },
+  baseLg: {
+    minHeight: 36,
+    paddingHorizontal: 15,
+    paddingVertical: 7,
+  },
+  baseSm: {
+    minHeight: 24,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    gap: 3,
   },
   pressed: {
     opacity: 0.7,
@@ -76,6 +112,9 @@ const styles = StyleSheet.create({
   subtle: {
     backgroundColor: colors.surfaceAlt,
   },
+  graySolid: {
+    backgroundColor: colors.inkMuted,
+  },
   disabled: {
     opacity: 0.5,
   },
@@ -83,6 +122,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: colors.text,
+  },
+  labelLg: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  labelSm: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   labelInverse: {
     color: colors.textInverse,

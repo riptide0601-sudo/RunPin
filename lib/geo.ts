@@ -16,6 +16,14 @@ export function haversineDistanceMeters(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_METERS * Math.asin(Math.sqrt(h));
 }
 
+export function routeDistanceKm(route: LatLng[]): number {
+  let totalMeters = 0;
+  for (let i = 1; i < route.length; i += 1) {
+    totalMeters += haversineDistanceMeters(route[i - 1], route[i]);
+  }
+  return Math.round((totalMeters / 1000) * 10) / 10;
+}
+
 const VISIBLE_RADIUS_BASE_ZOOM = 16;
 const VISIBLE_RADIUS_BASE_METERS = 500;
 const VISIBLE_RADIUS_MIN_METERS = 150;

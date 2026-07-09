@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { MenuList } from '@/components/profile/MenuList';
@@ -7,6 +8,14 @@ import { colors } from '@/constants/colors';
 import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 
 export default function ProfileScreen() {
+  const router = useRouter();
+
+  const handleMenuItemPress = (id: string) => {
+    if (id === 'menu-log') {
+      router.push('/run-log');
+    }
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -17,10 +26,9 @@ export default function ProfileScreen() {
         name={mockProfile.name}
         initial={mockProfile.initial}
         joinedLabel={mockProfile.joinedLabel}
-        careerLabel={mockProfile.careerLabel}
       />
       <StatsRow stats={mockProfileStats} />
-      <MenuList items={mockMenuItems} />
+      <MenuList items={mockMenuItems} onItemPress={handleMenuItemPress} />
     </ScrollView>
   );
 }

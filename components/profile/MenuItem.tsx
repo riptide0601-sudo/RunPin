@@ -6,11 +6,12 @@ import type { MenuItemData } from '@/types';
 
 interface MenuItemProps {
   item: MenuItemData;
+  onPress?: () => void;
 }
 
-export function MenuItem({ item }: MenuItemProps) {
+export function MenuItem({ item, onPress }: MenuItemProps) {
   return (
-    <Pressable style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
       <View style={styles.left}>
         <Ionicons name={item.icon} size={18} color={colors.ink} />
         <Text style={styles.label}>{item.label}</Text>
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   rowPressed: {
-    backgroundColor: colors.surfaceAlt,
+    opacity: 0.7,
   },
   left: {
     flexDirection: 'row',

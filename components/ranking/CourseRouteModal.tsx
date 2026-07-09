@@ -3,7 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getRouteCenter } from '@/components/map/getRouteCenter';
 import { LeafletMap } from '@/components/map/LeafletMap';
-import { DifficultyBadge } from '@/components/ui/DifficultyBadge';
+import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { colors } from '@/constants/colors';
 import type { Course } from '@/types';
 
@@ -21,14 +21,14 @@ export function CourseRouteModal({ visible, course, onClose }: CourseRouteModalP
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
+        {/* Empty area above the sheet — tapping it closes the modal. The sheet
+            itself sits after it so taps inside the sheet never reach this. */}
+        <Pressable style={styles.backdropSpacer} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.header}>
             <View style={styles.headerInfo}>
               <Text style={styles.title}>{course.name}</Text>
-              <View style={styles.metaRow}>
-                <Text style={styles.meta}>{course.distanceKm}km · 난이도</Text>
-                <DifficultyBadge difficulty={course.difficulty} />
-              </View>
+              <CourseMetaRow distanceKm={course.distanceKm} difficulty={course.difficulty} />
             </View>
             <Pressable onPress={onClose} hitSlop={12} style={({ pressed }) => pressed && styles.closePressed}>
               <Ionicons name="close" size={22} color={colors.text} />
@@ -52,7 +52,9 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
+  },
+  backdropSpacer: {
+    flex: 1,
   },
   sheet: {
     backgroundColor: colors.surface,
@@ -70,21 +72,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   closePressed: {
-    opacity: 0.5,
+    opacity: 0.7,
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  meta: {
-    fontSize: 13,
-    color: colors.textMuted,
   },
   map: {
     borderRadius: 20,

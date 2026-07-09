@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { StyleSheet, type LayoutChangeEvent } from 'react-native';
 
 import { PaceRings } from '@/components/community/PaceRings';
-import { getAnchoredPopupPosition, type Size } from '@/components/community/popupPosition';
+import { getAnchoredPopupPosition, type Point, type Size } from '@/components/community/popupPosition';
 import { RunnerDetailCard } from '@/components/community/RunnerDetailCard';
+import { RunningBadge } from '@/components/community/RunningBadge';
 import { LeafletMap, type MapMarker } from '@/components/map/LeafletMap';
 import { colors } from '@/constants/colors';
 import { mockMeLocation, mockMyRunningRoute } from '@/data/mock';
 import { getVisibleRadiusMeters, haversineDistanceMeters } from '@/lib/geo';
+import { isMatchCandidate } from '@/lib/matching';
 import type { RunnerMapDot } from '@/types';
 
 interface CommunityMapProps {
@@ -21,7 +23,7 @@ const CARD_SIZE: Size = { width: 190, height: 112 };
 export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [containerSize, setContainerSize] = useState<Size>({ width: 0, height: 0 });
-  const [selection, setSelection] = useState<{ runnerId: string; point: { x: number; y: number } } | null>(null);
+  const [selection, setSelection] = useState<{ runnerId: string; point: Point } | null>(null);
 
   useEffect(() => {
     setSelection(null);
@@ -42,7 +44,7 @@ export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
         ...visibleRunners.map((runner) => ({
           id: runner.id,
           position: runner.position,
-          variant: (runner.paceComparison === 'similar' ? 'match' : 'runner') as MapMarker['variant'],
+          variant: (isMatchCandidate(runner.paceComparison) ? 'match' : 'runner') as MapMarker['variant'],
         })),
       ];
 
@@ -67,14 +69,7 @@ export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
       onZoomChange={setZoom}
       onLayout={handleLayout}
     >
-      {isRunning ? (
-        <View style={styles.runningBadge} pointerEvents="none">
-          <View style={styles.runningDot} />
-          <Text style={styles.runningBadgeText}>러닝 중</Text>
-        </View>
-      ) : (
-        <PaceRings />
-      )}
+      {isRunning ? <RunningBadge style={styles.runningBadgeWrapper} /> : <PaceRings />}
       {!isRunning && selectedRunner && selection && containerSize.width > 0 ? (
         <RunnerDetailCard
           runner={selectedRunner}
@@ -88,27 +83,13 @@ export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
 
 const styles = StyleSheet.create({
   map: {},
-  runningBadge: {
+  runningBadgeWrapper: {
     position: 'absolute',
     top: 12,
     left: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
     backgroundColor: colors.surface,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-  },
-  runningDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.accentMe,
-  },
-  runningBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.accentMe,
   },
 });

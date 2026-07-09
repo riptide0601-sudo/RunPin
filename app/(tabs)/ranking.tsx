@@ -6,19 +6,21 @@ import { CourseRouteModal } from '@/components/ranking/CourseRouteModal';
 import { RankingListItem } from '@/components/ranking/RankingListItem';
 import { RankingTabs, type RankingPeriod } from '@/components/ranking/RankingTabs';
 import { colors } from '@/constants/colors';
-import { mockCourses, mockRankingsByPeriod } from '@/data/mock';
+import { mockRankingsByPeriod } from '@/data/mock';
+import { useAppData } from '@/lib/appData';
 import type { RankingEntry } from '@/types';
 
 export default function RankingScreen() {
   const insets = useSafeAreaInsets();
+  const { courses } = useAppData();
   const [period, setPeriod] = useState<RankingPeriod>('monthly');
   const [selectedEntry, setSelectedEntry] = useState<RankingEntry | null>(null);
 
   const rankings = mockRankingsByPeriod[period];
 
   const selectedCourse = useMemo(
-    () => (selectedEntry ? mockCourses.find((course) => course.id === selectedEntry.courseId) ?? null : null),
-    [selectedEntry],
+    () => (selectedEntry ? courses.find((course) => course.id === selectedEntry.courseId) ?? null : null),
+    [courses, selectedEntry],
   );
 
   return (

@@ -1,13 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
-import { DifficultyBadge } from '@/components/ui/DifficultyBadge';
+import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 import type { Course } from '@/types';
 
 interface CourseListItemProps {
-  course: Course & { isPopular?: boolean };
+  course: Course;
   isSelected?: boolean;
   onPress?: () => void;
 }
@@ -20,10 +20,7 @@ export function CourseListItem({ course, isSelected, onPress }: CourseListItemPr
           <Text style={styles.name}>{course.name}</Text>
           {course.isPopular ? <Pill label="인기" variant="filled" /> : null}
         </View>
-        <View style={styles.metaRow}>
-          <Text style={styles.meta}>{course.distanceKm}km · 난이도</Text>
-          <DifficultyBadge difficulty={course.difficulty} />
-        </View>
+        <CourseMetaRow distanceKm={course.distanceKm} difficulty={course.difficulty} />
       </Card>
     </Pressable>
   );
@@ -31,7 +28,7 @@ export function CourseListItem({ course, isSelected, onPress }: CourseListItemPr
 
 const styles = StyleSheet.create({
   pressed: {
-    opacity: 0.85,
+    opacity: 0.7,
   },
   card: {
     marginBottom: 12,
@@ -50,14 +47,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: colors.text,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  meta: {
-    fontSize: 13,
-    color: colors.textMuted,
   },
 });

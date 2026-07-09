@@ -1,15 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 
+import type { Point } from '@/components/community/popupPosition';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
+import { isMatchCandidate } from '@/lib/matching';
 import type { RunnerMapDot } from '@/types';
 
 interface RunnerDetailCardProps {
   runner: RunnerMapDot;
   onPropose: () => void;
-  position: { x: number; y: number };
+  position: Point;
 }
 
 const COMPARISON_LABEL: Record<RunnerMapDot['paceComparison'], string> = {
@@ -45,7 +47,7 @@ export function RunnerDetailCard({ runner, onPropose, position }: RunnerDetailCa
       <Card style={styles.card}>
         <Text style={styles.title}>
           {runner.nickname}
-          {runner.paceComparison === 'similar' ? ' · 매칭 러너' : ''}
+          {isMatchCandidate(runner.paceComparison) ? ' · 매칭 러너' : ''}
         </Text>
         <Text style={styles.meta}>
           {runner.paceLabel} · {runner.distanceLabel}

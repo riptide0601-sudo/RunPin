@@ -3,13 +3,15 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
+import { MY_PACE_LABEL, MY_PACE_SEC_PER_KM } from '@/constants/pace';
 
 interface RunningStatusBarProps {
   onEndRun: () => void;
 }
 
-const PACE_SEC_PER_KM = 340;
-const PACE_LABEL = "5'40\"/km";
+// 이미 어느 정도 뛰고 있는 상태를 보여주는 예시 화면이므로 0초가 아닌
+// 18분(15~20분 사이)부터 시작한다.
+const INITIAL_ELAPSED_SEC = 18 * 60;
 
 function formatElapsed(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);
@@ -18,7 +20,7 @@ function formatElapsed(totalSeconds: number): string {
 }
 
 export function RunningStatusBar({ onEndRun }: RunningStatusBarProps) {
-  const [elapsedSec, setElapsedSec] = useState(0);
+  const [elapsedSec, setElapsedSec] = useState(INITIAL_ELAPSED_SEC);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,14 +29,14 @@ export function RunningStatusBar({ onEndRun }: RunningStatusBarProps) {
     return () => clearInterval(timer);
   }, []);
 
-  const distanceKm = (elapsedSec / PACE_SEC_PER_KM).toFixed(2);
+  const distanceKm = (elapsedSec / MY_PACE_SEC_PER_KM).toFixed(2);
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
-        {formatElapsed(elapsedSec)} · {distanceKm}km · {PACE_LABEL}
+        {formatElapsed(elapsedSec)} · {distanceKm}km · {MY_PACE_LABEL}
       </Text>
-      <Pill label="러닝 종료" variant="outline" onPress={onEndRun} />
+      <Pill label="러닝 종료" variant="subtle" size="lg" onPress={onEndRun} />
     </View>
   );
 }

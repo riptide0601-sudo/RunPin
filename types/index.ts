@@ -18,8 +18,9 @@ export interface Course {
   name: string;
   coordinates: LatLng[];
   category: string;
-  difficulty: 1 | 2 | 3;
+  difficulty: 1 | 2 | 3 | 4 | 5;
   distanceKm: number;
+  isPopular?: boolean;
 }
 
 export interface RunLog {
@@ -29,6 +30,15 @@ export interface RunLog {
   startedAt: number;
   durationSec: number;
   paceSecPerKm: number;
+  courseName: string;
+  distanceKm: number;
+  cadenceSpm: number;
+  avgHeartRateBpm: number;
+  elevationSeries: number[];
+  paceSeries: number[];
+  heartRateSeries: number[];
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  isUploaded: boolean;
 }
 
 export interface Match {
@@ -64,6 +74,7 @@ export interface ProfileStats {
   totalDistanceKm: number;
   uploadedCourseCount: number;
   runMatesCount: number;
+  myPaceLabel: string;
 }
 
 export interface MenuItemData {

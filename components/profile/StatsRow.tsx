@@ -11,6 +11,7 @@ interface StatsRowProps {
 export function StatsRow({ stats }: StatsRowProps) {
   const items = [
     { label: '총거리', value: `${stats.totalDistanceKm}km` },
+    { label: '내 페이스', value: stats.myPaceLabel },
     { label: '업로드 코스', value: String(stats.uploadedCourseCount) },
     { label: '함께 뛴 러너', value: String(stats.runMatesCount) },
   ];
@@ -30,19 +31,21 @@ export function StatsRow({ stats }: StatsRowProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     paddingHorizontal: 20,
     marginBottom: 20,
   },
   card: {
-    flex: 1,
+    flexBasis: '48%',
+    flexGrow: 1,
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 16,
+    paddingVertical: 20,
     backgroundColor: colors.surfaceAlt,
   },
   value: {
-    fontSize: 16,
+    fontSize: 19,
     fontWeight: '700',
     color: colors.text,
   },

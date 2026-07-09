@@ -5,7 +5,7 @@ import { colors } from '@/constants/colors';
 import type { Course } from '@/types';
 
 interface RecommendedCourseListProps {
-  courses: (Course & { isPopular?: boolean })[];
+  courses: Course[];
   selectedCourseId?: string;
   onSelectCourse?: (courseId: string) => void;
 }
@@ -13,11 +13,12 @@ interface RecommendedCourseListProps {
 export function RecommendedCourseList({ courses, selectedCourseId, onSelectCourse }: RecommendedCourseListProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>내 주변 추천 코스</Text>
+      <Text style={styles.title}>추천 코스</Text>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {courses.map((course) => (
           <CourseListItem

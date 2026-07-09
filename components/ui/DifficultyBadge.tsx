@@ -3,13 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { colors } from '@/constants/colors';
 
 interface DifficultyBadgeProps {
-  difficulty: 1 | 2 | 3;
+  difficulty: 1 | 2 | 3 | 4 | 5;
 }
 
 export function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
   return (
     <View style={styles.row}>
-      {[1, 2, 3].map((level) => (
+      {[1, 2, 3, 4, 5].map((level) => (
         <View key={level} style={[styles.dot, level <= difficulty ? styles.dotFilled : styles.dotEmpty]} />
       ))}
     </View>

@@ -42,7 +42,7 @@ export function RankingListItem({ entry, onPress }: RankingListItemProps) {
 
 const styles = StyleSheet.create({
   pressed: {
-    opacity: 0.85,
+    opacity: 0.7,
   },
   card: {
     flexDirection: 'row',

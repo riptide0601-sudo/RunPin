@@ -7,29 +7,39 @@ import { RecommendedCourseList } from '@/components/home/RecommendedCourseList';
 import { getRouteCenter } from '@/components/map/getRouteCenter';
 import { LeafletMap } from '@/components/map/LeafletMap';
 import { colors } from '@/constants/colors';
-import { featuredCourse, mockCourses, mockMeLocation } from '@/data/mock';
+import { mockMeLocation } from '@/data/mock';
+import { useAppData } from '@/lib/appData';
 import { haversineDistanceMeters } from '@/lib/geo';
 
-const RECOMMEND_RADIUS_METERS = 3000;
-
 export default function HomeScreen() {
-  const [selectedCourseId, setSelectedCourseId] = useState(featuredCourse.id);
+  const { courses } = useAppData();
 
-  const nearbyCourses = useMemo(() => {
-    const filtered = mockCourses.filter(
-      (course) => haversineDistanceMeters(mockMeLocation, getRouteCenter(course.coordinates)) <= RECOMMEND_RADIUS_METERS,
-    );
-    return filtered.length > 0 ? filtered : mockCourses;
-  }, []);
+  // Distance from the user is the only sort key. isPopular only controls the
+  // "인기" badge (see CourseListItem) — it must never reorder the list, or a
+  // far-away popular course would jump ahead of closer ones.
+  const sortedCourses = useMemo(() => {
+    const distanceOf = (course: (typeof courses)[number]) =>
+      haversineDistanceMeters(mockMeLocation, getRouteCenter(course.coordinates));
+    return [...courses].sort((a, b) => distanceOf(a) - distanceOf(b));
+  }, [courses]);
+
+  const [selectedCourseId, setSelectedCourseId] = useState(sortedCourses[0]?.id);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const displayedCourses = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return sortedCourses;
+    return sortedCourses.filter((course) => course.name.toLowerCase().includes(query));
+  }, [sortedCourses, searchQuery]);
 
   const selectedCourse = useMemo(
-    () => mockCourses.find((course) => course.id === selectedCourseId) ?? featuredCourse,
-    [selectedCourseId],
+    () => courses.find((course) => course.id === selectedCourseId) ?? sortedCourses[0],
+    [courses, sortedCourses, selectedCourseId],
   );
 
   return (
     <View style={styles.container}>
-      <HomeHeader />
+      <HomeHeader searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
       <LeafletMap
         style={styles.map}
         center={getRouteCenter(selectedCourse.coordinates)}
@@ -43,7 +53,7 @@ export default function HomeScreen() {
         <CourseBanner title={selectedCourse.name} distanceKm={selectedCourse.distanceKm} />
       </LeafletMap>
       <RecommendedCourseList
-        courses={nearbyCourses}
+        courses={displayedCourses}
         selectedCourseId={selectedCourseId}
         onSelectCourse={setSelectedCourseId}
       />
