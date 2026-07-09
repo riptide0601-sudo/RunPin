@@ -37,8 +37,6 @@ const GRID_LINES = 3;
 const AXIS_LABEL_HEIGHT = 20;
 const AXIS_FONT_SIZE = 10;
 const KEY_POINT_FONT_SIZE = 9;
-const DEBUG_FONT_SIZE = 7;
-const DEBUG_COLOR = '#e11d48';
 
 // Below this, a chart just renders at the container's own width (no need to
 // scroll). Beyond it, every km gets at least this many px so long routes
@@ -47,21 +45,44 @@ const DEBUG_COLOR = '#e11d48';
 // horizontally.
 const MIN_PX_PER_KM = 40;
 
-// Half of a key-point value label's approximate on-screen footprint (e.g.
-// "42m" or "6'40''"), in px. Used to look at how the polyline actually moves
-// within the label's horizontal span — not just at the single key-point
-// pixel — before deciding whether the label goes above or below.
-const KEY_POINT_LABEL_HALF_WIDTH_PX = 22;
-// Fixed px distance kept between a key point's dot and its value label, so
-// the pairing always reads clearly regardless of how far the line drifts
-// from the point within its label's horizontal span. Deliberately a single
-// constant (not derived from local line extent) — using the local extent's
-// top/bottom to place the label let it drift many px away from the point
-// itself whenever a neighboring sample was more extreme than the point
-// being labeled.
-const KEY_POINT_LABEL_OFFSET = 11;
+// Dedicated vertical strip reserved at the very top and bottom of the plot
+// area, exclusively for the peak/trough value labels. yAt() below never
+// places the line inside this band, so a label drawn there is guaranteed to
+// never touch the line — no per-point overlap math needed.
+const KEY_POINT_LABEL_BAND = 20;
+// Gap kept between a label's baseline and the boundary where the line's
+// plotting area begins, so the label doesn't hug the line's topmost/
+// bottommost possible point.
+const KEY_POINT_LABEL_INSET = 6;
 
-export function LineChart({ label, unit, data, distanceKm, height = 120, formatValue }: LineChartProps) {
+// Adaptive km-axis ticks: try the smallest step first (0km, 1km, 2km, ...)
+// and only fall back to a coarser one once labels at that spacing would be
+// tight enough to overlap on the current chart width — a wide chart gets
+// dense 1km ticks, a narrow one automatically thins out.
+const KM_STEP_CANDIDATES_KM = [1, 2, 5, 10, 20, 25, 50, 100];
+const KM_LABEL_CHAR_WIDTH_PX = AXIS_FONT_SIZE * 0.62;
+const KM_LABEL_MIN_GAP_PX = 6;
+
+function pickKmStep(distanceKm: number, plotWidth: number): number {
+  if (distanceKm <= 0) return KM_STEP_CANDIDATES_KM[0];
+  for (const step of KM_STEP_CANDIDATES_KM) {
+    const tickCount = Math.floor(distanceKm / step) + 1;
+    if (tickCount <= 1) return step;
+    const spacingPx = (step / distanceKm) * plotWidth;
+    const widestLabelChars = `${Math.floor(distanceKm / step) * step}km`.length;
+    if (spacingPx >= widestLabelChars * KM_LABEL_CHAR_WIDTH_PX + KM_LABEL_MIN_GAP_PX) return step;
+  }
+  return KM_STEP_CANDIDATES_KM[KM_STEP_CANDIDATES_KM.length - 1];
+}
+
+function buildKmTicks(distanceKm: number, step: number): number[] {
+  if (distanceKm <= 0) return [0];
+  const ticks: number[] = [];
+  for (let i = 0; i * step <= distanceKm + 1e-9; i++) ticks.push(i * step);
+  return ticks;
+}
+
+export function LineChart({ label, unit, data, distanceKm, height = 140, formatValue }: LineChartProps) {
   // Measuring the Svg element's own onLayout was self-referential: its width
   // prop was already set to the state we were trying to derive, so it just
   // reported back whatever we'd already guessed (FALLBACK_CHART_WIDTH on the
@@ -86,8 +107,11 @@ export function LineChart({ label, unit, data, distanceKm, height = 120, formatV
   const width = Math.max(containerWidth, Math.ceil(distanceKm * MIN_PX_PER_KM));
   const scrollable = width > containerWidth + 1;
   const paddingX = 10;
-  const paddingY = 16;
+  const paddingY = 10;
   const chartHeight = height - AXIS_LABEL_HEIGHT;
+  // The line is only ever drawn inside this inner span — the label bands
+  // above and below it are reserved space the line can never enter.
+  const plotAreaHeight = Math.max(20, chartHeight - paddingY * 2 - KEY_POINT_LABEL_BAND * 2);
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
@@ -96,7 +120,7 @@ export function LineChart({ label, unit, data, distanceKm, height = 120, formatV
   const resolveLabel = formatValue ?? ((value: number) => `${Math.round(value)}`);
 
   const xAt = (index: number) => paddingX + (index / (data.length - 1 || 1)) * (width - paddingX * 2);
-  const yAt = (value: number) => paddingY + (1 - (value - min) / range) * (chartHeight - paddingY * 2);
+  const yAt = (value: number) => paddingY + KEY_POINT_LABEL_BAND + (1 - (value - min) / range) * plotAreaHeight;
   const xAnchor = (x: number): 'start' | 'middle' | 'end' => {
     if (x <= paddingX + 2) return 'start';
     if (x >= width - paddingX - 2) return 'end';
@@ -105,42 +129,18 @@ export function LineChart({ label, unit, data, distanceKm, height = 120, formatV
 
   const points = data.map((value, index) => `${xAt(index)},${yAt(value)}`).join(' ');
 
-  const xStep = (width - paddingX * 2) / (data.length - 1 || 1);
   const keyPointIndices = findExtremeIndices(data);
+  const plotTop = paddingY + KEY_POINT_LABEL_BAND;
+  const plotBottom = plotTop + plotAreaHeight;
 
-  // A key-point label was placed purely from ITS OWN point's y-value (above
-  // if near the top, below otherwise), which ignores that the polyline keeps
-  // moving through neighboring samples under/over the label's actual
-  // horizontal footprint — a label placed "above" a sharp local peak can
-  // still collide with the line's descent a few px to either side. Instead,
-  // look at the line's real min/max y across the label's horizontal span and
-  // clear *that*, not just the single plotted point.
-  const keyLabelIndexSpan = Math.max(1, Math.ceil(KEY_POINT_LABEL_HALF_WIDTH_PX / (xStep || 1)));
-  const localYExtent = (index: number) => {
-    const from = Math.max(0, index - keyLabelIndexSpan);
-    const to = Math.min(data.length - 1, index + keyLabelIndexSpan);
-    let top = Infinity;
-    let bottom = -Infinity;
-    for (let i = from; i <= to; i++) {
-      const y = yAt(data[i]);
-      if (y < top) top = y;
-      if (y > bottom) bottom = y;
-    }
-    return { top, bottom };
-  };
-
-  // Only two km labels, ever: the start and the actual end distance (not
-  // rounded down to a whole km) — pinned to the two edges of the chart,
-  // where they textAnchor away from each other and so can never collide
-  // regardless of how wide either string renders.
   const plotWidth = width - paddingX * 2;
-  const startX = paddingX;
-  const endX = paddingX + plotWidth;
+  const kmStep = pickKmStep(distanceKm, plotWidth);
+  const kmTicks = buildKmTicks(distanceKm, kmStep);
 
   const svg = (
     <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
       {Array.from({ length: GRID_LINES }, (_, i) => {
-        const y = paddingY + (i / (GRID_LINES - 1)) * (chartHeight - paddingY * 2);
+        const y = plotTop + (i / (GRID_LINES - 1)) * plotAreaHeight;
         return <Line key={i} x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke={colors.border} strokeWidth={1} />;
       })}
       <Polyline points={points} fill="none" stroke={colors.ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
@@ -148,55 +148,30 @@ export function LineChart({ label, unit, data, distanceKm, height = 120, formatV
         const x = xAt(index);
         const y = yAt(data[index]);
         const anchor = xAnchor(x);
-        // Which side (above/below the point) to place the label on is still
-        // decided from the line's local min/max across the label's own
-        // footprint — that's what keeps the label clear of a sharp local
-        // peak or dip next to the point. But the label's DISTANCE from the
-        // point is always the same fixed offset from the point's own y, not
-        // from the local top/bottom — otherwise a point whose neighbors are
-        // more extreme than it is would get a label placed far away from it.
-        const { top, bottom } = localYExtent(index);
-        const spaceAbove = top - paddingY;
-        const spaceBelow = chartHeight - paddingY - bottom;
-        const placedAbove = spaceAbove >= spaceBelow;
-        const labelY = placedAbove
-          ? Math.max(KEY_POINT_FONT_SIZE, y - KEY_POINT_LABEL_OFFSET)
-          : Math.min(chartHeight - 2, y + KEY_POINT_LABEL_OFFSET);
-        // Debug marker sits one step further out in the same direction as
-        // the real label, so it never itself collides with the label it's
-        // annotating — it reuses the exact same x/anchor as the real label,
-        // so if two debug markers overlap, the real labels do too.
-        const debugY = placedAbove ? labelY - 9 : labelY + 9;
+        // The peak's label always goes in the top band, the trough's always
+        // in the bottom band — correct by construction, since the peak is
+        // by definition the highest point on the whole line (nothing can be
+        // above it to collide with a label placed above it), and likewise
+        // for the trough below.
+        const isPeak = data[index] === max;
+        const labelY = isPeak ? plotTop - KEY_POINT_LABEL_INSET : plotBottom + KEY_POINT_FONT_SIZE + KEY_POINT_LABEL_INSET;
         return (
           <Fragment key={index}>
             <Circle cx={x} cy={y} r={3} fill={colors.ink} />
             <SvgText x={x} y={labelY} fontSize={KEY_POINT_FONT_SIZE} fontWeight="700" fill={colors.textMuted} textAnchor={anchor}>
               {resolveLabel(data[index])}
             </SvgText>
-            {__DEV__ ? (
-              <SvgText x={x} y={debugY} fontSize={DEBUG_FONT_SIZE} fill={DEBUG_COLOR} textAnchor={anchor}>
-                {`x:${Math.round(x)}`}
-              </SvgText>
-            ) : null}
           </Fragment>
         );
       })}
-      <SvgText x={startX} y={height - 2} fontSize={AXIS_FONT_SIZE} fontWeight="600" fill={colors.textMuted} textAnchor="start">
-        0km
-      </SvgText>
-      <SvgText x={endX} y={height - 2} fontSize={AXIS_FONT_SIZE} fontWeight="600" fill={colors.textMuted} textAnchor="end">
-        {distanceKm}km
-      </SvgText>
-      {__DEV__ ? (
-        <Fragment>
-          <SvgText x={startX} y={height - 12} fontSize={DEBUG_FONT_SIZE} fill={DEBUG_COLOR} textAnchor="start">
-            {`x:${Math.round(startX)}`}
+      {kmTicks.map((km) => {
+        const x = distanceKm > 0 ? paddingX + (km / distanceKm) * plotWidth : paddingX;
+        return (
+          <SvgText key={km} x={x} y={height - 2} fontSize={AXIS_FONT_SIZE} fontWeight="600" fill={colors.textMuted} textAnchor={xAnchor(x)}>
+            {`${km}km`}
           </SvgText>
-          <SvgText x={endX} y={height - 12} fontSize={DEBUG_FONT_SIZE} fill={DEBUG_COLOR} textAnchor="end">
-            {`x:${Math.round(endX)}`}
-          </SvgText>
-        </Fragment>
-      ) : null}
+        );
+      })}
     </Svg>
   );
 

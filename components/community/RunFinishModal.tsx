@@ -15,6 +15,12 @@ type OptionId = 'matched' | 'auto' | 'custom';
 
 const DEFAULT_DIFFICULTY: 1 | 2 | 3 | 4 | 5 = 3;
 
+// TEMP DEBUG: remove once the double-tap-to-dismiss-keyboard cause is confirmed.
+let tapSeq = 0;
+const debugLog = (...args: unknown[]) => {
+  if (__DEV__) console.log('[RunFinish]', ...args);
+};
+
 export interface SaveCourseResult {
   courseName: string;
   newCourse: Course | null;
@@ -38,8 +44,14 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      debugLog('keyboardDidShow', Date.now());
+      setIsKeyboardVisible(true);
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      debugLog('keyboardDidHide', Date.now());
+      setIsKeyboardVisible(false);
+    });
     return () => {
       showSub.remove();
       hideSub.remove();
@@ -66,6 +78,8 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
   // this must always close (that's what "바깥 탭" means), regardless of
   // whether a text field happened to be focused.
   const handleBackdropPress = () => {
+    debugLog('backdrop press', ++tapSeq, Date.now());
+    debugLog('calling Keyboard.dismiss() from backdrop', Date.now());
     Keyboard.dismiss();
     onSkip(difficulty);
   };
@@ -109,19 +123,25 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
           <View
             style={styles.sheet}
-            // Non-capture responder: children (option rows, the text input,
-            // the difficulty slider's own PanGestureHandler) always get first
-            // refusal on a touch, so this only fires for taps that land on
-            // truly empty space inside the sheet (gaps between cards, the
-            // title, the summary bar's padding). Gated on isKeyboardVisible
-            // so it's a no-op — and doesn't participate in responder
-            // negotiation at all — whenever the keyboard is already closed.
-            // There's no ScrollView inside this sheet (unlike the screens
-            // that render this modal), so this can't reproduce the old
-            // DismissKeyboardView bug where wrapping a ScrollView in a
-            // TouchableWithoutFeedback broke its scroll gesture.
-            onStartShouldSetResponder={() => isKeyboardVisible}
-            onResponderRelease={() => Keyboard.dismiss()}
+            // Capture fires at touch-start, before any descendant (the text
+            // input, option Pressables, the difficulty slider's own
+            // PanGestureHandler) gets a chance to react — this matters
+            // because on Android, tapping outside a focused TextInput can
+            // get consumed by the native view's own focus-clearing behavior
+            // before it ever reaches the JS responder chain, which is why a
+            // release-based handler on the bubble phase needed a second tap
+            // to actually fire. Returning false here means this view never
+            // claims the responder, so it's purely a side-effect hook: every
+            // other tap (buttons, options, the slider, the input itself)
+            // still behaves exactly as before.
+            onStartShouldSetResponderCapture={() => {
+              debugLog('sheet capture', ++tapSeq, 'kbVisible=', isKeyboardVisible, Date.now());
+              if (isKeyboardVisible) {
+                debugLog('calling Keyboard.dismiss() from sheet capture', Date.now());
+                Keyboard.dismiss();
+              }
+              return false;
+            }}
           >
             <View style={styles.summaryBar}>
               <View style={styles.summaryStats}>
@@ -153,6 +173,14 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
                   onChangeText={(text) => {
                     setCustomName(text);
                     setOptionId('custom');
+                  }}
+                  onFocus={() => debugLog('input focus', Date.now())}
+                  onBlur={() => {
+                    debugLog('input blur -> calling Keyboard.dismiss()', Date.now());
+                    // Safety net: if blur fires after some other dismiss attempt
+                    // (or the keyboard re-focuses the input before it can close),
+                    // force it closed once more here.
+                    Keyboard.dismiss();
                   }}
                   placeholder="코스 이름을 입력하세요"
                   placeholderTextColor={colors.textMuted}
