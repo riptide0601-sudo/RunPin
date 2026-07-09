@@ -14,13 +14,15 @@ import { haversineDistanceMeters } from '@/lib/geo';
 export default function HomeScreen() {
   const { courses } = useAppData();
 
-  // Distance from the user is the only sort key. isPopular only controls the
-  // "인기" badge (see CourseListItem) — it must never reorder the list, or a
-  // far-away popular course would jump ahead of closer ones.
+  // isPopular courses are pinned to the top of the list (sorted by distance
+  // among themselves), then the rest follow in distance order.
   const sortedCourses = useMemo(() => {
     const distanceOf = (course: (typeof courses)[number]) =>
       haversineDistanceMeters(mockMeLocation, getRouteCenter(course.coordinates));
-    return [...courses].sort((a, b) => distanceOf(a) - distanceOf(b));
+    return [...courses].sort((a, b) => {
+      if (!!a.isPopular !== !!b.isPopular) return a.isPopular ? -1 : 1;
+      return distanceOf(a) - distanceOf(b);
+    });
   }, [courses]);
 
   const [selectedCourseId, setSelectedCourseId] = useState(sortedCourses[0]?.id);
