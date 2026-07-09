@@ -26,7 +26,7 @@ export default function RunLogListScreen() {
         </Pressable>
         <Text style={styles.title}>내 러닝 기록</Text>
       </View>
-      <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {runLogs.map((log) => (
           <Pressable
             key={log.id}
@@ -42,16 +42,24 @@ export default function RunLogListScreen() {
                 {log.distanceKm}km · {formatPaceLabel(log.paceSecPerKm)}
               </Text>
               <View style={styles.statusRow}>
-                {log.isUploaded ? (
-                  <Pill
-                    variant="subtle"
-                    label="업로드 완료"
-                    size="sm"
-                    icon={<Ionicons name="checkmark-circle" size={12} color={colors.textMuted} />}
-                  />
-                ) : (
-                  <Pill variant="outline" label="업로드" size="sm" onPress={() => setUploadTarget(log)} />
-                )}
+                <Pressable
+                  hitSlop={4}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    if (!log.isUploaded) setUploadTarget(log);
+                  }}
+                >
+                  {log.isUploaded ? (
+                    <Pill
+                      variant="subtle"
+                      label="업로드 완료"
+                      size="sm"
+                      icon={<Ionicons name="checkmark-circle" size={12} color={colors.textMuted} />}
+                    />
+                  ) : (
+                    <Pill variant="outline" label="업로드" size="sm" />
+                  )}
+                </Pressable>
               </View>
             </Card>
           </Pressable>
@@ -88,6 +96,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
+  },
+  scroll: {
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: 20,

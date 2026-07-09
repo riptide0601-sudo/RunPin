@@ -10,28 +10,52 @@ import { colors } from '@/constants/colors';
 import { mockMeLocation } from '@/data/mock';
 import { useAppData } from '@/lib/appData';
 import { haversineDistanceMeters } from '@/lib/geo';
+import { matchesChosung } from '@/lib/hangul';
+
+// A course can only be "popular" if it's actually near me — a far-away course
+// with a high like count shouldn't outrank nearby ones just because it's
+// well-liked citywide.
+const POPULAR_CANDIDATE_RADIUS_METERS = 3000;
+const POPULAR_COURSE_COUNT = 3;
 
 export default function HomeScreen() {
   const { courses } = useAppData();
 
-  // isPopular courses are pinned to the top of the list (sorted by distance
-  // among themselves), then the rest follow in distance order.
+  // Popular courses (top-3 by like count among only the courses within
+  // POPULAR_CANDIDATE_RADIUS_METERS of me) are pinned to the top, sorted by
+  // distance among themselves. Everything else — including nearby courses
+  // that didn't make the top 3, and anything beyond the radius — follows in
+  // plain distance order.
   const sortedCourses = useMemo(() => {
     const distanceOf = (course: (typeof courses)[number]) =>
       haversineDistanceMeters(mockMeLocation, getRouteCenter(course.coordinates));
-    return [...courses].sort((a, b) => {
-      if (!!a.isPopular !== !!b.isPopular) return a.isPopular ? -1 : 1;
-      return distanceOf(a) - distanceOf(b);
-    });
+
+    const popularIds = new Set(
+      courses
+        .filter((course) => distanceOf(course) <= POPULAR_CANDIDATE_RADIUS_METERS)
+        .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
+        .slice(0, POPULAR_COURSE_COUNT)
+        .map((course) => course.id),
+    );
+
+    return courses
+      .map((course) => ({ ...course, isPopular: popularIds.has(course.id) }))
+      .sort((a, b) => {
+        if (a.isPopular !== b.isPopular) return a.isPopular ? -1 : 1;
+        return distanceOf(a) - distanceOf(b);
+      });
   }, [courses]);
 
   const [selectedCourseId, setSelectedCourseId] = useState(sortedCourses[0]?.id);
   const [searchQuery, setSearchQuery] = useState('');
 
   const displayedCourses = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return sortedCourses;
-    return sortedCourses.filter((course) => course.name.toLowerCase().includes(query));
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return sortedCourses;
+    const query = trimmed.toLowerCase();
+    return sortedCourses.filter(
+      (course) => course.name.toLowerCase().includes(query) || matchesChosung(course.name, trimmed),
+    );
   }, [sortedCourses, searchQuery]);
 
   const selectedCourse = useMemo(

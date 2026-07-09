@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 import { useAppData } from '@/lib/appData';
-import { formatDateLabel, formatDurationLabel, formatPaceLabel } from '@/lib/format';
+import { formatDateLabel, formatDurationLabel, formatPaceLabel, formatPaceShortLabel } from '@/lib/format';
 
 export default function RunLogDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -36,7 +36,7 @@ export default function RunLogDetailScreen() {
       {!log ? (
         <Text style={styles.emptyText}>기록을 찾을 수 없어요</Text>
       ) : (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.dateRow}>
             <Text style={styles.date}>{formatDateLabel(log.startedAt)}</Text>
             {log.isUploaded ? (
@@ -89,7 +89,7 @@ export default function RunLogDetailScreen() {
             <LineChart label="고도" unit="m" data={log.elevationSeries} distanceKm={log.distanceKm} />
           </Card>
           <Card style={styles.chartCard}>
-            <LineChart label="페이스" data={log.paceSeries} distanceKm={log.distanceKm} formatValue={formatPaceLabel} />
+            <LineChart label="페이스" data={log.paceSeries} distanceKm={log.distanceKm} formatValue={formatPaceShortLabel} />
           </Card>
           <Card style={styles.chartCard}>
             <LineChart label="심박수" unit="bpm" data={log.heartRateSeries} distanceKm={log.distanceKm} />
@@ -135,6 +135,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     fontSize: 14,
     color: colors.textMuted,
+  },
+  scroll: {
+    flex: 1,
   },
   content: {
     paddingHorizontal: 20,

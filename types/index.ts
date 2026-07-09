@@ -21,6 +21,7 @@ export interface Course {
   difficulty: 1 | 2 | 3 | 4 | 5;
   distanceKm: number;
   isPopular?: boolean;
+  likeCount?: number;
 }
 
 export interface RunLog {

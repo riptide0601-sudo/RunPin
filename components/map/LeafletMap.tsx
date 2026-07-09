@@ -29,6 +29,7 @@ interface LeafletMapProps {
   children?: ReactNode;
   dragging?: boolean;
   keepCenterOnZoom?: boolean;
+  zoomAnchorMarkerId?: string;
   onZoomChange?: (zoom: number) => void;
   onLayout?: (event: LayoutChangeEvent) => void;
 }
@@ -54,6 +55,7 @@ export function LeafletMap({
   children,
   dragging = true,
   keepCenterOnZoom = false,
+  zoomAnchorMarkerId,
   onZoomChange,
   onLayout,
 }: LeafletMapProps) {
@@ -69,6 +71,7 @@ export function LeafletMap({
       fitBounds,
       fitBoundsPadding,
       keepCenterOnZoom,
+      zoomAnchorMarkerId,
       markers: markers.map((marker) => ({
         id: marker.id,
         position: marker.position,
@@ -76,7 +79,7 @@ export function LeafletMap({
         color: VARIANT_COLORS[marker.variant],
       })),
     }),
-    [center, zoom, route, routeColor, fitBounds, fitBoundsPadding, keepCenterOnZoom, markers],
+    [center, zoom, route, routeColor, fitBounds, fitBoundsPadding, keepCenterOnZoom, zoomAnchorMarkerId, markers],
   );
 
   const sendData = useCallback(() => {

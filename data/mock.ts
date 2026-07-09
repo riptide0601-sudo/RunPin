@@ -75,7 +75,7 @@ export const mockCourses: Course[] = [
     category: '공원',
     difficulty: 4,
     distanceKm: 4.9,
-    isPopular: true,
+    likeCount: 1024,
   },
   {
     id: 'course-2',
@@ -118,6 +118,7 @@ export const mockCourses: Course[] = [
     category: '숲길',
     difficulty: 1,
     distanceKm: 3.1,
+    likeCount: 512,
   },
   {
     id: 'course-3',
@@ -156,7 +157,7 @@ export const mockCourses: Course[] = [
     category: '강변',
     difficulty: 3,
     distanceKm: 5.6,
-    isPopular: true,
+    likeCount: 890,
   },
   {
     id: 'course-4',
@@ -201,6 +202,7 @@ export const mockCourses: Course[] = [
     category: '하천',
     difficulty: 3,
     distanceKm: 5.6,
+    likeCount: 305,
   },
   {
     id: 'course-5',
@@ -240,7 +242,7 @@ export const mockCourses: Course[] = [
     category: '공원',
     difficulty: 2,
     distanceKm: 6.8,
-    isPopular: true,
+    likeCount: 640,
   },
   {
     id: 'course-6',
@@ -290,6 +292,7 @@ export const mockCourses: Course[] = [
     category: '숲길',
     difficulty: 1,
     distanceKm: 2.4,
+    likeCount: 130,
   },
   {
     id: 'course-7',
@@ -332,6 +335,7 @@ export const mockCourses: Course[] = [
     category: '강변',
     difficulty: 3,
     distanceKm: 4.8,
+    likeCount: 270,
   },
   {
     id: 'course-8',
@@ -372,6 +376,7 @@ export const mockCourses: Course[] = [
     category: '골목길',
     difficulty: 1,
     distanceKm: 1.6,
+    likeCount: 110,
   },
   {
     id: 'course-9',
@@ -412,6 +417,7 @@ export const mockCourses: Course[] = [
     category: '공원',
     difficulty: 3,
     distanceKm: 6.1,
+    likeCount: 580,
   },
   {
     id: 'course-10',
@@ -454,6 +460,7 @@ export const mockCourses: Course[] = [
     category: '하천',
     difficulty: 2,
     distanceKm: 3.8,
+    likeCount: 190,
   },
   {
     id: 'course-11',
@@ -500,6 +507,7 @@ export const mockCourses: Course[] = [
     category: '둘레길',
     difficulty: 5,
     distanceKm: 5.0,
+    likeCount: 240,
   },
   {
     id: 'course-12',
@@ -541,6 +549,7 @@ export const mockCourses: Course[] = [
     category: '공원',
     difficulty: 3,
     distanceKm: 4.4,
+    likeCount: 95,
   },
   {
     id: 'course-13',
@@ -589,6 +598,7 @@ export const mockCourses: Course[] = [
     category: '강변',
     difficulty: 4,
     distanceKm: 6.8,
+    likeCount: 150,
   },
   {
     id: 'course-14',
@@ -634,6 +644,7 @@ export const mockCourses: Course[] = [
     category: '골목길',
     difficulty: 2,
     distanceKm: 2.0,
+    likeCount: 80,
   },
   {
     id: 'course-15',
@@ -674,6 +685,7 @@ export const mockCourses: Course[] = [
     category: '골목길',
     difficulty: 2,
     distanceKm: 1.7,
+    likeCount: 70,
   },
   {
     id: 'course-16',
@@ -709,6 +721,7 @@ export const mockCourses: Course[] = [
     category: '골목길',
     difficulty: 1,
     distanceKm: 1.0,
+    likeCount: 60,
   },
   {
     id: 'course-17',
@@ -738,6 +751,7 @@ export const mockCourses: Course[] = [
     category: '하천',
     difficulty: 2,
     distanceKm: 5,
+    likeCount: 55,
   },
   {
     id: 'course-18',
@@ -788,6 +802,7 @@ export const mockCourses: Course[] = [
     category: '숲길',
     difficulty: 3,
     distanceKm: 1.9,
+    likeCount: 45,
   },
   {
     id: 'course-19',
@@ -829,6 +844,7 @@ export const mockCourses: Course[] = [
     category: '골목길',
     difficulty: 1,
     distanceKm: 0.9,
+    likeCount: 35,
   },
   {
     id: 'course-20',
@@ -870,6 +886,7 @@ export const mockCourses: Course[] = [
     category: '골목길',
     difficulty: 1,
     distanceKm: 1.3,
+    likeCount: 25,
   },
 ];
 

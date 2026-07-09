@@ -3,7 +3,6 @@ import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet,
 
 import { Card } from '@/components/ui/Card';
 import { DifficultySlider } from '@/components/ui/DifficultySlider';
-import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 import { generateCourseName } from '@/lib/courseName';
@@ -36,6 +35,16 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
   const [optionId, setOptionId] = useState<OptionId>('auto');
   const [customName, setCustomName] = useState('');
   const [difficulty, setDifficulty] = useState<1 | 2 | 3 | 4 | 5>(DEFAULT_DIFFICULTY);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (visible) {
@@ -98,7 +107,22 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
       <View style={styles.backdrop}>
         <Pressable style={styles.backdropSpacer} onPress={handleBackdropPress} />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
-          <DismissKeyboardView style={styles.sheet}>
+          <View
+            style={styles.sheet}
+            // Non-capture responder: children (option rows, the text input,
+            // the difficulty slider's own PanGestureHandler) always get first
+            // refusal on a touch, so this only fires for taps that land on
+            // truly empty space inside the sheet (gaps between cards, the
+            // title, the summary bar's padding). Gated on isKeyboardVisible
+            // so it's a no-op — and doesn't participate in responder
+            // negotiation at all — whenever the keyboard is already closed.
+            // There's no ScrollView inside this sheet (unlike the screens
+            // that render this modal), so this can't reproduce the old
+            // DismissKeyboardView bug where wrapping a ScrollView in a
+            // TouchableWithoutFeedback broke its scroll gesture.
+            onStartShouldSetResponder={() => isKeyboardVisible}
+            onResponderRelease={() => Keyboard.dismiss()}
+          >
             <View style={styles.summaryBar}>
               <View style={styles.summaryStats}>
                 {summaryItems.map((item, index) => (
@@ -146,7 +170,7 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
               </Pressable>
               <Pill label="업로드" variant="filled" onPress={handleSave} disabled={!canSave} style={styles.saveButton} />
             </View>
-          </DismissKeyboardView>
+          </View>
         </KeyboardAvoidingView>
       </View>
     </Modal>
@@ -290,6 +314,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     paddingVertical: 12,
     paddingHorizontal: 14,
+    // DifficultySlider now pins its own content to a fixed height (58px);
+    // mirror that here (58 + 12*2 padding) so this Card can't be resized by
+    // an ancestor layout either, on top of the child already being fixed.
+    minHeight: 82,
   },
   actions: {
     flexDirection: 'row',

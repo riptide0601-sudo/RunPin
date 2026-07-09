@@ -16,16 +16,12 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
     .leaflet-control-attribution { font-size: 8px; opacity: 0.55; }
     .leaflet-control-zoom { display: none; }
     .me-marker-wrap {
-      width: 26px;
-      height: 26px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .me-marker-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 7px;
+      border-radius: 50%;
       animation: me-pulse 2s ease-in-out infinite;
     }
     @keyframes me-pulse {
@@ -33,13 +29,18 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
       50% { transform: scale(1.15); opacity: 0.85; }
       100% { transform: scale(1); opacity: 1; }
     }
+    .runner-dot-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .runner-dot {
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <svg width="0" height="0" style="position:absolute">
-    <defs id="dotGradients"></defs>
-  </svg>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     function hexToRgb(hex) {
@@ -65,47 +66,40 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
       );
     }
 
-    var dotGradientCache = {};
-
     // A radial highlight centered on the dot, fading evenly outward into
     // the marker's true color, reads as a subtle 3D bead at small dot sizes
-    // without shifting the color the eye perceives at a glance.
-    function dotGradientUrl(color) {
-      if (dotGradientCache[color]) return dotGradientCache[color];
-      var id = 'dot-grad-' + color.replace(/[^a-zA-Z0-9]/g, '');
-      var defs = document.getElementById('dotGradients');
-      var gradient = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
-      gradient.setAttribute('id', id);
-      gradient.setAttribute('cx', '50%');
-      gradient.setAttribute('cy', '50%');
-      gradient.setAttribute('r', '65%');
-      var stopStart = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-      stopStart.setAttribute('offset', '0%');
-      stopStart.setAttribute('stop-color', lighten(color, 0.12));
-      var stopEnd = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-      stopEnd.setAttribute('offset', '100%');
-      stopEnd.setAttribute('stop-color', color);
-      gradient.appendChild(stopStart);
-      gradient.appendChild(stopEnd);
-      defs.appendChild(gradient);
-      var url = 'url(#' + id + ')';
-      dotGradientCache[color] = url;
-      return url;
+    // without shifting the color the eye perceives at a glance. CSS
+    // radial-gradient equivalent of the SVG version this replaced.
+    function dotGradientCss(color) {
+      return 'radial-gradient(circle at 50% 50%, ' + lighten(color, 0.12) + ' 0%, ' + color + ' 100%)';
     }
 
-    // Runner dots are drawn with L.circleMarker (pixel radius, not
-    // meter radius), so pinch-zoom never scales them geographically.
-    // This clamp exists to make that guarantee explicit and keep the
-    // on-screen size within a tight, deliberate range regardless of
-    // zoom level rather than relying on the implicit default.
-    var MARKER_RADIUS_MIN = 8;
-    var MARKER_RADIUS_MAX = 13;
-    var MARKER_RADIUS_BASE_ZOOM = 16;
-    var MARKER_RADIUS_BASE = 10;
+    // Runner dots used to be drawn with L.circleMarker (SVG). Leaflet's SVG
+    // Renderer listens for the map's 'zoom' event — which fires on every
+    // animation frame throughout a live pinch gesture, not just at its end —
+    // and in response applies a live CSS transform to the whole shared SVG
+    // container, visibly scaling every circleMarker's radius up/down for the
+    // full duration of the pinch. L.Marker (used for "me" and now for runner
+    // dots too, both as L.divIcon) only *repositions* its icon element on
+    // 'zoom' — it never scale-transforms it — so a divIcon marker's on-screen
+    // size stays fixed throughout the whole gesture instead of ballooning
+    // with it. Both marker types are still driven by the SAME diameter curve
+    // (rather than each having its own base size) so "me" and the runner
+    // dots start out — and stay — the same size as each other.
+    //
+    // The base/min/max here intentionally match "me"'s original static size
+    // (14px, before either marker type scaled with zoom) — a prior pass
+    // unified the two marker types onto the runner dot's old, larger range
+    // (16-26px) instead, which grew "me" rather than shrinking the runners.
+    var MARKER_DIAMETER_MIN = 10;
+    var MARKER_DIAMETER_MAX = 18;
+    var MARKER_DIAMETER_BASE_ZOOM = 16;
+    var MARKER_DIAMETER_BASE = 14;
 
-    function radiusForZoom(zoom) {
-      var raw = MARKER_RADIUS_BASE + (zoom - MARKER_RADIUS_BASE_ZOOM) * 0.5;
-      return Math.min(MARKER_RADIUS_MAX, Math.max(MARKER_RADIUS_MIN, raw));
+    function diameterForZoom(zoom) {
+      var raw = MARKER_DIAMETER_BASE + (zoom - MARKER_DIAMETER_BASE_ZOOM) * 1;
+      var clamped = Math.min(MARKER_DIAMETER_MAX, Math.max(MARKER_DIAMETER_MIN, raw));
+      return clamped;
     }
 
     var map = L.map('map', {
@@ -118,17 +112,43 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
     }).setView([${center.latitude}, ${center.longitude}], ${zoom});
 
     var keepCenterOnZoom = false;
+    // Which marker id (if any) the zoom should be pivoted around. When unset,
+    // zoom instead re-centers on fixedCenter (the fitBounds/explicit center),
+    // same as before. Set to 'me' for screens where zooming should always
+    // keep "my" position fixed on screen, independent of where the current
+    // view happens to be centered.
+    var zoomAnchorMarkerId = null;
     var fixedCenter = null;
     var applyingFitBounds = false;
+
+    // "Run follow" mode (fitBounds + anchored on the 'me' marker, i.e. the
+    // running screen) used to re-run map.fitBounds() on every single
+    // __setMapData call, including the ones triggered by the zoom-level
+    // change itself (zoomend -> notifyZoomChange -> RN state update ->
+    // re-send data). That snapped any pinch-zoom the user just did straight
+    // back to the fitBounds level, which read as "zoom is blocked". Track
+    // whether the user has manually zoomed during this run and, once they
+    // have, stop calling fitBounds altogether — only re-center on 'me' at
+    // whatever zoom they left it at.
+    var runFollowActive = false;
+    var userZoomedInRun = false;
+
     map.on('zoomend', function () {
-      if (!applyingFitBounds && keepCenterOnZoom && fixedCenter) {
-        map.setView(fixedCenter, map.getZoom(), { animate: false });
+      if (runFollowActive) {
+        if (!applyingFitBounds) {
+          userZoomedInRun = true;
+        }
+      } else if (!applyingFitBounds && keepCenterOnZoom) {
+        var anchor = (zoomAnchorMarkerId && markerPositions[zoomAnchorMarkerId]) || fixedCenter;
+        if (anchor) map.setView(anchor, map.getZoom(), { animate: false });
       }
-      var zoomRadius = radiusForZoom(map.getZoom());
+      var zoomDiameter = diameterForZoom(map.getZoom());
       Object.keys(markerLayers).forEach(function (id) {
         var layer = markerLayers[id];
-        if (typeof layer.setRadius === 'function') {
-          layer.setRadius(zoomRadius);
+        if (markerVariants[id] === 'me') {
+          layer.setIcon(meIcon(meMarkerColor, zoomDiameter));
+        } else {
+          layer.setIcon(dotIcon(markerColors[id], zoomDiameter));
         }
       });
       notifyZoomChange(map.getZoom());
@@ -142,20 +162,42 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
 
     var routeLayer = null;
     var markerLayers = {};
+    var markerVariants = {};
+    var markerPositions = {};
+    var markerColors = {};
+    var meMarkerColor = null;
 
     function clearMarkers() {
       Object.keys(markerLayers).forEach(function (id) {
         map.removeLayer(markerLayers[id]);
       });
       markerLayers = {};
+      markerVariants = {};
+      markerPositions = {};
+      markerColors = {};
     }
 
-    function meIcon(color) {
+    function meIcon(color, diameter) {
       return L.divIcon({
         className: '',
-        html: '<div class="me-marker-wrap"><div class="me-marker-dot" style="background:' + color + ';"></div></div>',
-        iconSize: [26, 26],
-        iconAnchor: [13, 13],
+        html:
+          '<div class="me-marker-wrap" style="width:' + diameter + 'px;height:' + diameter + 'px;">' +
+          '<div class="me-marker-dot" style="width:' + diameter + 'px;height:' + diameter + 'px;background:' + color + ';"></div>' +
+          '</div>',
+        iconSize: [diameter, diameter],
+        iconAnchor: [diameter / 2, diameter / 2],
+      });
+    }
+
+    function dotIcon(color, diameter) {
+      return L.divIcon({
+        className: '',
+        html:
+          '<div class="runner-dot-wrap" style="width:' + diameter + 'px;height:' + diameter + 'px;">' +
+          '<div class="runner-dot" style="width:' + diameter + 'px;height:' + diameter + 'px;background:' + dotGradientCss(color) + ';"></div>' +
+          '</div>',
+        iconSize: [diameter, diameter],
+        iconAnchor: [diameter / 2, diameter / 2],
       });
     }
 
@@ -203,6 +245,29 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
       fixedCenter = [fitCenter.lat, fitCenter.lng];
     }
 
+    // Builds a bounding box centered exactly on the given center point
+    // (rather than on the route's own centroid) but still large enough to
+    // contain the given bounds. Used to fitBounds the run route while
+    // keeping "me" pinned to the visual center of the screen at all times —
+    // trivially satisfying "me is always within the middle third of the
+    // screen" since it's dead-center.
+    function symmetricBoundsAround(center, bounds) {
+      var latDelta = Math.max(
+        Math.abs(center.lat - bounds.getNorth()),
+        Math.abs(center.lat - bounds.getSouth()),
+        0.0001,
+      );
+      var lngDelta = Math.max(
+        Math.abs(center.lng - bounds.getEast()),
+        Math.abs(center.lng - bounds.getWest()),
+        0.0001,
+      );
+      return L.latLngBounds(
+        [center.lat - latDelta, center.lng - lngDelta],
+        [center.lat + latDelta, center.lng + lngDelta],
+      );
+    }
+
     if (window.ResizeObserver) {
       var resizeObserver = new ResizeObserver(function () {
         if (lastFitBounds) {
@@ -216,6 +281,11 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
 
     window.__setMapData = function (data) {
       keepCenterOnZoom = !!data.keepCenterOnZoom;
+      zoomAnchorMarkerId = data.zoomAnchorMarkerId || null;
+      // The running screen is uniquely identified by fitBounds + anchoring
+      // zoom on 'me' — reuse that instead of adding a new prop.
+      runFollowActive = !!data.fitBounds && zoomAnchorMarkerId === 'me';
+      if (!runFollowActive) userZoomedInRun = false;
 
       if (data.center && !data.fitBounds) {
         fixedCenter = [data.center.latitude, data.center.longitude];
@@ -241,27 +311,46 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
             bounds.extend([marker.position.latitude, marker.position.longitude]);
           });
           var pad = data.fitBoundsPadding || {};
-          lastFitBounds = { bounds: bounds, pad: pad };
-          applyFitBounds(bounds, pad);
+          var meMarkerData = runFollowActive
+            ? (data.markers || []).find(function (m) { return m.variant === 'me'; })
+            : null;
+
+          if (meMarkerData) {
+            var meLatLng = L.latLng(meMarkerData.position.latitude, meMarkerData.position.longitude);
+            if (!userZoomedInRun) {
+              // Auto mode: keep the whole route + me framed, centered on me
+              // (not the route's centroid), re-zooming out as the route grows.
+              var symmetric = symmetricBoundsAround(meLatLng, bounds);
+              lastFitBounds = { bounds: symmetric, pad: pad };
+              applyFitBounds(symmetric, pad);
+            } else {
+              // Manual mode: the user has pinch-zoomed — never touch zoom
+              // again, just keep panning to follow 'me' at their chosen zoom.
+              lastFitBounds = null;
+              map.panTo(meLatLng, { animate: false });
+            }
+          } else {
+            lastFitBounds = { bounds: bounds, pad: pad };
+            applyFitBounds(bounds, pad);
+          }
         } else {
           lastFitBounds = null;
         }
       }
 
       clearMarkers();
+      var currentDiameter = diameterForZoom(map.getZoom());
       (data.markers || []).forEach(function (marker) {
         var layer;
         if (marker.variant === 'me') {
+          meMarkerColor = marker.color;
           layer = L.marker([marker.position.latitude, marker.position.longitude], {
-            icon: meIcon(marker.color),
+            icon: meIcon(marker.color, currentDiameter),
             interactive: false,
           });
         } else {
-          layer = L.circleMarker([marker.position.latitude, marker.position.longitude], {
-            radius: radiusForZoom(map.getZoom()),
-            stroke: false,
-            fillColor: dotGradientUrl(marker.color),
-            fillOpacity: 1,
+          layer = L.marker([marker.position.latitude, marker.position.longitude], {
+            icon: dotIcon(marker.color, currentDiameter),
           });
           layer.on('click', function (e) {
             L.DomEvent.stopPropagation(e);
@@ -271,6 +360,9 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
         }
         layer.addTo(map);
         markerLayers[marker.id] = layer;
+        markerVariants[marker.id] = marker.variant;
+        markerPositions[marker.id] = [marker.position.latitude, marker.position.longitude];
+        markerColors[marker.id] = marker.color;
       });
     };
   </script>

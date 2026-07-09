@@ -4,6 +4,16 @@ export function formatPaceLabel(secPerKm: number): string {
   return `${minutes}'${String(seconds).padStart(2, '0')}"/km`;
 }
 
+// Minutes'seconds'' with two straight apostrophes for seconds (e.g. 6'30''),
+// no /km suffix — for compact spots like graph key-point labels where
+// formatPaceLabel's real double-quote + unit suffix reads as a different,
+// unintended format.
+export function formatPaceShortLabel(secPerKm: number): string {
+  const minutes = Math.floor(secPerKm / 60);
+  const seconds = Math.round(secPerKm % 60);
+  return `${minutes}'${String(seconds).padStart(2, '0')}''`;
+}
+
 export function formatDateLabel(epochMs: number): string {
   const date = new Date(epochMs);
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;

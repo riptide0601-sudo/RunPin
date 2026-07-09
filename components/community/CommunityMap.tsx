@@ -20,6 +20,10 @@ interface CommunityMapProps {
 const DEFAULT_ZOOM = 16;
 const CARD_SIZE: Size = { width: 190, height: 112 };
 
+// Clears the top RunningStatusBar overlay and the bottom notice bar so the
+// full run route + current position are never hidden underneath them.
+const RUNNING_FIT_BOUNDS_PADDING = { top: 90, right: 32, bottom: 90, left: 32 };
+
 export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [containerSize, setContainerSize] = useState<Size>({ width: 0, height: 0 });
@@ -61,11 +65,14 @@ export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
       zoom={zoom}
       center={isRunning ? myRunningPosition : mockMeLocation}
       route={isRunning ? mockMyRunningRoute : undefined}
+      fitBounds={isRunning}
+      fitBoundsPadding={isRunning ? RUNNING_FIT_BOUNDS_PADDING : undefined}
       markers={markers}
       onMarkerPress={(id, point) => setSelection({ runnerId: id, point })}
       onMapPress={() => setSelection(null)}
       dragging={false}
-      keepCenterOnZoom={!isRunning}
+      keepCenterOnZoom
+      zoomAnchorMarkerId={isRunning ? 'me' : undefined}
       onZoomChange={setZoom}
       onLayout={handleLayout}
     >

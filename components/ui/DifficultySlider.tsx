@@ -22,6 +22,20 @@ const LEVEL_LABELS = ['매우 쉬움', '쉬움', '보통', '어려움', '매우 
 // the real, on-device measured width (below) lands a frame later.
 const FALLBACK_LABEL_WIDTH = 80;
 
+// Every previous fix only pinned the value label's WIDTH. The actual
+// "box grows/shrinks" complaint is about HEIGHT: headerRow had no explicit
+// height and relied on `alignItems: 'baseline'` across two Text nodes of
+// different fontSize/fontWeight (14/700 vs 13/400), which is exactly the
+// kind of layout that's sensitive to per-platform font-metric quirks (e.g.
+// Android's includeFontPadding can size a line slightly differently
+// depending on the glyphs actually present). Rather than chase that further,
+// pin both the row and the whole container to fixed heights so the box
+// literally cannot resize regardless of which label is showing.
+const HEADER_ROW_HEIGHT = 20;
+const TRACK_HEIGHT = 32;
+const CONTAINER_GAP = 6;
+const CONTAINER_HEIGHT = HEADER_ROW_HEIGHT + CONTAINER_GAP + TRACK_HEIGHT;
+
 export function DifficultySlider({ value, onChange }: DifficultySliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
 
@@ -121,11 +135,17 @@ export function DifficultySlider({ value, onChange }: DifficultySliderProps) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 6,
+    gap: CONTAINER_GAP,
+    height: CONTAINER_HEIGHT,
   },
   headerRow: {
+    height: HEADER_ROW_HEIGHT,
     flexDirection: 'row',
-    alignItems: 'baseline',
+    // 'baseline' alignment made the row's own height depend on per-platform
+    // font-metric quirks of whichever label string was currently showing.
+    // 'center' against an explicitly fixed row height removes that
+    // dependency entirely.
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   title: {
@@ -148,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   track: {
-    height: 32,
+    height: TRACK_HEIGHT,
     justifyContent: 'center',
   },
   baseLine: {

@@ -1,5 +1,5 @@
-import { Fragment, useCallback, useRef, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Fragment, useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
 import { colors } from '@/constants/colors';
@@ -17,124 +17,83 @@ interface LineChartProps {
 // onLayout reports the real container width below) still lays out sensibly.
 const FALLBACK_CHART_WIDTH = 320;
 
-// The graph's most informative moments: where it starts, ends, peaks, and
-// bottoms out. Marking every local wiggle would clutter a 120px-tall chart,
-// so only the global extremes (plus the endpoints, which are informative in
-// their own right) get called out with a value label.
-function findKeyPoints(data: number[]): number[] {
+// Only the two most informative moments get a value label: the global peak
+// and the global trough. Every previous attempt at picking more candidates
+// (endpoints, local wiggles, width-measured overlap checks) still ended up
+// colliding somewhere, so this drops back to the simplest possible rule —
+// exactly one high point and one low point, nothing else to reason about.
+function findExtremeIndices(data: number[]): number[] {
   if (data.length === 0) return [];
-  if (data.length <= 2) return data.map((_, index) => index);
   let maxIndex = 0;
   let minIndex = 0;
   data.forEach((value, index) => {
     if (value > data[maxIndex]) maxIndex = index;
     if (value < data[minIndex]) minIndex = index;
   });
-  return Array.from(new Set([0, minIndex, maxIndex, data.length - 1])).sort((a, b) => a - b);
+  return Array.from(new Set([minIndex, maxIndex])).sort((a, b) => a - b);
 }
 
 const GRID_LINES = 3;
 const AXIS_LABEL_HEIGHT = 20;
-const AXIS_FONT_SIZE = 12;
-const AXIS_LABEL_GAP = 6;
+const AXIS_FONT_SIZE = 10;
+const KEY_POINT_FONT_SIZE = 9;
+const DEBUG_FONT_SIZE = 7;
+const DEBUG_COLOR = '#e11d48';
 
-// Used only for the handful of frames before a label's real on-device width
-// has been measured (see measureLayer below) — deliberately generous so a
-// still-unmeasured label can never be judged to "fit" when it might not.
-function fallbackLabelWidth(km: number): number {
-  return `${km}km`.length * 10;
-}
+// Below this, a chart just renders at the container's own width (no need to
+// scroll). Beyond it, every km gets at least this many px so long routes
+// stay readable instead of cramming a squished shape into one fixed-width
+// screen — the chart becomes wider than its container and scrolls
+// horizontally.
+const MIN_PX_PER_KM = 40;
 
-// A label's real drawn extent depends on its textAnchor: 'start' labels
-// (only km 0) extend a full label-width to the right, 'end' labels (the
-// last tick, when distanceKm lands it right at the axis edge) extend a
-// full label-width to the left, and 'middle' labels split evenly. Treating
-// every gap as if both sides were 'middle' (half-width each) under-counts
-// the space needed at those two boundary ticks — that mismatch is what
-// let the first/last km label collide with its neighbor at long distances.
-function labelExtent(
-  km: number,
-  x: number,
-  anchor: 'start' | 'middle' | 'end',
-  widthOf: (km: number) => number,
-): [left: number, right: number] {
-  const w = widthOf(km);
-  if (anchor === 'start') return [x, x + w];
-  if (anchor === 'end') return [x - w, x];
-  return [x - w / 2, x + w / 2];
-}
-
-function buildEvenTicks(lastKm: number, step: number): number[] {
-  const ticks: number[] = [];
-  for (let km = 0; km <= lastKm; km += step) ticks.push(km);
-  if (ticks[ticks.length - 1] !== lastKm) ticks.push(lastKm);
-  return ticks;
-}
-
-function ticksFit(
-  ticks: number[],
-  xOfKm: (km: number) => number,
-  xAnchor: (x: number) => 'start' | 'middle' | 'end',
-  widthOf: (km: number) => number,
-): boolean {
-  for (let i = 1; i < ticks.length; i++) {
-    const prevX = xOfKm(ticks[i - 1]);
-    const curX = xOfKm(ticks[i]);
-    const [, prevRight] = labelExtent(ticks[i - 1], prevX, xAnchor(prevX), widthOf);
-    const [curLeft] = labelExtent(ticks[i], curX, xAnchor(curX), widthOf);
-    if (curLeft - prevRight < AXIS_LABEL_GAP) return false;
-  }
-  return true;
-}
-
-// Chooses which whole-km ticks to show as an even stride (0, step, 2*step, ...).
-// Rather than pre-computing a "safe" step from an assumed label width, this
-// tries step=1, 2, 3, ... and keeps the first stride whose ticks actually
-// pass an anchor-aware overlap check (ticksFit) against the same xOfKm/
-// xAnchor functions used to render them — so correctness comes from
-// simulating the real drawn boxes, not a formula that can drift out of
-// sync with the render logic.
-function pickKmTicks(
-  lastKm: number,
-  xOfKm: (km: number) => number,
-  xAnchor: (x: number) => 'start' | 'middle' | 'end',
-  widthOf: (km: number) => number,
-): number[] {
-  if (lastKm <= 0) return [0];
-  for (let step = 1; step <= lastKm; step++) {
-    const ticks = buildEvenTicks(lastKm, step);
-    if (ticksFit(ticks, xOfKm, xAnchor, widthOf)) return ticks;
-  }
-  return [0, lastKm];
-}
+// Half of a key-point value label's approximate on-screen footprint (e.g.
+// "42m" or "6'40''"), in px. Used to look at how the polyline actually moves
+// within the label's horizontal span — not just at the single key-point
+// pixel — before deciding whether the label goes above or below.
+const KEY_POINT_LABEL_HALF_WIDTH_PX = 22;
+// Fixed px distance kept between a key point's dot and its value label, so
+// the pairing always reads clearly regardless of how far the line drifts
+// from the point within its label's horizontal span. Deliberately a single
+// constant (not derived from local line extent) — using the local extent's
+// top/bottom to place the label let it drift many px away from the point
+// itself whenever a neighboring sample was more extreme than the point
+// being labeled.
+const KEY_POINT_LABEL_OFFSET = 11;
 
 export function LineChart({ label, unit, data, distanceKm, height = 120, formatValue }: LineChartProps) {
-  // The SVG used a fixed viewBox width (320) while rendering at width="100%",
-  // which silently rescales everything inside it to the container's real
-  // width. Label widths are measured in real device pixels via RN onLayout,
-  // so feeding them into a viewBox that doesn't equal the real render width
-  // made the overlap math correct on paper but wrong on screen (worse the
-  // further the device's actual width drifts from 320). Measuring the real
-  // width and using that same number for both the viewBox and the Svg's
-  // width prop makes 1 viewBox unit == 1 real device pixel, so the two
-  // measurements finally agree.
-  const [chartWidth, setChartWidth] = useState(FALLBACK_CHART_WIDTH);
-  const handleChartLayout = useCallback(
+  // Measuring the Svg element's own onLayout was self-referential: its width
+  // prop was already set to the state we were trying to derive, so it just
+  // reported back whatever we'd already guessed (FALLBACK_CHART_WIDTH on the
+  // first frame) instead of the parent's real available width. A plain,
+  // unsized wrapper View always stretches to the parent's actual width
+  // (default flex `alignItems: 'stretch'`), so measuring that instead gives
+  // the real number regardless of what the Svg inside it later renders at.
+  const [containerWidth, setContainerWidth] = useState(FALLBACK_CHART_WIDTH);
+  const handleContainerLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const measured = event.nativeEvent.layout.width;
-      if (measured > 0 && measured !== chartWidth) setChartWidth(measured);
+      if (measured > 0 && measured !== containerWidth) setContainerWidth(measured);
     },
-    [chartWidth],
+    [containerWidth],
   );
 
-  const width = chartWidth;
+  // Long routes get at least MIN_PX_PER_KM of chart width per km instead of
+  // being squeezed into the container's fixed width — once that exceeds the
+  // container, the chart renders wider than the screen and scrolls
+  // horizontally (see `scrollable` below) rather than cramming every km-tick
+  // into the same space.
+  const width = Math.max(containerWidth, Math.ceil(distanceKm * MIN_PX_PER_KM));
+  const scrollable = width > containerWidth + 1;
   const paddingX = 10;
   const paddingY = 16;
   const chartHeight = height - AXIS_LABEL_HEIGHT;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const resolveLabel = formatValue ?? ((value: number) => `${Math.round(value)}${unit ?? ''}`);
+  // Key-point labels show the bare number (no unit) — only formatValue
+  // overrides (e.g. pace's "6'40''") render anything beyond the digits.
+  const resolveLabel = formatValue ?? ((value: number) => `${Math.round(value)}`);
 
   const xAt = (index: number) => paddingX + (index / (data.length - 1 || 1)) * (width - paddingX * 2);
   const yAt = (value: number) => paddingY + (1 - (value - min) / range) * (chartHeight - paddingY * 2);
@@ -145,63 +104,101 @@ export function LineChart({ label, unit, data, distanceKm, height = 120, formatV
   };
 
   const points = data.map((value, index) => `${xAt(index)},${yAt(value)}`).join(' ');
-  const keyPointIndices = findKeyPoints(data);
 
-  // km-tick x-positions come directly from the km/distance ratio (not from
-  // rounding to the nearest data-sample index), so spacing is exactly even.
-  const plotWidth = width - paddingX * 2;
-  const lastKm = Math.floor(distanceKm);
-  const xOfKm = (km: number) => paddingX + (distanceKm > 0 ? km / distanceKm : 0) * plotWidth;
+  const xStep = (width - paddingX * 2) / (data.length - 1 || 1);
+  const keyPointIndices = findExtremeIndices(data);
 
-  // The previous fix computed label width from a guessed "0.63px per
-  // character" constant attributed to Arial/Segoe UI — desktop/web fonts
-  // that this React Native app never actually renders with (iOS draws with
-  // San Francisco, Android with Roboto, both bold here via fontWeight 600,
-  // which is wider than the regular weight the guess implicitly assumed).
-  // So the overlap-avoidance algorithm below was always sound; it was just
-  // fed a made-up number. This measures the real on-device width of every
-  // candidate "Nkm" label via an offscreen RN <Text> + onLayout, using the
-  // exact fontSize/fontWeight the SVG label renders with.
-  const candidateKms = Array.from({ length: lastKm + 1 }, (_, i) => i);
-  const [measuredWidths, setMeasuredWidths] = useState<Record<number, number>>({});
-  const loggedKeyRef = useRef<string | null>(null);
-
-  const handleLabelMeasured = useCallback((km: number, measuredWidth: number) => {
-    setMeasuredWidths((prev) => (prev[km] === measuredWidth ? prev : { ...prev, [km]: measuredWidth }));
-  }, []);
-
-  const widthOf = useCallback((km: number) => measuredWidths[km] ?? fallbackLabelWidth(km), [measuredWidths]);
-
-  const kmTicks = pickKmTicks(lastKm, xOfKm, xAnchor, widthOf);
-
-  const allMeasured = candidateKms.every((km) => measuredWidths[km] !== undefined);
-  if (allMeasured && __DEV__) {
-    const logKey = `${label}:${lastKm}:${candidateKms.map((km) => measuredWidths[km]).join(',')}`;
-    if (loggedKeyRef.current !== logKey) {
-      loggedKeyRef.current = logKey;
-      let prevRight: number | null = null;
-      const rows = kmTicks.map((km) => {
-        const x = xOfKm(km);
-        const anchor = xAnchor(x);
-        const [left, right] = labelExtent(km, x, anchor, widthOf);
-        const gapFromPrev = prevRight === null ? null : Number((left - prevRight).toFixed(1));
-        prevRight = right;
-        return {
-          km,
-          x: Number(x.toFixed(1)),
-          measuredWidth: widthOf(km),
-          anchor,
-          left: Number(left.toFixed(1)),
-          right: Number(right.toFixed(1)),
-          gapFromPrevTick: gapFromPrev,
-        };
-      });
-      console.log(
-        `[LineChart:${label}] chartWidth=${chartWidth} (viewBox now matches real render width) real measured tick placement (gapFromPrevTick must be >= ${AXIS_LABEL_GAP}):`,
-        rows,
-      );
+  // A key-point label was placed purely from ITS OWN point's y-value (above
+  // if near the top, below otherwise), which ignores that the polyline keeps
+  // moving through neighboring samples under/over the label's actual
+  // horizontal footprint — a label placed "above" a sharp local peak can
+  // still collide with the line's descent a few px to either side. Instead,
+  // look at the line's real min/max y across the label's horizontal span and
+  // clear *that*, not just the single plotted point.
+  const keyLabelIndexSpan = Math.max(1, Math.ceil(KEY_POINT_LABEL_HALF_WIDTH_PX / (xStep || 1)));
+  const localYExtent = (index: number) => {
+    const from = Math.max(0, index - keyLabelIndexSpan);
+    const to = Math.min(data.length - 1, index + keyLabelIndexSpan);
+    let top = Infinity;
+    let bottom = -Infinity;
+    for (let i = from; i <= to; i++) {
+      const y = yAt(data[i]);
+      if (y < top) top = y;
+      if (y > bottom) bottom = y;
     }
-  }
+    return { top, bottom };
+  };
+
+  // Only two km labels, ever: the start and the actual end distance (not
+  // rounded down to a whole km) — pinned to the two edges of the chart,
+  // where they textAnchor away from each other and so can never collide
+  // regardless of how wide either string renders.
+  const plotWidth = width - paddingX * 2;
+  const startX = paddingX;
+  const endX = paddingX + plotWidth;
+
+  const svg = (
+    <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      {Array.from({ length: GRID_LINES }, (_, i) => {
+        const y = paddingY + (i / (GRID_LINES - 1)) * (chartHeight - paddingY * 2);
+        return <Line key={i} x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke={colors.border} strokeWidth={1} />;
+      })}
+      <Polyline points={points} fill="none" stroke={colors.ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      {keyPointIndices.map((index) => {
+        const x = xAt(index);
+        const y = yAt(data[index]);
+        const anchor = xAnchor(x);
+        // Which side (above/below the point) to place the label on is still
+        // decided from the line's local min/max across the label's own
+        // footprint — that's what keeps the label clear of a sharp local
+        // peak or dip next to the point. But the label's DISTANCE from the
+        // point is always the same fixed offset from the point's own y, not
+        // from the local top/bottom — otherwise a point whose neighbors are
+        // more extreme than it is would get a label placed far away from it.
+        const { top, bottom } = localYExtent(index);
+        const spaceAbove = top - paddingY;
+        const spaceBelow = chartHeight - paddingY - bottom;
+        const placedAbove = spaceAbove >= spaceBelow;
+        const labelY = placedAbove
+          ? Math.max(KEY_POINT_FONT_SIZE, y - KEY_POINT_LABEL_OFFSET)
+          : Math.min(chartHeight - 2, y + KEY_POINT_LABEL_OFFSET);
+        // Debug marker sits one step further out in the same direction as
+        // the real label, so it never itself collides with the label it's
+        // annotating — it reuses the exact same x/anchor as the real label,
+        // so if two debug markers overlap, the real labels do too.
+        const debugY = placedAbove ? labelY - 9 : labelY + 9;
+        return (
+          <Fragment key={index}>
+            <Circle cx={x} cy={y} r={3} fill={colors.ink} />
+            <SvgText x={x} y={labelY} fontSize={KEY_POINT_FONT_SIZE} fontWeight="700" fill={colors.textMuted} textAnchor={anchor}>
+              {resolveLabel(data[index])}
+            </SvgText>
+            {__DEV__ ? (
+              <SvgText x={x} y={debugY} fontSize={DEBUG_FONT_SIZE} fill={DEBUG_COLOR} textAnchor={anchor}>
+                {`x:${Math.round(x)}`}
+              </SvgText>
+            ) : null}
+          </Fragment>
+        );
+      })}
+      <SvgText x={startX} y={height - 2} fontSize={AXIS_FONT_SIZE} fontWeight="600" fill={colors.textMuted} textAnchor="start">
+        0km
+      </SvgText>
+      <SvgText x={endX} y={height - 2} fontSize={AXIS_FONT_SIZE} fontWeight="600" fill={colors.textMuted} textAnchor="end">
+        {distanceKm}km
+      </SvgText>
+      {__DEV__ ? (
+        <Fragment>
+          <SvgText x={startX} y={height - 12} fontSize={DEBUG_FONT_SIZE} fill={DEBUG_COLOR} textAnchor="start">
+            {`x:${Math.round(startX)}`}
+          </SvgText>
+          <SvgText x={endX} y={height - 12} fontSize={DEBUG_FONT_SIZE} fill={DEBUG_COLOR} textAnchor="end">
+            {`x:${Math.round(endX)}`}
+          </SvgText>
+        </Fragment>
+      ) : null}
+    </Svg>
+  );
 
   return (
     <View style={styles.container}>
@@ -209,43 +206,15 @@ export function LineChart({ label, unit, data, distanceKm, height = 120, formatV
         {label}
         {unit ? <Text style={styles.unit}> ({unit})</Text> : null}
       </Text>
-      <View style={styles.measureLayer} pointerEvents="none">
-        {candidateKms.map((km) => (
-          <Text key={km} style={styles.measureText} onLayout={(event) => handleLabelMeasured(km, event.nativeEvent.layout.width)}>
-            {km}km
-          </Text>
-        ))}
+      <View onLayout={handleContainerLayout}>
+        {scrollable ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {svg}
+          </ScrollView>
+        ) : (
+          svg
+        )}
       </View>
-      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} onLayout={handleChartLayout}>
-        {Array.from({ length: GRID_LINES }, (_, i) => {
-          const y = paddingY + (i / (GRID_LINES - 1)) * (chartHeight - paddingY * 2);
-          return <Line key={i} x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke={colors.border} strokeWidth={1} />;
-        })}
-        <Polyline points={points} fill="none" stroke={colors.ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        {keyPointIndices.map((index) => {
-          const x = xAt(index);
-          const y = yAt(data[index]);
-          const anchor = xAnchor(x);
-          const labelBelow = y < chartHeight * 0.35;
-          const labelY = labelBelow ? y + 14 : y - 8;
-          return (
-            <Fragment key={index}>
-              <Circle cx={x} cy={y} r={3} fill={colors.ink} />
-              <SvgText x={x} y={labelY} fontSize={11} fontWeight="700" fill={colors.text} textAnchor={anchor}>
-                {resolveLabel(data[index])}
-              </SvgText>
-            </Fragment>
-          );
-        })}
-        {kmTicks.map((km) => {
-          const x = xOfKm(km);
-          return (
-            <SvgText key={km} x={x} y={height - 2} fontSize={AXIS_FONT_SIZE} fontWeight="600" fill={colors.textMuted} textAnchor={xAnchor(x)}>
-              {km}km
-            </SvgText>
-          );
-        })}
-      </Svg>
     </View>
   );
 }
@@ -263,13 +232,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     color: colors.textMuted,
-  },
-  measureLayer: {
-    position: 'absolute',
-    opacity: 0,
-  },
-  measureText: {
-    fontSize: AXIS_FONT_SIZE,
-    fontWeight: '600',
   },
 });
