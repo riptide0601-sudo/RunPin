@@ -13,7 +13,7 @@ import type { RankingEntry } from '@/types';
 export default function RankingScreen() {
   const insets = useSafeAreaInsets();
   const { courses } = useAppData();
-  const [period, setPeriod] = useState<RankingPeriod>('monthly');
+  const [period, setPeriod] = useState<RankingPeriod>('latest');
   const [selectedEntry, setSelectedEntry] = useState<RankingEntry | null>(null);
 
   const rankings = useMemo<RankingEntry[]>(() => {
