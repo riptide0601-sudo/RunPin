@@ -66,6 +66,7 @@ export function RecommendedCourseList({
                   onSelectCourse?.(course.id);
                 }}
               />
+              {hasGroup && isExpanded ? <Text style={styles.relatedLabel}>관련코스</Text> : null}
               {hasGroup ? (
                 <CourseGroupCarousel
                   expanded={isExpanded}
@@ -105,5 +106,13 @@ const styles = StyleSheet.create({
   },
   item: {
     marginBottom: 12,
+  },
+  relatedLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textMuted,
+    marginTop: 6,
+    marginBottom: 4,
+    marginLeft: 4,
   },
 });

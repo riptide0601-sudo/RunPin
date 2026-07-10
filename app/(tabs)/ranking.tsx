@@ -21,6 +21,7 @@ export default function RankingScreen() {
       return [...courses]
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, 20)
+        .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
         .map((course, index) => ({
           id: `latest-${course.id}`,
           rank: index + 1,
