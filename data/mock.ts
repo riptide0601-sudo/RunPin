@@ -110,7 +110,7 @@ export const mockCourses: Course[] = [
     difficulty: 4,
     distanceKm: 4.9,
     uploaderName: '러너콘',
-    likeCount: 1024,
+    likeCount: 11,
   },
   {
     id: 'course-2',
@@ -155,7 +155,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 3.1,
     uploaderName: '한강러너',
-    likeCount: 512,
+    likeCount: 11,
   },
   {
     id: 'course-3',
@@ -166,7 +166,7 @@ export const mockCourses: Course[] = [
     difficulty: 3,
     distanceKm: 5.6,
     uploaderName: '지현',
-    likeCount: 890,
+    likeCount: 26,
   },
   {
     id: 'course-4',
@@ -213,7 +213,7 @@ export const mockCourses: Course[] = [
     difficulty: 3,
     distanceKm: 5.6,
     uploaderName: '지수',
-    likeCount: 305,
+    likeCount: 16,
   },
   {
     id: 'course-5',
@@ -255,7 +255,7 @@ export const mockCourses: Course[] = [
     difficulty: 2,
     distanceKm: 6.8,
     uploaderName: '민수',
-    likeCount: 640,
+    likeCount: 30,
   },
   {
     id: 'course-6',
@@ -307,7 +307,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 2.4,
     uploaderName: '하늘',
-    likeCount: 130,
+    likeCount: 24,
   },
   {
     id: 'course-7',
@@ -352,7 +352,7 @@ export const mockCourses: Course[] = [
     difficulty: 3,
     distanceKm: 4.8,
     uploaderName: '서연',
-    likeCount: 270,
+    likeCount: 47,
   },
   {
     id: 'course-8',
@@ -395,7 +395,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 1.6,
     uploaderName: '유진',
-    likeCount: 110,
+    likeCount: 13,
   },
   {
     id: 'course-9',
@@ -440,7 +440,7 @@ export const mockCourses: Course[] = [
     difficulty: 3,
     distanceKm: 6.1,
     uploaderName: '태호',
-    likeCount: 580,
+    likeCount: 47,
   },
   {
     id: 'course-10',
@@ -485,7 +485,7 @@ export const mockCourses: Course[] = [
     difficulty: 2,
     distanceKm: 3.8,
     uploaderName: '미래',
-    likeCount: 190,
+    likeCount: 32,
   },
   {
     id: 'course-11',
@@ -534,7 +534,7 @@ export const mockCourses: Course[] = [
     difficulty: 5,
     distanceKm: 5.0,
     uploaderName: '준영',
-    likeCount: 240,
+    likeCount: 46,
   },
   {
     id: 'course-12',
@@ -578,7 +578,7 @@ export const mockCourses: Course[] = [
     difficulty: 3,
     distanceKm: 4.4,
     uploaderName: '소민',
-    likeCount: 95,
+    likeCount: 62,
   },
   {
     id: 'course-13',
@@ -629,7 +629,7 @@ export const mockCourses: Course[] = [
     difficulty: 4,
     distanceKm: 6.8,
     uploaderName: '수아',
-    likeCount: 150,
+    likeCount: 79,
   },
   {
     id: 'course-14',
@@ -677,7 +677,7 @@ export const mockCourses: Course[] = [
     difficulty: 2,
     distanceKm: 2.0,
     uploaderName: '서준',
-    likeCount: 80,
+    likeCount: 21,
   },
   {
     id: 'course-15',
@@ -720,7 +720,7 @@ export const mockCourses: Course[] = [
     difficulty: 2,
     distanceKm: 1.7,
     uploaderName: '다은',
-    likeCount: 70,
+    likeCount: 22,
   },
   {
     id: 'course-16',
@@ -758,7 +758,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 1.0,
     uploaderName: '지훈',
-    likeCount: 60,
+    likeCount: 23,
   },
   {
     id: 'course-17',
@@ -790,7 +790,7 @@ export const mockCourses: Course[] = [
     difficulty: 2,
     distanceKm: 5,
     uploaderName: '현우',
-    likeCount: 55,
+    likeCount: 49,
   },
   {
     id: 'course-18',
@@ -843,7 +843,7 @@ export const mockCourses: Course[] = [
     difficulty: 3,
     distanceKm: 1.9,
     uploaderName: '예린',
-    likeCount: 45,
+    likeCount: 60,
   },
   {
     id: 'course-19',
@@ -887,7 +887,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 0.9,
     uploaderName: '나연',
-    likeCount: 35,
+    likeCount: 27,
   },
   {
     id: 'course-20',
@@ -931,7 +931,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 1.3,
     uploaderName: '도윤',
-    likeCount: 25,
+    likeCount: 24,
   },
 ];
 
@@ -962,7 +962,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 2.4,
     uploaderName: '성민',
-    likeCount: 410,
+    likeCount: 85,
   },
   {
     id: 'course-25',
@@ -989,7 +989,7 @@ mockCourses.push(
     difficulty: 5,
     distanceKm: 2.9,
     uploaderName: '유나',
-    likeCount: 180,
+    likeCount: 88,
   },
   {
     id: 'course-47',
@@ -1020,7 +1020,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 3.9,
     uploaderName: '재현',
-    likeCount: 260,
+    likeCount: 76,
   },
   {
     id: 'course-48',
@@ -1055,7 +1055,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 5.4,
     uploaderName: '소율',
-    likeCount: 95,
+    likeCount: 79,
   },
   {
     id: 'course-26',
@@ -1082,7 +1082,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 1.8,
     uploaderName: '민준',
-    likeCount: 260,
+    likeCount: 68,
   },
   {
     id: 'course-49',
@@ -1110,7 +1110,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 1.7,
     uploaderName: '하람',
-    likeCount: 150,
+    likeCount: 59,
   },
   {
     id: 'course-21',
@@ -1149,7 +1149,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 5.5,
     uploaderName: '지우',
-    likeCount: 430,
+    likeCount: 117,
   },
   {
     id: 'course-22',
@@ -1184,7 +1184,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 4.8,
     uploaderName: '연우',
-    likeCount: 210,
+    likeCount: 122,
   },
   {
     id: 'course-23',
@@ -1217,7 +1217,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 3.3,
     uploaderName: '다현',
-    likeCount: 75,
+    likeCount: 126,
   },
   {
     id: 'course-31',
@@ -1246,7 +1246,7 @@ mockCourses.push(
     difficulty: 5,
     distanceKm: 1.9,
     uploaderName: '시우',
-    likeCount: 320,
+    likeCount: 114,
   },
   {
     id: 'course-50',
@@ -1273,7 +1273,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 1.9,
     uploaderName: '채원',
-    likeCount: 200,
+    likeCount: 142,
   },
   {
     id: 'course-51',
@@ -1298,7 +1298,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 1.3,
     uploaderName: '러너콘',
-    likeCount: 130,
+    likeCount: 146,
   },
   {
     id: 'course-32',
@@ -1339,7 +1339,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 4,
     uploaderName: '한강러너',
-    likeCount: 180,
+    likeCount: 62,
   },
   {
     id: 'course-33',
@@ -1376,7 +1376,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 3.8,
     uploaderName: '지현',
-    likeCount: 95,
+    likeCount: 63,
   },
   {
     id: 'course-52',
@@ -1407,7 +1407,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 3.4,
     uploaderName: '민수',
-    likeCount: 140,
+    likeCount: 79,
   },
   {
     id: 'course-53',
@@ -1434,7 +1434,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 1.7,
     uploaderName: '하늘',
-    likeCount: 60,
+    likeCount: 81,
   },
   {
     id: 'course-34',
@@ -1469,7 +1469,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 6.7,
     uploaderName: '서연',
-    likeCount: 410,
+    likeCount: 113,
   },
   {
     id: 'course-35',
@@ -1500,7 +1500,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 5.7,
     uploaderName: '유진',
-    likeCount: 260,
+    likeCount: 117,
   },
   {
     id: 'course-54',
@@ -1527,7 +1527,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 3,
     uploaderName: '태호',
-    likeCount: 180,
+    likeCount: 144,
   },
   {
     id: 'course-55',
@@ -1550,7 +1550,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 2.4,
     uploaderName: '미래',
-    likeCount: 95,
+    likeCount: 147,
   },
   {
     id: 'course-36',
@@ -1583,7 +1583,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 1.5,
     uploaderName: '준영',
-    likeCount: 70,
+    likeCount: 87,
   },
   {
     id: 'course-56',
@@ -1618,7 +1618,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 1.5,
     uploaderName: '소민',
-    likeCount: 45,
+    likeCount: 108,
   },
   {
     id: 'course-30',
@@ -1653,7 +1653,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 2.9,
     uploaderName: '서준',
-    likeCount: 150,
+    likeCount: 145,
   },
   {
     id: 'course-57',
@@ -1682,7 +1682,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 2,
     uploaderName: '다은',
-    likeCount: 90,
+    likeCount: 192,
   },
   {
     id: 'course-37',
@@ -1717,7 +1717,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 1.5,
     uploaderName: '현우',
-    likeCount: 60,
+    likeCount: 40,
   },
   {
     id: 'course-58',
@@ -1746,7 +1746,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 0.9,
     uploaderName: '예린',
-    likeCount: 35,
+    likeCount: 50,
   },
   {
     id: 'course-27',
@@ -1785,7 +1785,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 4.8,
     uploaderName: '도윤',
-    likeCount: 320,
+    likeCount: 152,
   },
   {
     id: 'course-28',
@@ -1820,7 +1820,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 3.1,
     uploaderName: '수아',
-    likeCount: 205,
+    likeCount: 156,
   },
   {
     id: 'course-29',
@@ -1851,7 +1851,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 3,
     uploaderName: '지훈',
-    likeCount: 140,
+    likeCount: 160,
   },
   {
     id: 'course-59',
@@ -1878,7 +1878,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 2.7,
     uploaderName: '나연',
-    likeCount: 230,
+    likeCount: 118,
   },
   {
     id: 'course-60',
@@ -1901,7 +1901,7 @@ mockCourses.push(
     difficulty: 5,
     distanceKm: 1.5,
     uploaderName: '성민',
-    likeCount: 160,
+    likeCount: 152,
   },
   {
     id: 'course-61',
@@ -1922,7 +1922,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 1.2,
     uploaderName: '유나',
-    likeCount: 100,
+    likeCount: 156,
   },
   {
     id: 'course-38',
@@ -1963,7 +1963,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 3.9,
     uploaderName: '재현',
-    likeCount: 120,
+    likeCount: 91,
   },
   {
     id: 'course-39',
@@ -1998,7 +1998,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 2.8,
     uploaderName: '소율',
-    likeCount: 85,
+    likeCount: 93,
   },
   {
     id: 'course-62',
@@ -2029,7 +2029,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 2.3,
     uploaderName: '민준',
-    likeCount: 150,
+    likeCount: 98,
   },
   {
     id: 'course-63',
@@ -2054,7 +2054,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 1.2,
     uploaderName: '하람',
-    likeCount: 60,
+    likeCount: 100,
   },
   {
     id: 'course-40',
@@ -2095,7 +2095,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 4.4,
     uploaderName: '지우',
-    likeCount: 150,
+    likeCount: 105,
   },
   {
     id: 'course-64',
@@ -2128,7 +2128,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 3.1,
     uploaderName: '연우',
-    likeCount: 90,
+    likeCount: 138,
   },
   {
     id: 'course-41',
@@ -2163,7 +2163,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 2.5,
     uploaderName: '다현',
-    likeCount: 55,
+    likeCount: 136,
   },
   {
     id: 'course-65',
@@ -2192,7 +2192,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 1.8,
     uploaderName: '시우',
-    likeCount: 35,
+    likeCount: 179,
   },
   {
     id: 'course-42',
@@ -2233,7 +2233,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 1.7,
     uploaderName: '채원',
-    likeCount: 45,
+    likeCount: 42,
   },
   {
     id: 'course-66',
@@ -2268,7 +2268,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 1.3,
     uploaderName: '러너콘',
-    likeCount: 60,
+    likeCount: 55,
   },
   {
     id: 'course-67',
@@ -2299,7 +2299,7 @@ mockCourses.push(
     difficulty: 5,
     distanceKm: 1.2,
     uploaderName: '한강러너',
-    likeCount: 35,
+    likeCount: 57,
   },
   {
     id: 'course-68',
@@ -2324,7 +2324,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 0.7,
     uploaderName: '지현',
-    likeCount: 20,
+    likeCount: 58,
   },
   {
     id: 'course-43',
@@ -2359,7 +2359,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 1.4,
     uploaderName: '지수',
-    likeCount: 40,
+    likeCount: 45,
   },
   {
     id: 'course-69',
@@ -2388,7 +2388,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 1.2,
     uploaderName: '민수',
-    likeCount: 25,
+    likeCount: 60,
   },
   {
     id: 'course-44',
@@ -2415,7 +2415,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 3.7,
     uploaderName: '하늘',
-    likeCount: 30,
+    likeCount: 92,
   },
   {
     id: 'course-70',
@@ -2438,7 +2438,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 3.1,
     uploaderName: '서연',
-    likeCount: 18,
+    likeCount: 101,
   },
   {
     id: 'course-45',
@@ -2481,7 +2481,7 @@ mockCourses.push(
     difficulty: 2,
     distanceKm: 1,
     uploaderName: '유진',
-    likeCount: 25,
+    likeCount: 111,
   },
   {
     id: 'course-71',
@@ -2516,7 +2516,7 @@ mockCourses.push(
     difficulty: 4,
     distanceKm: 0.6,
     uploaderName: '태호',
-    likeCount: 15,
+    likeCount: 121,
   },
   {
     id: 'course-46',
@@ -2551,7 +2551,7 @@ mockCourses.push(
     difficulty: 1,
     distanceKm: 0.8,
     uploaderName: '미래',
-    likeCount: 15,
+    likeCount: 49,
   },
   {
     id: 'course-72',
@@ -2580,7 +2580,7 @@ mockCourses.push(
     difficulty: 3,
     distanceKm: 0.4,
     uploaderName: '준영',
-    likeCount: 9,
+    likeCount: 54,
   },
 );
 

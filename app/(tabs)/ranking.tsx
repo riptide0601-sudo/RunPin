@@ -20,6 +20,7 @@ export default function RankingScreen() {
     if (period === 'latest') {
       return [...courses]
         .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 20)
         .map((course, index) => ({
           id: `latest-${course.id}`,
           rank: index + 1,
