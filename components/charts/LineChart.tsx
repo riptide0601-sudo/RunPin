@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg';
 
 import { colors } from '@/constants/colors';
 
@@ -31,6 +31,31 @@ function findExtremeIndices(data: number[]): number[] {
     if (value < data[minIndex]) minIndex = index;
   });
   return Array.from(new Set([minIndex, maxIndex])).sort((a, b) => a - b);
+}
+
+// Builds a smooth SVG path through every point using a Catmull-Rom spline
+// converted to cubic bezier segments. The curve passes exactly through each
+// input point (only the control points between them are interpolated), so
+// data values and their positions are unchanged — just the connecting line
+// stops being made of hard angles.
+function buildSmoothPath(points: { x: number; y: number }[]): string {
+  if (points.length === 0) return '';
+  if (points.length < 3) {
+    return points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  }
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] ?? points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
+  }
+  return d;
 }
 
 const GRID_LINES = 3;
@@ -127,7 +152,8 @@ export function LineChart({ label, unit, data, distanceKm, height = 140, formatV
     return 'middle';
   };
 
-  const points = data.map((value, index) => `${xAt(index)},${yAt(value)}`).join(' ');
+  const linePoints = data.map((value, index) => ({ x: xAt(index), y: yAt(value) }));
+  const pathD = buildSmoothPath(linePoints);
 
   const keyPointIndices = findExtremeIndices(data);
   const plotTop = paddingY + KEY_POINT_LABEL_BAND;
@@ -143,7 +169,7 @@ export function LineChart({ label, unit, data, distanceKm, height = 140, formatV
         const y = plotTop + (i / (GRID_LINES - 1)) * plotAreaHeight;
         return <Line key={i} x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke={colors.border} strokeWidth={1} />;
       })}
-      <Polyline points={points} fill="none" stroke={colors.ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      <Path d={pathD} fill="none" stroke={colors.ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       {keyPointIndices.map((index) => {
         const x = xAt(index);
         const y = yAt(data[index]);

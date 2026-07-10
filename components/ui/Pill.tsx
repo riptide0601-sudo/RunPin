@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type GestureResponderEvent, type TextStyle, type ViewStyle } from 'react-native';
 
 import { colors } from '@/constants/colors';
 
@@ -11,9 +11,10 @@ interface PillProps {
   onPress?: (event: GestureResponderEvent) => void;
   disabled?: boolean;
   style?: ViewStyle;
+  labelStyle?: TextStyle;
 }
 
-export function Pill({ label, variant = 'subtle', size = 'md', icon, onPress, disabled, style }: PillProps) {
+export function Pill({ label, variant = 'subtle', size = 'md', icon, onPress, disabled, style, labelStyle }: PillProps) {
   if (!onPress) {
     return (
       <View
@@ -36,6 +37,7 @@ export function Pill({ label, variant = 'subtle', size = 'md', icon, onPress, di
             size === 'lg' && styles.labelLg,
             size === 'sm' && styles.labelSm,
             (variant === 'filled' || variant === 'graySolid') && styles.labelInverse,
+            labelStyle,
           ]}
         >
           {label}
@@ -69,6 +71,7 @@ export function Pill({ label, variant = 'subtle', size = 'md', icon, onPress, di
           size === 'lg' && styles.labelLg,
           size === 'sm' && styles.labelSm,
           (variant === 'filled' || variant === 'graySolid') && styles.labelInverse,
+          labelStyle,
         ]}
       >
         {label}

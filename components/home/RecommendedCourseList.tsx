@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: colors.textMuted,
-    marginTop: 6,
-    marginBottom: 4,
+    marginTop: 10,
+    marginBottom: 8,
     marginLeft: 4,
   },
 });

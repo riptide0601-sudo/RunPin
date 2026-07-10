@@ -54,10 +54,18 @@ export default function RunLogListScreen() {
                       variant="subtle"
                       label="업로드 완료"
                       size="sm"
-                      icon={<Ionicons name="checkmark-circle" size={12} color={colors.textMuted} />}
+                      icon={<Ionicons name="checkmark-circle" size={13} color={colors.textMuted} />}
+                      style={styles.uploadPill}
+                      labelStyle={styles.uploadPillLabel}
                     />
                   ) : (
-                    <Pill variant="outline" label="업로드" size="sm" />
+                    <Pill
+                      variant="outline"
+                      label="업로드"
+                      size="sm"
+                      style={styles.uploadPill}
+                      labelStyle={styles.uploadPillLabel}
+                    />
                   )}
                 </Pressable>
               </View>
@@ -134,5 +142,14 @@ const styles = StyleSheet.create({
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+  },
+  uploadPill: {
+    minHeight: 28,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  uploadPillLabel: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

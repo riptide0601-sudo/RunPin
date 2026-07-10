@@ -44,10 +44,19 @@ export default function RunLogDetailScreen() {
                 variant="subtle"
                 label="업로드 완료"
                 size="sm"
-                icon={<Ionicons name="checkmark-circle" size={12} color={colors.textMuted} />}
+                icon={<Ionicons name="checkmark-circle" size={16} color={colors.textMuted} />}
+                style={styles.uploadPill}
+                labelStyle={styles.uploadPillLabel}
               />
             ) : (
-              <Pill variant="outline" label="업로드" size="sm" onPress={() => setShowUpload(true)} />
+              <Pill
+                variant="outline"
+                label="업로드"
+                size="sm"
+                style={styles.uploadPill}
+                labelStyle={styles.uploadPillLabel}
+                onPress={() => setShowUpload(true)}
+              />
             )}
           </View>
 
@@ -180,5 +189,14 @@ const styles = StyleSheet.create({
   },
   chartCard: {
     gap: 8,
+  },
+  uploadPill: {
+    minHeight: 34,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  uploadPillLabel: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

@@ -300,7 +300,7 @@ export function buildLeafletHtml(center: LatLng, zoom: number, dragging = true):
         var latlngs = data.route.map(function (p) { return [p.latitude, p.longitude]; });
         routeLayer = L.polyline(latlngs, {
           color: data.routeColor || '#1A1A1A',
-          weight: 4,
+          weight: 3,
           opacity: 0.9,
           lineCap: 'round',
           lineJoin: 'round',
