@@ -20,6 +20,7 @@ export interface Course {
   category: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
   distanceKm: number;
+  uploaderName: string;
   isPopular?: boolean;
   likeCount?: number;
 }

@@ -1,5 +1,18 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  Animated,
+  Easing,
+  Keyboard,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type KeyboardEvent,
+  type KeyboardEventEasing,
+} from 'react-native';
 
 import { Card } from '@/components/ui/Card';
 import { DifficultySlider } from '@/components/ui/DifficultySlider';
@@ -9,11 +22,26 @@ import { generateCourseName } from '@/lib/courseName';
 import { routeDistanceKm } from '@/lib/geo';
 import { findNearestCourse } from '@/lib/matching';
 import { RUN_SUMMARY, RUN_SUMMARY_TIME_LABEL } from '@/lib/runSummary';
+import { mockProfile } from '@/data/mock';
 import type { Course, LatLng } from '@/types';
 
 type OptionId = 'matched' | 'auto' | 'custom';
 
 const DEFAULT_DIFFICULTY: 1 | 2 | 3 | 4 | 5 = 3;
+
+// Android keyboard events never carry a real duration/easing (Keyboard.d.ts:
+// "Always set to 0 on Android" / "Always set to 'keyboard' on Android"), which is
+// why KeyboardAvoidingView's internal `if (duration && easing)` check silently
+// skips its LayoutAnimation there — the sheet snaps instead of sliding. We drive
+// the offset ourselves so both platforms animate symmetrically on show and hide.
+const FALLBACK_KEYBOARD_ANIMATION_MS = 250;
+const KEYBOARD_EASING: Record<KeyboardEventEasing, (value: number) => number> = {
+  easeIn: Easing.in(Easing.ease),
+  easeOut: Easing.out(Easing.ease),
+  easeInEaseOut: Easing.inOut(Easing.ease),
+  linear: Easing.linear,
+  keyboard: Easing.out(Easing.ease),
+};
 
 // TEMP DEBUG: remove once the double-tap-to-dismiss-keyboard cause is confirmed.
 let tapSeq = 0;
@@ -42,21 +70,40 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
   const [customName, setCustomName] = useState('');
   const [difficulty, setDifficulty] = useState<1 | 2 | 3 | 4 | 5>(DEFAULT_DIFFICULTY);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const keyboardOffset = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () => {
-      debugLog('keyboardDidShow', Date.now());
+    // iOS reports real duration/easing on the "will" events, which is what lets
+    // KeyboardAvoidingView's LayoutAnimation track the system curve. Android never
+    // fires "will" events and always reports duration: 0 there, so we fall back to
+    // "did" events plus our own fixed duration/easing to get a comparable slide.
+    const showEventName = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEventName = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const animateTo = (toValue: number, event: KeyboardEvent) => {
+      Animated.timing(keyboardOffset, {
+        toValue,
+        duration: event.duration > 0 ? event.duration : FALLBACK_KEYBOARD_ANIMATION_MS,
+        easing: KEYBOARD_EASING[event.easing] ?? KEYBOARD_EASING.keyboard,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showSub = Keyboard.addListener(showEventName, (event) => {
+      debugLog('keyboardShow', Date.now());
       setIsKeyboardVisible(true);
+      animateTo(event.endCoordinates.height, event);
     });
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      debugLog('keyboardDidHide', Date.now());
+    const hideSub = Keyboard.addListener(hideEventName, (event) => {
+      debugLog('keyboardHide', Date.now());
       setIsKeyboardVisible(false);
+      animateTo(0, event);
     });
     return () => {
       showSub.remove();
       hideSub.remove();
     };
-  }, []);
+  }, [keyboardOffset]);
 
   useEffect(() => {
     if (visible) {
@@ -104,6 +151,7 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
       category: optionId === 'auto' ? autoSuggestion.category : '골목길',
       difficulty,
       distanceKm: routeDistanceKm(myRoute),
+      uploaderName: mockProfile.name,
     };
     onSave({ courseName: newCourse.name, newCourse, difficulty });
   };
@@ -120,7 +168,7 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
     <Modal visible={visible} animationType="slide" transparent onRequestClose={() => onSkip(difficulty)}>
       <View style={styles.backdrop}>
         <Pressable style={styles.backdropSpacer} onPress={handleBackdropPress} />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
+        <Animated.View style={{ paddingBottom: keyboardOffset }}>
           <View
             style={styles.sheet}
             // Capture fires at touch-start, before any descendant (the text
@@ -199,7 +247,7 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
               <Pill label="업로드" variant="filled" onPress={handleSave} disabled={!canSave} style={styles.saveButton} />
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </Animated.View>
       </View>
     </Modal>
   );

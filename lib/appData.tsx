@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
-import { mockCourses, mockRunLogs } from '@/data/mock';
+import { mockCourses, mockProfile, mockRunLogs } from '@/data/mock';
 import { findMatchingCourse } from '@/lib/matching';
 import type { Course, RunLog } from '@/types';
 
@@ -36,6 +36,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             category: '골목길',
             difficulty: log.difficulty,
             distanceKm: log.distanceKm,
+            uploaderName: mockProfile.name,
           };
           setCourses((prev) => [newCourse, ...prev]);
         }

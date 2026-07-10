@@ -9,6 +9,7 @@ import { LeafletMap } from '@/components/map/LeafletMap';
 import { colors } from '@/constants/colors';
 import { mockMeLocation } from '@/data/mock';
 import { useAppData } from '@/lib/appData';
+import { groupCoursesByName } from '@/lib/courseGroups';
 import { haversineDistanceMeters } from '@/lib/geo';
 import { matchesChosung } from '@/lib/hangul';
 
@@ -21,30 +22,40 @@ const POPULAR_COURSE_COUNT = 3;
 export default function HomeScreen() {
   const { courses } = useAppData();
 
-  // Popular courses (top-3 by like count among only the courses within
-  // POPULAR_CANDIDATE_RADIUS_METERS of me) are pinned to the top, sorted by
-  // distance among themselves. Everything else — including nearby courses
+  // 같은 이름을 가진 코스들을 하나의 그룹으로 묶고, 그룹당 likeCount가 가장 높은
+  // 코스(대표 코스)만 추천 리스트/인기 판정/지도 기본 노출 대상으로 삼는다. 나머지
+  // 그룹 멤버는 대표 코스를 탭했을 때 펼쳐지는 캐러셀에서만 노출된다.
+  const groups = useMemo(() => groupCoursesByName(courses), [courses]);
+  const representativeCourses = useMemo(() => groups.map((group) => group.representative), [groups]);
+  const groupMembersByRepId = useMemo(
+    () => new Map(groups.map((group) => [group.representative.id, group.members])),
+    [groups],
+  );
+
+  // Popular courses (top-3 by like count among only the representative courses
+  // within POPULAR_CANDIDATE_RADIUS_METERS of me) are pinned to the top, sorted
+  // by distance among themselves. Everything else — including nearby courses
   // that didn't make the top 3, and anything beyond the radius — follows in
   // plain distance order.
   const sortedCourses = useMemo(() => {
-    const distanceOf = (course: (typeof courses)[number]) =>
+    const distanceOf = (course: (typeof representativeCourses)[number]) =>
       haversineDistanceMeters(mockMeLocation, getRouteCenter(course.coordinates));
 
     const popularIds = new Set(
-      courses
+      representativeCourses
         .filter((course) => distanceOf(course) <= POPULAR_CANDIDATE_RADIUS_METERS)
         .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
         .slice(0, POPULAR_COURSE_COUNT)
         .map((course) => course.id),
     );
 
-    return courses
+    return representativeCourses
       .map((course) => ({ ...course, isPopular: popularIds.has(course.id) }))
       .sort((a, b) => {
         if (a.isPopular !== b.isPopular) return a.isPopular ? -1 : 1;
         return distanceOf(a) - distanceOf(b);
       });
-  }, [courses]);
+  }, [representativeCourses]);
 
   const [selectedCourseId, setSelectedCourseId] = useState(sortedCourses[0]?.id);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,6 +93,7 @@ export default function HomeScreen() {
         courses={displayedCourses}
         selectedCourseId={selectedCourseId}
         onSelectCourse={setSelectedCourseId}
+        groupMembersByRepId={groupMembersByRepId}
       />
     </View>
   );
