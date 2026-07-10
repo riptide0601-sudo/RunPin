@@ -152,6 +152,7 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
       difficulty,
       distanceKm: routeDistanceKm(myRoute),
       uploaderName: mockProfile.name,
+      createdAt: Date.now(),
     };
     onSave({ courseName: newCourse.name, newCourse, difficulty });
   };

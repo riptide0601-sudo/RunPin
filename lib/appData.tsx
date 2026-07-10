@@ -37,6 +37,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             difficulty: log.difficulty,
             distanceKm: log.distanceKm,
             uploaderName: mockProfile.name,
+            createdAt: Date.now(),
           };
           setCourses((prev) => [newCourse, ...prev]);
         }

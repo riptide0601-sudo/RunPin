@@ -16,7 +16,21 @@ export default function RankingScreen() {
   const [period, setPeriod] = useState<RankingPeriod>('monthly');
   const [selectedEntry, setSelectedEntry] = useState<RankingEntry | null>(null);
 
-  const rankings = mockRankingsByPeriod[period];
+  const rankings = useMemo<RankingEntry[]>(() => {
+    if (period === 'latest') {
+      return [...courses]
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map((course, index) => ({
+          id: `latest-${course.id}`,
+          rank: index + 1,
+          courseId: course.id,
+          courseName: course.name,
+          uploaderName: course.uploaderName,
+          likeCount: course.likeCount ?? 0,
+        }));
+    }
+    return mockRankingsByPeriod[period];
+  }, [courses, period]);
 
   const selectedCourse = useMemo(
     () => (selectedEntry ? courses.find((course) => course.id === selectedEntry.courseId) ?? null : null),

@@ -23,6 +23,7 @@ export interface Course {
   uploaderName: string;
   isPopular?: boolean;
   likeCount?: number;
+  createdAt: number;
 }
 
 export interface RunLog {
@@ -50,7 +51,7 @@ export interface Match {
   radiusMeters: number;
 }
 
-export type RankingPeriod = 'monthly' | 'yearly' | 'all';
+export type RankingPeriod = 'latest' | 'monthly' | 'yearly' | 'all';
 
 export interface RankingEntry {
   id: string;

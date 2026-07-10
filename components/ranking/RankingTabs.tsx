@@ -11,6 +11,7 @@ interface RankingTabsProps {
 }
 
 const OPTIONS: { value: RankingPeriod; label: string }[] = [
+  { value: 'latest', label: '최신' },
   { value: 'monthly', label: '월간' },
   { value: 'yearly', label: '연간' },
   { value: 'all', label: '전체' },

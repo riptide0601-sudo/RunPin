@@ -72,6 +72,7 @@ const BANPO_COORDINATES: LatLng[] = [
 export const mockCourses: Course[] = [
   {
     id: 'course-1',
+    createdAt: 1783492513155,
     name: '몽마르뜨공원',
     coordinates: [
       { latitude: 37.5495, longitude: 126.916515 },
@@ -113,6 +114,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-2',
+    createdAt: 1783276513155,
     name: '경의선숲길',
     coordinates: [
       { latitude: 37.566843, longitude: 126.918043 },
@@ -157,6 +159,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-3',
+    createdAt: 1783060513155,
     name: '한강 반포지구',
     coordinates: BANPO_COORDINATES,
     category: '강변',
@@ -167,6 +170,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-4',
+    createdAt: 1782844513155,
     name: '안양천 러닝코스',
     coordinates: [
       { latitude: 37.518014, longitude: 126.893398 },
@@ -213,6 +217,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-5',
+    createdAt: 1782628513155,
     name: '보라매공원',
     coordinates: [
       { latitude: 37.49075, longitude: 126.917555 },
@@ -254,6 +259,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-6',
+    createdAt: 1782412513155,
     name: '연남동 경의선 확장코스',
     coordinates: [
       { latitude: 37.569895, longitude: 126.928676 },
@@ -305,6 +311,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-7',
+    createdAt: 1782196513156,
     name: '망원한강공원 러닝코스',
     coordinates: [
       { latitude: 37.55301, longitude: 126.936494 },
@@ -349,6 +356,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-8',
+    createdAt: 1781980513156,
     name: '성산동 골목길 코스',
     coordinates: [
       { latitude: 37.558594, longitude: 126.946149 },
@@ -391,6 +399,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-9',
+    createdAt: 1781764513156,
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -433,6 +442,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-10',
+    createdAt: 1781548513156,
     name: '홍제천 산책로',
     coordinates: [
       { latitude: 37.542208, longitude: 126.933032 },
@@ -477,6 +487,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-11',
+    createdAt: 1781332513156,
     name: '연희동 둘레길',
     coordinates: [
       { latitude: 37.54674, longitude: 126.919723 },
@@ -525,6 +536,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-12',
+    createdAt: 1781116513156,
     name: '가좌역 코스',
     coordinates: [
       { latitude: 37.556482, longitude: 126.90641 },
@@ -568,6 +580,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-13',
+    createdAt: 1780900513156,
     name: '서강대교 남단 코스',
     coordinates: [
       { latitude: 37.568199, longitude: 126.916203 },
@@ -618,6 +631,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-14',
+    createdAt: 1780684513156,
     name: '신수동 골목길 코스',
     coordinates: [
       { latitude: 37.554907, longitude: 126.934546 },
@@ -665,6 +679,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-15',
+    createdAt: 1780468513156,
     name: '서강대 캠퍼스길',
     coordinates: [
       { latitude: 37.549177, longitude: 126.939212 },
@@ -707,6 +722,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-16',
+    createdAt: 1780252513156,
     name: '대현동 골목길 코스',
     coordinates: [
       { latitude: 37.557345, longitude: 126.945881 },
@@ -744,6 +760,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-17',
+    createdAt: 1780036513156,
     name: '불광천 산책로',
     coordinates: [
       { latitude: 37.576522, longitude: 126.901967 },
@@ -775,6 +792,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-18',
+    createdAt: 1779820513156,
     name: '성미산 자락길',
     coordinates: [
       { latitude: 37.560517, longitude: 126.919529 },
@@ -827,6 +845,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-19',
+    createdAt: 1779604513156,
     name: '합정동 골목길 코스',
     coordinates: [
       { latitude: 37.551877, longitude: 126.912502 },
@@ -870,6 +889,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-20',
+    createdAt: 1779388513156,
     name: '창천동 명물길 코스',
     coordinates: [
       { latitude: 37.555922, longitude: 126.937588 },
@@ -921,6 +941,7 @@ export const mockCourses: Course[] = [
 mockCourses.push(
   {
     id: 'course-24',
+    createdAt: 1779172513156,
     name: '몽마르뜨공원',
     coordinates: [
       { latitude: 37.5495, longitude: 126.916515 },
@@ -943,6 +964,7 @@ mockCourses.push(
   },
   {
     id: 'course-25',
+    createdAt: 1778956513156,
     name: '몽마르뜨공원',
     coordinates: [
       { latitude: 37.5495, longitude: 126.916515 },
@@ -969,6 +991,7 @@ mockCourses.push(
   },
   {
     id: 'course-47',
+    createdAt: 1778740513156,
     name: '몽마르뜨공원',
     coordinates: [
       { latitude: 37.5495, longitude: 126.916515 },
@@ -999,6 +1022,7 @@ mockCourses.push(
   },
   {
     id: 'course-48',
+    createdAt: 1778524513156,
     name: '몽마르뜨공원',
     coordinates: [
       { latitude: 37.5495, longitude: 126.916515 },
@@ -1033,6 +1057,7 @@ mockCourses.push(
   },
   {
     id: 'course-26',
+    createdAt: 1778308513156,
     name: '경의선숲길',
     coordinates: [
       { latitude: 37.564961, longitude: 126.919746 },
@@ -1059,6 +1084,7 @@ mockCourses.push(
   },
   {
     id: 'course-49',
+    createdAt: 1778092513156,
     name: '경의선숲길',
     coordinates: [
       { latitude: 37.559459, longitude: 126.926614 },
@@ -1086,6 +1112,7 @@ mockCourses.push(
   },
   {
     id: 'course-21',
+    createdAt: 1777876513156,
     name: '한강 반포지구',
     coordinates: [
       { latitude: 37.50655, longitude: 126.989076 },
@@ -1124,6 +1151,7 @@ mockCourses.push(
   },
   {
     id: 'course-22',
+    createdAt: 1777660513156,
     name: '한강 반포지구',
     coordinates: [
       { latitude: 37.50655, longitude: 126.989076 },
@@ -1158,6 +1186,7 @@ mockCourses.push(
   },
   {
     id: 'course-23',
+    createdAt: 1777444513156,
     name: '한강 반포지구',
     coordinates: [
       { latitude: 37.50655, longitude: 126.989076 },
@@ -1190,6 +1219,7 @@ mockCourses.push(
   },
   {
     id: 'course-31',
+    createdAt: 1777228513156,
     name: '한강 반포지구',
     coordinates: [
       { latitude: 37.50655, longitude: 126.989076 },
@@ -1218,6 +1248,7 @@ mockCourses.push(
   },
   {
     id: 'course-50',
+    createdAt: 1777012513156,
     name: '한강 반포지구',
     coordinates: [
       { latitude: 37.50655, longitude: 126.989076 },
@@ -1244,6 +1275,7 @@ mockCourses.push(
   },
   {
     id: 'course-51',
+    createdAt: 1776796513156,
     name: '한강 반포지구',
     coordinates: [
       { latitude: 37.50655, longitude: 126.989076 },
@@ -1268,6 +1300,7 @@ mockCourses.push(
   },
   {
     id: 'course-32',
+    createdAt: 1776580513156,
     name: '안양천 러닝코스',
     coordinates: [
       { latitude: 37.518014, longitude: 126.893398 },
@@ -1308,6 +1341,7 @@ mockCourses.push(
   },
   {
     id: 'course-33',
+    createdAt: 1776364513156,
     name: '안양천 러닝코스',
     coordinates: [
       { latitude: 37.518014, longitude: 126.893398 },
@@ -1344,6 +1378,7 @@ mockCourses.push(
   },
   {
     id: 'course-52',
+    createdAt: 1776148513156,
     name: '안양천 러닝코스',
     coordinates: [
       { latitude: 37.518014, longitude: 126.893398 },
@@ -1374,6 +1409,7 @@ mockCourses.push(
   },
   {
     id: 'course-53',
+    createdAt: 1775932513156,
     name: '안양천 러닝코스',
     coordinates: [
       { latitude: 37.518014, longitude: 126.893398 },
@@ -1400,6 +1436,7 @@ mockCourses.push(
   },
   {
     id: 'course-34',
+    createdAt: 1775716513156,
     name: '보라매공원',
     coordinates: [
       { latitude: 37.49075, longitude: 126.917555 },
@@ -1434,6 +1471,7 @@ mockCourses.push(
   },
   {
     id: 'course-35',
+    createdAt: 1775500513156,
     name: '보라매공원',
     coordinates: [
       { latitude: 37.49075, longitude: 126.917555 },
@@ -1464,6 +1502,7 @@ mockCourses.push(
   },
   {
     id: 'course-54',
+    createdAt: 1775284513156,
     name: '보라매공원',
     coordinates: [
       { latitude: 37.49075, longitude: 126.917555 },
@@ -1490,6 +1529,7 @@ mockCourses.push(
   },
   {
     id: 'course-55',
+    createdAt: 1775068513156,
     name: '보라매공원',
     coordinates: [
       { latitude: 37.49075, longitude: 126.917555 },
@@ -1512,6 +1552,7 @@ mockCourses.push(
   },
   {
     id: 'course-36',
+    createdAt: 1774852513156,
     name: '연남동 경의선 확장코스',
     coordinates: [
       { latitude: 37.56688, longitude: 126.930867 },
@@ -1544,6 +1585,7 @@ mockCourses.push(
   },
   {
     id: 'course-56',
+    createdAt: 1774636513156,
     name: '연남동 경의선 확장코스',
     coordinates: [
       { latitude: 37.563545, longitude: 126.930231 },
@@ -1578,6 +1620,7 @@ mockCourses.push(
   },
   {
     id: 'course-30',
+    createdAt: 1774420513156,
     name: '망원한강공원 러닝코스',
     coordinates: [
       { latitude: 37.55301, longitude: 126.936494 },
@@ -1612,6 +1655,7 @@ mockCourses.push(
   },
   {
     id: 'course-57',
+    createdAt: 1774204513156,
     name: '망원한강공원 러닝코스',
     coordinates: [
       { latitude: 37.55301, longitude: 126.936494 },
@@ -1640,6 +1684,7 @@ mockCourses.push(
   },
   {
     id: 'course-37',
+    createdAt: 1773988513156,
     name: '성산동 골목길 코스',
     coordinates: [
       { latitude: 37.558594, longitude: 126.946149 },
@@ -1674,6 +1719,7 @@ mockCourses.push(
   },
   {
     id: 'course-58',
+    createdAt: 1773772513156,
     name: '성산동 골목길 코스',
     coordinates: [
       { latitude: 37.558594, longitude: 126.946149 },
@@ -1702,6 +1748,7 @@ mockCourses.push(
   },
   {
     id: 'course-27',
+    createdAt: 1773556513156,
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -1740,6 +1787,7 @@ mockCourses.push(
   },
   {
     id: 'course-28',
+    createdAt: 1773340513156,
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -1774,6 +1822,7 @@ mockCourses.push(
   },
   {
     id: 'course-29',
+    createdAt: 1773124513156,
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -1804,6 +1853,7 @@ mockCourses.push(
   },
   {
     id: 'course-59',
+    createdAt: 1772908513156,
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -1830,6 +1880,7 @@ mockCourses.push(
   },
   {
     id: 'course-60',
+    createdAt: 1772692513156,
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -1852,6 +1903,7 @@ mockCourses.push(
   },
   {
     id: 'course-61',
+    createdAt: 1772476513156,
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -1872,6 +1924,7 @@ mockCourses.push(
   },
   {
     id: 'course-38',
+    createdAt: 1772260513156,
     name: '홍제천 산책로',
     coordinates: [
       { latitude: 37.542208, longitude: 126.933032 },
@@ -1912,6 +1965,7 @@ mockCourses.push(
   },
   {
     id: 'course-39',
+    createdAt: 1772044513156,
     name: '홍제천 산책로',
     coordinates: [
       { latitude: 37.542208, longitude: 126.933032 },
@@ -1946,6 +2000,7 @@ mockCourses.push(
   },
   {
     id: 'course-62',
+    createdAt: 1771828513156,
     name: '홍제천 산책로',
     coordinates: [
       { latitude: 37.542208, longitude: 126.933032 },
@@ -1976,6 +2031,7 @@ mockCourses.push(
   },
   {
     id: 'course-63',
+    createdAt: 1771612513156,
     name: '홍제천 산책로',
     coordinates: [
       { latitude: 37.542208, longitude: 126.933032 },
@@ -2000,6 +2056,7 @@ mockCourses.push(
   },
   {
     id: 'course-40',
+    createdAt: 1771396513156,
     name: '연희동 둘레길',
     coordinates: [
       { latitude: 37.54674, longitude: 126.919723 },
@@ -2040,6 +2097,7 @@ mockCourses.push(
   },
   {
     id: 'course-64',
+    createdAt: 1771180513156,
     name: '연희동 둘레길',
     coordinates: [
       { latitude: 37.54674, longitude: 126.919723 },
@@ -2072,6 +2130,7 @@ mockCourses.push(
   },
   {
     id: 'course-41',
+    createdAt: 1770964513156,
     name: '가좌역 코스',
     coordinates: [
       { latitude: 37.556482, longitude: 126.90641 },
@@ -2106,6 +2165,7 @@ mockCourses.push(
   },
   {
     id: 'course-65',
+    createdAt: 1770748513156,
     name: '가좌역 코스',
     coordinates: [
       { latitude: 37.556482, longitude: 126.90641 },
@@ -2134,6 +2194,7 @@ mockCourses.push(
   },
   {
     id: 'course-42',
+    createdAt: 1770532513156,
     name: '신수동 골목길 코스',
     coordinates: [
       { latitude: 37.554907, longitude: 126.934546 },
@@ -2174,6 +2235,7 @@ mockCourses.push(
   },
   {
     id: 'course-66',
+    createdAt: 1770316513156,
     name: '신수동 골목길 코스',
     coordinates: [
       { latitude: 37.554907, longitude: 126.934546 },
@@ -2208,6 +2270,7 @@ mockCourses.push(
   },
   {
     id: 'course-67',
+    createdAt: 1770100513156,
     name: '신수동 골목길 코스',
     coordinates: [
       { latitude: 37.554907, longitude: 126.934546 },
@@ -2238,6 +2301,7 @@ mockCourses.push(
   },
   {
     id: 'course-68',
+    createdAt: 1769884513156,
     name: '신수동 골목길 코스',
     coordinates: [
       { latitude: 37.554907, longitude: 126.934546 },
@@ -2262,6 +2326,7 @@ mockCourses.push(
   },
   {
     id: 'course-43',
+    createdAt: 1769668513156,
     name: '서강대 캠퍼스길',
     coordinates: [
       { latitude: 37.549177, longitude: 126.939212 },
@@ -2296,6 +2361,7 @@ mockCourses.push(
   },
   {
     id: 'course-69',
+    createdAt: 1769452513156,
     name: '서강대 캠퍼스길',
     coordinates: [
       { latitude: 37.549177, longitude: 126.939212 },
@@ -2324,6 +2390,7 @@ mockCourses.push(
   },
   {
     id: 'course-44',
+    createdAt: 1769236513156,
     name: '불광천 산책로',
     coordinates: [
       { latitude: 37.576522, longitude: 126.901967 },
@@ -2350,6 +2417,7 @@ mockCourses.push(
   },
   {
     id: 'course-70',
+    createdAt: 1769020513156,
     name: '불광천 산책로',
     coordinates: [
       { latitude: 37.576522, longitude: 126.901967 },
@@ -2372,6 +2440,7 @@ mockCourses.push(
   },
   {
     id: 'course-45',
+    createdAt: 1768804513156,
     name: '성미산 자락길',
     coordinates: [
       { latitude: 37.560517, longitude: 126.919529 },
@@ -2414,6 +2483,7 @@ mockCourses.push(
   },
   {
     id: 'course-71',
+    createdAt: 1768588513156,
     name: '성미산 자락길',
     coordinates: [
       { latitude: 37.560517, longitude: 126.919529 },
@@ -2448,6 +2518,7 @@ mockCourses.push(
   },
   {
     id: 'course-46',
+    createdAt: 1768372513156,
     name: '창천동 명물길 코스',
     coordinates: [
       { latitude: 37.555922, longitude: 126.937588 },
@@ -2482,6 +2553,7 @@ mockCourses.push(
   },
   {
     id: 'course-72',
+    createdAt: 1768156513156,
     name: '창천동 명물길 코스',
     coordinates: [
       { latitude: 37.555922, longitude: 126.937588 },
@@ -2512,7 +2584,7 @@ mockCourses.push(
 
 export const featuredCourse = mockCourses[0];
 
-export const mockRankingsByPeriod: Record<RankingPeriod, RankingEntry[]> = {
+export const mockRankingsByPeriod: Record<Exclude<RankingPeriod, 'latest'>, RankingEntry[]> = {
   monthly: [
     { id: 'rank-monthly-1', rank: 1, courseId: 'course-1', courseName: '몽마르뜨공원', uploaderName: '러너콘', likeCount: 128 },
     { id: 'rank-monthly-2', rank: 2, courseId: 'course-3', courseName: '한강 반포지구', uploaderName: '한강러너', likeCount: 94 },
