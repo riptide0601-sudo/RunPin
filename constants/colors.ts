@@ -17,9 +17,9 @@ export const colors = {
 
 // Monotone 원칙의 예외: 유저 등급 배지 전용 색상 (1~5단계)
 export const gradeColors: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: '#B2B965',
-  2: '#C99961',
-  3: '#82414D',
-  4: '#456E9A',
-  5: '#5F489A',
+  1: '#A9AE6A',
+  2: '#BC9466',
+  3: '#814C56',
+  4: '#4F7195',
+  5: '#655295',
 };
