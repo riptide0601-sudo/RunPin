@@ -40,3 +40,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# unused Claude Code skill assets (not used by the app)
+/skills/
