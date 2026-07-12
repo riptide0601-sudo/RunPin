@@ -47,7 +47,7 @@ export function RunnerDetailCard({ runner, onPropose, position }: RunnerDetailCa
     >
       <Card style={styles.card}>
         <View style={styles.titleRow}>
-          <GradeBadge level={runner.gradeLevel ?? 1} size={16} />
+          <GradeBadge level={runner.gradeLevel ?? 1} size={14} />
           <Text style={styles.title}>
             {runner.nickname}
             {isMatchCandidate(runner.paceComparison) ? ' · 매칭 러너' : ''}
