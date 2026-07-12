@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text } from 'react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import type { Point } from '@/components/community/popupPosition';
 import { Card } from '@/components/ui/Card';
+import { GradeBadge } from '@/components/ui/GradeBadge';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 import { isMatchCandidate } from '@/lib/matching';
@@ -45,10 +46,13 @@ export function RunnerDetailCard({ runner, onPropose, position }: RunnerDetailCa
       ]}
     >
       <Card style={styles.card}>
-        <Text style={styles.title}>
-          {runner.nickname}
-          {isMatchCandidate(runner.paceComparison) ? ' · 매칭 러너' : ''}
-        </Text>
+        <View style={styles.titleRow}>
+          <GradeBadge level={runner.gradeLevel ?? 1} size={16} />
+          <Text style={styles.title}>
+            {runner.nickname}
+            {isMatchCandidate(runner.paceComparison) ? ' · 매칭 러너' : ''}
+          </Text>
+        </View>
         <Text style={styles.meta}>
           {runner.paceLabel} · {runner.distanceLabel}
         </Text>
@@ -66,6 +70,11 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: 8,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   title: {
     fontSize: 14,

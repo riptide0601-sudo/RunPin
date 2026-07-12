@@ -14,3 +14,12 @@ export const colors = {
   // Monotone 원칙의 예외: 좋아요(추천) 하트 전용 색상
   like: '#E63946',
 } as const;
+
+// Monotone 원칙의 예외: 유저 등급 배지 전용 색상 (1~5단계)
+export const gradeColors: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: '#B2B965',
+  2: '#C99961',
+  3: '#82414D',
+  4: '#456E9A',
+  5: '#5F489A',
+};

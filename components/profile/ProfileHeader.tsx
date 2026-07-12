@@ -1,15 +1,18 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { GradeBadge } from '@/components/ui/GradeBadge';
 import { colors } from '@/constants/colors';
+import type { GradeLevel } from '@/types';
 
 interface ProfileHeaderProps {
   name: string;
   initial: string;
   joinedLabel: string;
+  gradeLevel: GradeLevel;
 }
 
-export function ProfileHeader({ name, initial, joinedLabel }: ProfileHeaderProps) {
+export function ProfileHeader({ name, initial, joinedLabel, gradeLevel }: ProfileHeaderProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -18,7 +21,10 @@ export function ProfileHeader({ name, initial, joinedLabel }: ProfileHeaderProps
         <Text style={styles.avatarText}>{initial}</Text>
       </View>
       <View style={styles.info}>
-        <Text style={styles.name}>{name}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name}>{name}</Text>
+          <GradeBadge level={gradeLevel} size={18} />
+        </View>
         <Text style={styles.meta}>{joinedLabel}</Text>
       </View>
     </View>
@@ -48,6 +54,11 @@ const styles = StyleSheet.create({
   },
   info: {
     gap: 4,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   name: {
     fontSize: 18,

@@ -64,6 +64,8 @@ export interface RankingEntry {
 
 export type PaceComparison = 'faster' | 'similar' | 'slower';
 
+export type GradeLevel = 1 | 2 | 3 | 4 | 5;
+
 export interface RunnerMapDot {
   id: string;
   nickname: string;
@@ -71,6 +73,7 @@ export interface RunnerMapDot {
   paceLabel: string;
   distanceLabel: string;
   paceComparison: PaceComparison;
+  gradeLevel?: GradeLevel;
 }
 
 export interface ProfileStats {

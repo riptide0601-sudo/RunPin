@@ -1183,7 +1183,7 @@ mockCourses.push(
     category: '강변',
     difficulty: 4,
     distanceKm: 4.8,
-    uploaderName: '연우',
+    uploaderName: '파클로즈',
     likeCount: 122,
   },
   {
@@ -1216,7 +1216,7 @@ mockCourses.push(
     category: '강변',
     difficulty: 3,
     distanceKm: 3.3,
-    uploaderName: '다현',
+    uploaderName: '파클로즈',
     likeCount: 126,
   },
   {
@@ -1245,7 +1245,7 @@ mockCourses.push(
     category: '강변',
     difficulty: 5,
     distanceKm: 1.9,
-    uploaderName: '시우',
+    uploaderName: '파클로즈',
     likeCount: 114,
   },
   {
@@ -1272,7 +1272,7 @@ mockCourses.push(
     category: '강변',
     difficulty: 1,
     distanceKm: 1.9,
-    uploaderName: '채원',
+    uploaderName: '파클로즈',
     likeCount: 142,
   },
   {
@@ -1297,7 +1297,7 @@ mockCourses.push(
     category: '강변',
     difficulty: 3,
     distanceKm: 1.3,
-    uploaderName: '러너콘',
+    uploaderName: '파클로즈',
     likeCount: 146,
   },
   {
@@ -1526,7 +1526,7 @@ mockCourses.push(
     category: '공원',
     difficulty: 4,
     distanceKm: 3,
-    uploaderName: '태호',
+    uploaderName: '파클로즈',
     likeCount: 144,
   },
   {
@@ -2626,24 +2626,24 @@ export const mockRankingsByPeriod: Record<Exclude<RankingPeriod, 'latest'>, Rank
 };
 
 export const mockRunnerDots: RunnerMapDot[] = [
-  { id: 'runner-1', nickname: '지현', position: { latitude: 37.5589, longitude: 126.9345 }, paceLabel: "5'40\"/km", distanceLabel: '250m', paceComparison: 'similar' },
-  { id: 'runner-2', nickname: '서준', position: { latitude: 37.561, longitude: 126.9372 }, paceLabel: "6'05\"/km", distanceLabel: '400m', paceComparison: 'slower' },
-  { id: 'runner-3', nickname: '민수', position: { latitude: 37.5578, longitude: 126.9368 }, paceLabel: "5'55\"/km", distanceLabel: '520m', paceComparison: 'similar' },
-  { id: 'runner-4', nickname: '하늘', position: { latitude: 37.5615, longitude: 126.934 }, paceLabel: "7'10\"/km", distanceLabel: '610m', paceComparison: 'slower' },
-  { id: 'runner-5', nickname: '서연', position: { latitude: 37.5605, longitude: 126.939 }, paceLabel: "8'00\"/km", distanceLabel: '700m', paceComparison: 'slower' },
-  { id: 'runner-6', nickname: '유진', position: { latitude: 37.5612, longitude: 126.9364 }, paceLabel: "5'10\"/km", distanceLabel: '150m', paceComparison: 'faster' },
-  { id: 'runner-7', nickname: '태호', position: { latitude: 37.561, longitude: 126.9395 }, paceLabel: "4'50\"/km", distanceLabel: '350m', paceComparison: 'faster' },
-  { id: 'runner-8', nickname: '미래', position: { latitude: 37.5531, longitude: 126.9389 }, paceLabel: "5'35\"/km", distanceLabel: '800m', paceComparison: 'similar' },
-  { id: 'runner-9', nickname: '소민', position: { latitude: 37.5506, longitude: 126.9315 }, paceLabel: "6'20\"/km", distanceLabel: '1.1km', paceComparison: 'slower' },
-  { id: 'runner-10', nickname: '준영', position: { latitude: 37.5607, longitude: 126.9331 }, paceLabel: "5'05\"/km", distanceLabel: '250m', paceComparison: 'faster' },
-  { id: 'runner-11', nickname: '다은', position: { latitude: 37.5709, longitude: 126.9241 }, paceLabel: "6'45\"/km", distanceLabel: '1.6km', paceComparison: 'slower' },
-  { id: 'runner-12', nickname: '현우', position: { latitude: 37.5585, longitude: 126.9406 }, paceLabel: "5'45\"/km", distanceLabel: '450m', paceComparison: 'similar' },
-  { id: 'runner-13', nickname: '예린', position: { latitude: 37.5715, longitude: 126.9532 }, paceLabel: "7'30\"/km", distanceLabel: '2.0km', paceComparison: 'slower' },
-  { id: 'runner-14', nickname: '도윤', position: { latitude: 37.5581, longitude: 126.9294 }, paceLabel: "4'55\"/km", distanceLabel: '600m', paceComparison: 'faster' },
-  { id: 'runner-15', nickname: '수아', position: { latitude: 37.5679, longitude: 126.9321 }, paceLabel: "5'50\"/km", distanceLabel: '950m', paceComparison: 'similar' },
-  { id: 'runner-16', nickname: '지훈', position: { latitude: 37.5524, longitude: 126.9471 }, paceLabel: "6'50\"/km", distanceLabel: '1.3km', paceComparison: 'slower' },
-  { id: 'runner-17', nickname: '나연', position: { latitude: 37.5572, longitude: 126.9352 }, paceLabel: "5'20\"/km", distanceLabel: '300m', paceComparison: 'faster' },
-  { id: 'runner-18', nickname: '성민', position: { latitude: 37.5636, longitude: 126.909 }, paceLabel: "6'10\"/km", distanceLabel: '2.4km', paceComparison: 'slower' },
+  { id: 'runner-1', nickname: '지현', position: { latitude: 37.5589, longitude: 126.9345 }, paceLabel: "5'40\"/km", distanceLabel: '250m', paceComparison: 'similar', gradeLevel: 3 },
+  { id: 'runner-2', nickname: '서준', position: { latitude: 37.561, longitude: 126.9372 }, paceLabel: "6'05\"/km", distanceLabel: '400m', paceComparison: 'slower', gradeLevel: 1 },
+  { id: 'runner-3', nickname: '민수', position: { latitude: 37.5578, longitude: 126.9368 }, paceLabel: "5'55\"/km", distanceLabel: '520m', paceComparison: 'similar', gradeLevel: 2 },
+  { id: 'runner-4', nickname: '하늘', position: { latitude: 37.5615, longitude: 126.934 }, paceLabel: "7'10\"/km", distanceLabel: '610m', paceComparison: 'slower', gradeLevel: 4 },
+  { id: 'runner-5', nickname: '서연', position: { latitude: 37.5605, longitude: 126.939 }, paceLabel: "8'00\"/km", distanceLabel: '700m', paceComparison: 'slower', gradeLevel: 2 },
+  { id: 'runner-6', nickname: '유진', position: { latitude: 37.5612, longitude: 126.9364 }, paceLabel: "5'10\"/km", distanceLabel: '150m', paceComparison: 'faster', gradeLevel: 3 },
+  { id: 'runner-7', nickname: '태호', position: { latitude: 37.561, longitude: 126.9395 }, paceLabel: "4'50\"/km", distanceLabel: '350m', paceComparison: 'faster', gradeLevel: 5 },
+  { id: 'runner-8', nickname: '미래', position: { latitude: 37.5531, longitude: 126.9389 }, paceLabel: "5'35\"/km", distanceLabel: '800m', paceComparison: 'similar', gradeLevel: 1 },
+  { id: 'runner-9', nickname: '소민', position: { latitude: 37.5506, longitude: 126.9315 }, paceLabel: "6'20\"/km", distanceLabel: '1.1km', paceComparison: 'slower', gradeLevel: 2 },
+  { id: 'runner-10', nickname: '준영', position: { latitude: 37.5607, longitude: 126.9331 }, paceLabel: "5'05\"/km", distanceLabel: '250m', paceComparison: 'faster', gradeLevel: 4 },
+  { id: 'runner-11', nickname: '다은', position: { latitude: 37.5709, longitude: 126.9241 }, paceLabel: "6'45\"/km", distanceLabel: '1.6km', paceComparison: 'slower', gradeLevel: 1 },
+  { id: 'runner-12', nickname: '현우', position: { latitude: 37.5585, longitude: 126.9406 }, paceLabel: "5'45\"/km", distanceLabel: '450m', paceComparison: 'similar', gradeLevel: 3 },
+  { id: 'runner-13', nickname: '예린', position: { latitude: 37.5715, longitude: 126.9532 }, paceLabel: "7'30\"/km", distanceLabel: '2.0km', paceComparison: 'slower', gradeLevel: 2 },
+  { id: 'runner-14', nickname: '도윤', position: { latitude: 37.5581, longitude: 126.9294 }, paceLabel: "4'55\"/km", distanceLabel: '600m', paceComparison: 'faster', gradeLevel: 5 },
+  { id: 'runner-15', nickname: '수아', position: { latitude: 37.5679, longitude: 126.9321 }, paceLabel: "5'50\"/km", distanceLabel: '950m', paceComparison: 'similar', gradeLevel: 1 },
+  { id: 'runner-16', nickname: '지훈', position: { latitude: 37.5524, longitude: 126.9471 }, paceLabel: "6'50\"/km", distanceLabel: '1.3km', paceComparison: 'slower', gradeLevel: 3 },
+  { id: 'runner-17', nickname: '나연', position: { latitude: 37.5572, longitude: 126.9352 }, paceLabel: "5'20\"/km", distanceLabel: '300m', paceComparison: 'faster', gradeLevel: 2 },
+  { id: 'runner-18', nickname: '성민', position: { latitude: 37.5636, longitude: 126.909 }, paceLabel: "6'10\"/km", distanceLabel: '2.4km', paceComparison: 'slower', gradeLevel: 4 },
 ];
 
 export const mockMeLocation: LatLng = { latitude: 37.5599, longitude: 126.9358 };
