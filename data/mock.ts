@@ -307,7 +307,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 2.4,
     uploaderName: '하늘',
-    likeCount: 24,
+    likeCount: 14,
   },
   {
     id: 'course-7',
@@ -440,7 +440,7 @@ export const mockCourses: Course[] = [
     difficulty: 3,
     distanceKm: 6.1,
     uploaderName: '태호',
-    likeCount: 47,
+    likeCount: 19,
   },
   {
     id: 'course-10',
