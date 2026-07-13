@@ -51,7 +51,7 @@ export interface Match {
   radiusMeters: number;
 }
 
-export type RankingPeriod = 'latest' | 'monthly' | 'yearly' | 'all';
+export type RankingPeriod = 'daily' | 'monthly' | 'yearly' | 'all';
 
 export interface RankingEntry {
   id: string;

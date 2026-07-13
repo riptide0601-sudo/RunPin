@@ -13,17 +13,17 @@ import type { RankingEntry } from '@/types';
 export default function RankingScreen() {
   const insets = useSafeAreaInsets();
   const { courses } = useAppData();
-  const [period, setPeriod] = useState<RankingPeriod>('latest');
+  const [period, setPeriod] = useState<RankingPeriod>('daily');
   const [selectedEntry, setSelectedEntry] = useState<RankingEntry | null>(null);
 
   const rankings = useMemo<RankingEntry[]>(() => {
-    if (period === 'latest') {
+    if (period === 'daily') {
+      const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
       return [...courses]
-        .sort((a, b) => b.createdAt - a.createdAt)
-        .slice(0, 20)
+        .filter((course) => course.createdAt >= dayAgo)
         .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
         .map((course, index) => ({
-          id: `latest-${course.id}`,
+          id: `daily-${course.id}`,
           rank: index + 1,
           courseId: course.id,
           courseName: course.name,
@@ -44,9 +44,13 @@ export default function RankingScreen() {
       <Text style={[styles.title, { paddingTop: insets.top + 8 }]}>랭킹</Text>
       <RankingTabs value={period} onChange={setPeriod} />
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {rankings.map((entry) => (
-          <RankingListItem key={entry.id} entry={entry} onPress={() => setSelectedEntry(entry)} />
-        ))}
+        {period === 'daily' && rankings.length === 0 ? (
+          <Text style={styles.emptyText}>오늘 업로드된 코스가 없어요</Text>
+        ) : (
+          rankings.map((entry) => (
+            <RankingListItem key={entry.id} entry={entry} onPress={() => setSelectedEntry(entry)} />
+          ))
+        )}
       </ScrollView>
       <CourseRouteModal
         visible={selectedEntry !== null}
@@ -71,5 +75,11 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 24,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 14,
+    color: colors.textMuted,
   },
 });
