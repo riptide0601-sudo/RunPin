@@ -23,7 +23,7 @@ export function ProfileHeader({ name, initial, joinedLabel, gradeLevel }: Profil
       <View style={styles.info}>
         <View style={styles.nameRow}>
           <Text style={styles.name}>{name}</Text>
-          <GradeBadge level={gradeLevel} size={18} />
+          <GradeBadge level={gradeLevel} size={25} />
         </View>
         <Text style={styles.meta}>{joinedLabel}</Text>
       </View>
