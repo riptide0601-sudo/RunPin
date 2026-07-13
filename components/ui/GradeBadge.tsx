@@ -10,8 +10,8 @@ interface GradeBadgeProps {
   style?: ViewStyle;
 }
 
-// 도형(원+path)의 실제 bounding box: x:[36,64], y:[10,54.3]
-const BBOX = { minX: 36, minY: 10, width: 28, height: 44.3 };
+// 도형(원+path)의 실측 bounding box(getBBox 기준): x:[45,55], y:[79,112], 여백 4~5씩 추가
+const BBOX = { minX: 40, minY: 75, width: 20, height: 41 };
 const ASPECT_RATIO = BBOX.width / BBOX.height;
 
 export function GradeBadge({ level, size = 20, style }: GradeBadgeProps) {
@@ -22,10 +22,11 @@ export function GradeBadge({ level, size = 20, style }: GradeBadgeProps) {
       width={size * ASPECT_RATIO}
       height={size}
       viewBox={`${BBOX.minX} ${BBOX.minY} ${BBOX.width} ${BBOX.height}`}
+      preserveAspectRatio="xMidYMid meet"
       style={style}
     >
-      <Circle cx={50} cy={24} r={14} fill={color} />
-      <Path d="M50,25.4 C57.1,28 55.7,40.3 50,54.3 C44.3,40.3 42.9,28 50,25.4 Z" fill={color} />
+      <Circle cx={50} cy={84} r={5} fill={color} />
+      <Path d="M50,89 C56,92 55,101 50,112 C45,101 44,92 50,89 Z" fill={color} />
     </Svg>
   );
 }
