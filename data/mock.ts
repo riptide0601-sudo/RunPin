@@ -633,7 +633,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-14',
-    createdAt: 1780684513156,
+    createdAt: 1784590971377,
     name: '신수동 골목길 코스',
     coordinates: [
       { latitude: 37.554907, longitude: 126.934546 },
@@ -677,7 +677,7 @@ export const mockCourses: Course[] = [
     difficulty: 2,
     distanceKm: 2.0,
     uploaderName: '서준',
-    likeCount: 21,
+    likeCount: 25,
   },
   {
     id: 'course-15',
@@ -724,7 +724,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-16',
-    createdAt: 1780252513156,
+    createdAt: 1784583771377,
     name: '대현동 골목길 코스',
     coordinates: [
       { latitude: 37.557345, longitude: 126.945881 },
@@ -758,11 +758,11 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 1.0,
     uploaderName: '지훈',
-    likeCount: 23,
+    likeCount: 40,
   },
   {
     id: 'course-17',
-    createdAt: 1780036513156,
+    createdAt: 1784576571377,
     name: '불광천 산책로',
     coordinates: [
       { latitude: 37.576522, longitude: 126.901967 },
@@ -790,7 +790,7 @@ export const mockCourses: Course[] = [
     difficulty: 2,
     distanceKm: 5,
     uploaderName: '현우',
-    likeCount: 49,
+    likeCount: 18,
   },
   {
     id: 'course-18',
@@ -847,7 +847,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-19',
-    createdAt: 1779604513156,
+    createdAt: 1784569371377,
     name: '합정동 골목길 코스',
     coordinates: [
       { latitude: 37.551877, longitude: 126.912502 },
@@ -887,11 +887,11 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 0.9,
     uploaderName: '나연',
-    likeCount: 27,
+    likeCount: 32,
   },
   {
     id: 'course-20',
-    createdAt: 1779388513156,
+    createdAt: 1784562171377,
     name: '창천동 명물길 코스',
     coordinates: [
       { latitude: 37.555922, longitude: 126.937588 },
@@ -931,7 +931,7 @@ export const mockCourses: Course[] = [
     difficulty: 1,
     distanceKm: 1.3,
     uploaderName: '도윤',
-    likeCount: 24,
+    likeCount: 10,
   },
 ];
 
@@ -2588,40 +2588,40 @@ export const featuredCourse = mockCourses[0];
 
 export const mockRankingsByPeriod: Record<Exclude<RankingPeriod, 'daily'>, RankingEntry[]> = {
   monthly: [
-    { id: 'rank-monthly-1', rank: 1, courseId: 'course-1', courseName: '몽마르뜨공원', uploaderName: '러너콘', likeCount: 128 },
-    { id: 'rank-monthly-2', rank: 2, courseId: 'course-3', courseName: '한강 반포지구', uploaderName: '한강러너', likeCount: 94 },
-    { id: 'rank-monthly-3', rank: 3, courseId: 'course-2', courseName: '경의선숲길', uploaderName: '지현', likeCount: 76 },
-    { id: 'rank-monthly-4', rank: 4, courseId: 'course-7', courseName: '망원한강공원 러닝코스', uploaderName: '지수', likeCount: 68 },
-    { id: 'rank-monthly-5', rank: 5, courseId: 'course-4', courseName: '안양천 러닝코스', uploaderName: '민수', likeCount: 52 },
-    { id: 'rank-monthly-6', rank: 6, courseId: 'course-9', courseName: '월드컵공원 둘레길', uploaderName: '하늘', likeCount: 47 },
-    { id: 'rank-monthly-7', rank: 7, courseId: 'course-5', courseName: '보라매공원', uploaderName: '서연', likeCount: 41 },
-    { id: 'rank-monthly-8', rank: 8, courseId: 'course-6', courseName: '연남동 경의선 확장코스', uploaderName: '유진', likeCount: 35 },
-    { id: 'rank-monthly-9', rank: 9, courseId: 'course-11', courseName: '연희동 둘레길', uploaderName: '태호', likeCount: 29 },
-    { id: 'rank-monthly-10', rank: 10, courseId: 'course-13', courseName: '서강대교 남단 코스', uploaderName: '미래', likeCount: 22 },
+    { id: 'rank-monthly-1', rank: 1, courseId: 'course-1', courseName: '몽마르뜨공원', uploaderName: '러너콘', likeCount: 200 },
+    { id: 'rank-monthly-2', rank: 2, courseId: 'course-3', courseName: '한강 반포지구', uploaderName: '한강러너', likeCount: 180 },
+    { id: 'rank-monthly-3', rank: 3, courseId: 'course-2', courseName: '경의선숲길', uploaderName: '지현', likeCount: 160 },
+    { id: 'rank-monthly-4', rank: 4, courseId: 'course-7', courseName: '망원한강공원 러닝코스', uploaderName: '지수', likeCount: 145 },
+    { id: 'rank-monthly-5', rank: 5, courseId: 'course-4', courseName: '안양천 러닝코스', uploaderName: '민수', likeCount: 130 },
+    { id: 'rank-monthly-6', rank: 6, courseId: 'course-9', courseName: '월드컵공원 둘레길', uploaderName: '하늘', likeCount: 115 },
+    { id: 'rank-monthly-7', rank: 7, courseId: 'course-5', courseName: '보라매공원', uploaderName: '서연', likeCount: 100 },
+    { id: 'rank-monthly-8', rank: 8, courseId: 'course-6', courseName: '연남동 경의선 확장코스', uploaderName: '유진', likeCount: 85 },
+    { id: 'rank-monthly-9', rank: 9, courseId: 'course-11', courseName: '연희동 둘레길', uploaderName: '태호', likeCount: 70 },
+    { id: 'rank-monthly-10', rank: 10, courseId: 'course-13', courseName: '서강대교 남단 코스', uploaderName: '미래', likeCount: 50 },
   ],
   yearly: [
-    { id: 'rank-yearly-1', rank: 1, courseId: 'course-3', courseName: '한강 반포지구', uploaderName: '한강러너', likeCount: 265 },
-    { id: 'rank-yearly-2', rank: 2, courseId: 'course-1', courseName: '몽마르뜨공원', uploaderName: '러너콘', likeCount: 230 },
-    { id: 'rank-yearly-3', rank: 3, courseId: 'course-9', courseName: '월드컵공원 둘레길', uploaderName: '하늘', likeCount: 198 },
-    { id: 'rank-yearly-4', rank: 4, courseId: 'course-4', courseName: '안양천 러닝코스', uploaderName: '민수', likeCount: 165 },
-    { id: 'rank-yearly-5', rank: 5, courseId: 'course-7', courseName: '망원한강공원 러닝코스', uploaderName: '지수', likeCount: 145 },
-    { id: 'rank-yearly-6', rank: 6, courseId: 'course-2', courseName: '경의선숲길', uploaderName: '지현', likeCount: 128 },
-    { id: 'rank-yearly-7', rank: 7, courseId: 'course-11', courseName: '연희동 둘레길', uploaderName: '태호', likeCount: 116 },
-    { id: 'rank-yearly-8', rank: 8, courseId: 'course-5', courseName: '보라매공원', uploaderName: '서연', likeCount: 93 },
-    { id: 'rank-yearly-9', rank: 9, courseId: 'course-8', courseName: '성산동 골목길 코스', uploaderName: '준영', likeCount: 76 },
-    { id: 'rank-yearly-10', rank: 10, courseId: 'course-13', courseName: '서강대교 남단 코스', uploaderName: '미래', likeCount: 62 },
+    { id: 'rank-yearly-1', rank: 1, courseId: 'course-3', courseName: '한강 반포지구', uploaderName: '한강러너', likeCount: 500 },
+    { id: 'rank-yearly-2', rank: 2, courseId: 'course-1', courseName: '몽마르뜨공원', uploaderName: '러너콘', likeCount: 460 },
+    { id: 'rank-yearly-3', rank: 3, courseId: 'course-9', courseName: '월드컵공원 둘레길', uploaderName: '하늘', likeCount: 425 },
+    { id: 'rank-yearly-4', rank: 4, courseId: 'course-4', courseName: '안양천 러닝코스', uploaderName: '민수', likeCount: 395 },
+    { id: 'rank-yearly-5', rank: 5, courseId: 'course-7', courseName: '망원한강공원 러닝코스', uploaderName: '지수', likeCount: 365 },
+    { id: 'rank-yearly-6', rank: 6, courseId: 'course-2', courseName: '경의선숲길', uploaderName: '지현', likeCount: 335 },
+    { id: 'rank-yearly-7', rank: 7, courseId: 'course-11', courseName: '연희동 둘레길', uploaderName: '태호', likeCount: 305 },
+    { id: 'rank-yearly-8', rank: 8, courseId: 'course-5', courseName: '보라매공원', uploaderName: '서연', likeCount: 280 },
+    { id: 'rank-yearly-9', rank: 9, courseId: 'course-8', courseName: '성산동 골목길 코스', uploaderName: '준영', likeCount: 260 },
+    { id: 'rank-yearly-10', rank: 10, courseId: 'course-13', courseName: '서강대교 남단 코스', uploaderName: '미래', likeCount: 250 },
   ],
   all: [
-    { id: 'rank-all-1', rank: 1, courseId: 'course-1', courseName: '몽마르뜨공원', uploaderName: '러너콘', likeCount: 420 },
-    { id: 'rank-all-2', rank: 2, courseId: 'course-3', courseName: '한강 반포지구', uploaderName: '한강러너', likeCount: 365 },
-    { id: 'rank-all-3', rank: 3, courseId: 'course-5', courseName: '보라매공원', uploaderName: '서연', likeCount: 280 },
-    { id: 'rank-all-4', rank: 4, courseId: 'course-9', courseName: '월드컵공원 둘레길', uploaderName: '하늘', likeCount: 250 },
-    { id: 'rank-all-5', rank: 5, courseId: 'course-2', courseName: '경의선숲길', uploaderName: '지현', likeCount: 220 },
-    { id: 'rank-all-6', rank: 6, courseId: 'course-4', courseName: '안양천 러닝코스', uploaderName: '민수', likeCount: 175 },
-    { id: 'rank-all-7', rank: 7, courseId: 'course-7', courseName: '망원한강공원 러닝코스', uploaderName: '지수', likeCount: 150 },
-    { id: 'rank-all-8', rank: 8, courseId: 'course-11', courseName: '연희동 둘레길', uploaderName: '태호', likeCount: 132 },
-    { id: 'rank-all-9', rank: 9, courseId: 'course-10', courseName: '홍제천 산책로', uploaderName: '소민', likeCount: 108 },
-    { id: 'rank-all-10', rank: 10, courseId: 'course-13', courseName: '서강대교 남단 코스', uploaderName: '미래', likeCount: 90 },
+    { id: 'rank-all-1', rank: 1, courseId: 'course-1', courseName: '몽마르뜨공원', uploaderName: '러너콘', likeCount: 1000 },
+    { id: 'rank-all-2', rank: 2, courseId: 'course-3', courseName: '한강 반포지구', uploaderName: '한강러너', likeCount: 920 },
+    { id: 'rank-all-3', rank: 3, courseId: 'course-5', courseName: '보라매공원', uploaderName: '서연', likeCount: 860 },
+    { id: 'rank-all-4', rank: 4, courseId: 'course-9', courseName: '월드컵공원 둘레길', uploaderName: '하늘', likeCount: 800 },
+    { id: 'rank-all-5', rank: 5, courseId: 'course-2', courseName: '경의선숲길', uploaderName: '지현', likeCount: 745 },
+    { id: 'rank-all-6', rank: 6, courseId: 'course-4', courseName: '안양천 러닝코스', uploaderName: '민수', likeCount: 695 },
+    { id: 'rank-all-7', rank: 7, courseId: 'course-7', courseName: '망원한강공원 러닝코스', uploaderName: '지수', likeCount: 650 },
+    { id: 'rank-all-8', rank: 8, courseId: 'course-11', courseName: '연희동 둘레길', uploaderName: '태호', likeCount: 610 },
+    { id: 'rank-all-9', rank: 9, courseId: 'course-10', courseName: '홍제천 산책로', uploaderName: '소민', likeCount: 575 },
+    { id: 'rank-all-10', rank: 10, courseId: 'course-13', courseName: '서강대교 남단 코스', uploaderName: '미래', likeCount: 550 },
   ],
 };
 
