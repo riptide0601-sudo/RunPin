@@ -1,4 +1,3 @@
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -28,10 +27,6 @@ const HOME_FIT_BOUNDS_PADDING = { top: 90, right: 32, bottom: 32, left: 32 };
 
 export default function HomeScreen() {
   const { courses } = useAppData();
-  const measuredTabBarHeight = useBottomTabBarHeight();
-  if (__DEV__) {
-    console.log('[TabBar] measured (react-navigation) height =', measuredTabBarHeight);
-  }
 
   // 같은 이름을 가진 코스들을 하나의 그룹으로 묶고, 그룹당 likeCount가 가장 높은
   // 코스(대표 코스)만 추천 리스트/인기 판정/지도 기본 노출 대상으로 삼는다. 나머지

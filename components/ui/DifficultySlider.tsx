@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import {
   PanGestureHandler,
@@ -46,7 +46,6 @@ export function DifficultySlider({ value, onChange }: DifficultySliderProps) {
   // real measured width for the current platform/font, and size the visible
   // label to the widest of those — so it's provably wide enough for all 5.
   const [labelWidths, setLabelWidths] = useState<number[]>(() => LEVEL_LABELS.map(() => 0));
-  const loggedRef = useRef(false);
 
   const handleLabelMeasured = useCallback((index: number, width: number) => {
     setLabelWidths((prev) => {
@@ -59,16 +58,6 @@ export function DifficultySlider({ value, onChange }: DifficultySliderProps) {
 
   const allLabelsMeasured = labelWidths.every((width) => width > 0);
   const labelBoxWidth = allLabelsMeasured ? Math.ceil(Math.max(...labelWidths)) + 2 : FALLBACK_LABEL_WIDTH;
-
-  if (allLabelsMeasured && !loggedRef.current && __DEV__) {
-    loggedRef.current = true;
-    console.log(
-      '[DifficultySlider] measured label widths:',
-      LEVEL_LABELS.map((label, index) => `${label}=${labelWidths[index]}px`).join(', '),
-      '-> box width:',
-      labelBoxWidth,
-    );
-  }
 
   const handleLayout = (event: LayoutChangeEvent) => {
     setTrackWidth(event.nativeEvent.layout.width);

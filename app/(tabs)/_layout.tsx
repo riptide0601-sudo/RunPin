@@ -18,12 +18,7 @@ const TAB_BAR_TOP_PADDING = 6;
 // View로 한 번 더 감싸서 그 안에서 수동으로 수직 중앙 정렬한다.
 const renderTabBarButton = (props: ComponentProps<typeof PlatformPressable>) => (
   <PlatformPressable {...props} style={[props.style, { padding: 0 }]}>
-    <View
-      style={{ height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center' }}
-      onLayout={
-        __DEV__ ? (e) => console.log('[TabBar] content box layout =', e.nativeEvent.layout) : undefined
-      }
-    >
+    <View style={{ height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
       {props.children}
     </View>
   </PlatformPressable>
@@ -31,14 +26,6 @@ const renderTabBarButton = (props: ComponentProps<typeof PlatformPressable>) => 
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-
-  if (__DEV__) {
-    console.log('[TabBar] insets =', insets);
-    console.log(
-      '[TabBar] computed height =',
-      TAB_BAR_CONTENT_HEIGHT + TAB_BAR_TOP_PADDING + insets.bottom
-    );
-  }
 
   return (
     <Tabs
