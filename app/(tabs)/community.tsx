@@ -1,19 +1,21 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CommunityMap } from '@/components/community/CommunityMap';
 import { MatchProposalCard } from '@/components/community/MatchProposalCard';
 import { RunFinishModal, type SaveCourseResult } from '@/components/community/RunFinishModal';
 import { RunningStatusBar } from '@/components/community/RunningStatusBar';
+import { AlertModal } from '@/components/ui/AlertModal';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 import { mockMyRunningRoute, mockRunnerDots } from '@/data/mock';
-import { useAppData } from '@/lib/appData';
+import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
 import { buildFinishedRunLog } from '@/lib/runSummary';
 
 type ProposalStatus = 'pending' | 'accepted' | 'declined';
+type InfoModal = 'none' | 'proposed' | 'limit' | 'accepted';
 
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
@@ -22,23 +24,23 @@ export default function CommunityScreen() {
   const [proposalStatus, setProposalStatus] = useState<ProposalStatus>('pending');
   const [isRunning, setIsRunning] = useState(false);
   const [finishVisible, setFinishVisible] = useState(false);
+  const [infoModal, setInfoModal] = useState<InfoModal>('none');
+
+  const closeInfoModal = () => setInfoModal('none');
 
   const handleAccept = () => {
     setProposalStatus('accepted');
-    Alert.alert('매칭이 수락되었습니다', '러닝 시작 버튼을 눌러 러닝을 시작하세요');
+    setInfoModal('accepted');
   };
 
   const handlePropose = () => {
     if (canPropose) {
       recordProposal();
-      Alert.alert('제안을 보냈어요', '상대방이 수락하면 매칭이 완료돼요');
+      setInfoModal('proposed');
       return;
     }
 
-    Alert.alert('무료 제안 횟수를 모두 사용했어요', '구독하고 무제한으로 이용해보세요', [
-      { text: '취소', style: 'cancel' },
-      { text: '구독하기', onPress: () => router.push('/subscription') },
-    ]);
+    setInfoModal('limit');
   };
 
   const handleDecline = () => {
@@ -100,6 +102,39 @@ export default function CommunityScreen() {
         courses={courses}
         onSave={handleSaveCourse}
         onSkip={handleSkipSaveCourse}
+      />
+
+      <AlertModal
+        visible={infoModal !== 'none'}
+        tone={infoModal === 'limit' ? 'subscribe' : 'default'}
+        icon={infoModal === 'limit' ? 'star' : 'checkmark-circle'}
+        title={
+          infoModal === 'accepted'
+            ? '매칭이 수락되었습니다'
+            : infoModal === 'proposed'
+              ? '제안을 보냈어요'
+              : '무료 제안 횟수를 모두 사용했어요'
+        }
+        message={
+          infoModal === 'accepted'
+            ? '러닝 시작 버튼을 눌러 러닝을 시작하세요'
+            : infoModal === 'proposed'
+              ? '상대방이 수락하면 매칭이 완료돼요'
+              : `무료 제안 ${FREE_PROPOSAL_LIMIT}회를 모두 사용했어요. 구독하고 무제한으로 이용해보세요`
+        }
+        secondaryAction={infoModal === 'limit' ? { label: '취소', onPress: closeInfoModal, variant: 'outline' } : undefined}
+        primaryAction={
+          infoModal === 'limit'
+            ? {
+                label: '구독하기',
+                onPress: () => {
+                  closeInfoModal();
+                  router.push('/subscription');
+                },
+              }
+            : { label: '확인', onPress: closeInfoModal }
+        }
+        onRequestClose={closeInfoModal}
       />
     </View>
   );

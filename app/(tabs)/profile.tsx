@@ -35,14 +35,14 @@ export default function ProfileScreen() {
         gradeLevel={grade.level}
       />
       <StatsRow stats={mockProfileStats} />
-      <MenuList items={mockMenuItems.slice(0, 1)} onItemPress={handleMenuItemPress} />
       <SubscriptionBanner
         isSubscribed={isSubscribed}
         remaining={Math.min(remainingProposals, FREE_PROPOSAL_LIMIT)}
         limit={FREE_PROPOSAL_LIMIT}
+        memberName={mockProfile.name}
         onPress={() => router.push('/subscription')}
       />
-      <MenuList items={mockMenuItems.slice(1)} onItemPress={handleMenuItemPress} />
+      <MenuList items={mockMenuItems} onItemPress={handleMenuItemPress} />
     </ScrollView>
   );
 }
