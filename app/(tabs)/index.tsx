@@ -6,7 +6,7 @@ import { CourseBanner } from '@/components/home/CourseBanner';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { RecommendedCourseList } from '@/components/home/RecommendedCourseList';
 import { getRouteCenter } from '@/components/map/getRouteCenter';
-import { LeafletMap } from '@/components/map/LeafletMap';
+import { LeafletMap, type MapMarker } from '@/components/map/LeafletMap';
 import { colors } from '@/constants/colors';
 import { mockMeLocation } from '@/data/mock';
 import { useAppData } from '@/lib/appData';
@@ -19,6 +19,12 @@ import { matchesChosung } from '@/lib/hangul';
 // well-liked citywide.
 const POPULAR_CANDIDATE_RADIUS_METERS = 3000;
 const POPULAR_COURSE_COUNT = 3;
+
+// Hoisted to stable module-level references so LeafletMap's payload useMemo
+// doesn't see a "changed" prop (and re-inject into the WebView) on every
+// render that isn't actually related to the map, e.g. each search keystroke.
+const ME_MARKERS: MapMarker[] = [{ id: 'me', position: mockMeLocation, variant: 'me' }];
+const HOME_FIT_BOUNDS_PADDING = { top: 90, right: 32, bottom: 32, left: 32 };
 
 export default function HomeScreen() {
   const { courses } = useAppData();
@@ -79,16 +85,21 @@ export default function HomeScreen() {
     [courses, sortedCourses, selectedCourseId],
   );
 
+  const selectedCourseCenter = useMemo(
+    () => getRouteCenter(selectedCourse.coordinates),
+    [selectedCourse],
+  );
+
   return (
     <View style={styles.container}>
       <HomeHeader searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
       <LeafletMap
         style={styles.map}
-        center={getRouteCenter(selectedCourse.coordinates)}
+        center={selectedCourseCenter}
         route={selectedCourse.coordinates}
         fitBounds
-        fitBoundsPadding={{ top: 90, right: 32, bottom: 32, left: 32 }}
-        markers={[{ id: 'me', position: mockMeLocation, variant: 'me' }]}
+        fitBoundsPadding={HOME_FIT_BOUNDS_PADDING}
+        markers={ME_MARKERS}
         dragging={false}
         keepCenterOnZoom
       >

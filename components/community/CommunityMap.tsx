@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, type LayoutChangeEvent } from 'react-native';
 
 import { PaceRings } from '@/components/community/PaceRings';
@@ -36,22 +36,33 @@ export function CommunityMap({ runners, isRunning, onPropose }: CommunityMapProp
 
   const myRunningPosition = mockMyRunningRoute[mockMyRunningRoute.length - 1];
 
-  const visibleRunners = isRunning
-    ? []
-    : runners.filter(
-        (runner) => haversineDistanceMeters(mockMeLocation, runner.position) <= getVisibleRadiusMeters(zoom),
-      );
+  // Memoized so LeafletMap's payload useMemo (which triggers a WebView
+  // injectJavaScript call) doesn't see a "changed" markers prop on every
+  // render that isn't actually related to runner positions or zoom.
+  const visibleRunners = useMemo(
+    () =>
+      isRunning
+        ? []
+        : runners.filter(
+            (runner) => haversineDistanceMeters(mockMeLocation, runner.position) <= getVisibleRadiusMeters(zoom),
+          ),
+    [isRunning, runners, zoom],
+  );
 
-  const markers: MapMarker[] = isRunning
-    ? [{ id: 'me', position: myRunningPosition, variant: 'me' }]
-    : [
-        { id: 'me', position: mockMeLocation, variant: 'me' },
-        ...visibleRunners.map((runner) => ({
-          id: runner.id,
-          position: runner.position,
-          variant: (isMatchCandidate(runner.paceComparison) ? 'match' : 'runner') as MapMarker['variant'],
-        })),
-      ];
+  const markers: MapMarker[] = useMemo(
+    () =>
+      isRunning
+        ? [{ id: 'me', position: myRunningPosition, variant: 'me' }]
+        : [
+            { id: 'me', position: mockMeLocation, variant: 'me' },
+            ...visibleRunners.map((runner) => ({
+              id: runner.id,
+              position: runner.position,
+              variant: (isMatchCandidate(runner.paceComparison) ? 'match' : 'runner') as MapMarker['variant'],
+            })),
+          ],
+    [isRunning, myRunningPosition, visibleRunners],
+  );
 
   const selectedRunner = selection ? (visibleRunners.find((runner) => runner.id === selection.runnerId) ?? null) : null;
 
