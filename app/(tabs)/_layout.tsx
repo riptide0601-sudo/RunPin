@@ -8,6 +8,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/constants/colors';
 
 const TAB_BAR_CONTENT_HEIGHT = 44; // excludes safe-area inset
+// 콘텐츠(아이콘+라벨)가 탭바 맨 위에 바짝 붙어 보이는 것을 완화하기 위한 여백.
+// paddingBottom(=insets.bottom)은 그대로 둬 홈 인디케이터와의 거리는 유지하고,
+// 콘텐츠 박스만 이만큼 아래로 내린다.
+const TAB_BAR_TOP_PADDING = 6;
 
 // react-navigation의 BottomTabItem 내부 정렬(padding/justifyContent 하드코딩)에
 // 의존하지 않기 위해, 버튼의 children(아이콘+라벨)을 우리가 직접 만든 height:100%
@@ -30,7 +34,10 @@ export default function TabsLayout() {
 
   if (__DEV__) {
     console.log('[TabBar] insets =', insets);
-    console.log('[TabBar] computed height =', TAB_BAR_CONTENT_HEIGHT + insets.bottom);
+    console.log(
+      '[TabBar] computed height =',
+      TAB_BAR_CONTENT_HEIGHT + TAB_BAR_TOP_PADDING + insets.bottom
+    );
   }
 
   return (
@@ -40,9 +47,9 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+          height: TAB_BAR_CONTENT_HEIGHT + TAB_BAR_TOP_PADDING + insets.bottom,
           paddingBottom: insets.bottom,
-          paddingTop: 0,
+          paddingTop: TAB_BAR_TOP_PADDING,
         },
         tabBarButton: renderTabBarButton,
       }}
