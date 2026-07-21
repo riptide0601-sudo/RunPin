@@ -1,22 +1,24 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { PlatformPressable } from '@react-navigation/elements';
+import type { ComponentProps } from 'react';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 
-// @react-navigation/bottom-tabs hardcodes padding:5 + justifyContent:'flex-start'
-// on the tab button itself (tabVerticalUiKit style) and only exposes
-// tabBarItemStyle to the *outer* wrapper, not the button — so shrinking
-// tabBarStyle.height or setting tabBarItemStyle.justifyContent alone cannot
-// change the button's internal padding and silently overflows instead of
-// shrinking. tabBarButton below replaces that padding with 0 so the content
-// height below is the real, full height of the button.
-const ICON_HEIGHT = 28; // default wrapperUikit height in TabBarIcon.tsx
-const LABEL_LINE_HEIGHT = 12;
-const CONTENT_HEIGHT = ICON_HEIGHT + LABEL_LINE_HEIGHT; // 40
-const VERTICAL_MARGIN = 2; // equal top/bottom margin around icon+label
-const TAB_BAR_CONTENT_HEIGHT = CONTENT_HEIGHT + VERTICAL_MARGIN * 2; // 44, excludes safe-area inset
+const TAB_BAR_CONTENT_HEIGHT = 44; // excludes safe-area inset
+
+// react-navigation의 BottomTabItem 내부 정렬(padding/justifyContent 하드코딩)에
+// 의존하지 않기 위해, 버튼의 children(아이콘+라벨)을 우리가 직접 만든 height:100%
+// View로 한 번 더 감싸서 그 안에서 수동으로 수직 중앙 정렬한다.
+const renderTabBarButton = (props: ComponentProps<typeof PlatformPressable>) => (
+  <PlatformPressable {...props} style={[props.style, { padding: 0 }]}>
+    <View style={{ height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+      {props.children}
+    </View>
+  </PlatformPressable>
+);
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -32,18 +34,7 @@ export default function TabsLayout() {
           paddingBottom: insets.bottom,
           paddingTop: 0,
         },
-        tabBarItemStyle: {
-          justifyContent: 'center',
-        },
-        tabBarLabelStyle: {
-          lineHeight: LABEL_LINE_HEIGHT,
-        },
-        tabBarButton: (props) => (
-          <PlatformPressable
-            {...props}
-            style={[props.style, { padding: 0, justifyContent: 'center' }]}
-          />
-        ),
+        tabBarButton: renderTabBarButton,
       }}
     >
       <Tabs.Screen
