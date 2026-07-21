@@ -43,12 +43,6 @@ const KEYBOARD_EASING: Record<KeyboardEventEasing, (value: number) => number> = 
   keyboard: Easing.out(Easing.ease),
 };
 
-// TEMP DEBUG: remove once the double-tap-to-dismiss-keyboard cause is confirmed.
-let tapSeq = 0;
-const debugLog = (...args: unknown[]) => {
-  if (__DEV__) console.log('[RunFinish]', ...args);
-};
-
 export interface SaveCourseResult {
   courseName: string;
   newCourse: Course | null;
@@ -90,12 +84,10 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
     };
 
     const showSub = Keyboard.addListener(showEventName, (event) => {
-      debugLog('keyboardShow', Date.now());
       setIsKeyboardVisible(true);
       animateTo(event.endCoordinates.height, event);
     });
     const hideSub = Keyboard.addListener(hideEventName, (event) => {
-      debugLog('keyboardHide', Date.now());
       setIsKeyboardVisible(false);
       animateTo(0, event);
     });
@@ -125,8 +117,6 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
   // this must always close (that's what "바깥 탭" means), regardless of
   // whether a text field happened to be focused.
   const handleBackdropPress = () => {
-    debugLog('backdrop press', ++tapSeq, Date.now());
-    debugLog('calling Keyboard.dismiss() from backdrop', Date.now());
     Keyboard.dismiss();
     onSkip(difficulty);
   };
@@ -184,9 +174,7 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
             // other tap (buttons, options, the slider, the input itself)
             // still behaves exactly as before.
             onStartShouldSetResponderCapture={() => {
-              debugLog('sheet capture', ++tapSeq, 'kbVisible=', isKeyboardVisible, Date.now());
               if (isKeyboardVisible) {
-                debugLog('calling Keyboard.dismiss() from sheet capture', Date.now());
                 Keyboard.dismiss();
               }
               return false;
@@ -223,9 +211,7 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
                     setCustomName(text);
                     setOptionId('custom');
                   }}
-                  onFocus={() => debugLog('input focus', Date.now())}
                   onBlur={() => {
-                    debugLog('input blur -> calling Keyboard.dismiss()', Date.now());
                     // Safety net: if blur fires after some other dismiss attempt
                     // (or the keyboard re-focuses the input before it can close),
                     // force it closed once more here.
