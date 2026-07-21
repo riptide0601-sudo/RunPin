@@ -11,7 +11,7 @@ const TAB_BAR_CONTENT_HEIGHT = 44; // excludes safe-area inset
 // 콘텐츠(아이콘+라벨)가 탭바 맨 위에 바짝 붙어 보이는 것을 완화하기 위한 여백.
 // paddingBottom(=insets.bottom)은 그대로 둬 홈 인디케이터와의 거리는 유지하고,
 // 콘텐츠 박스만 이만큼 아래로 내린다.
-const TAB_BAR_TOP_PADDING = 6;
+const TAB_BAR_TOP_PADDING = 34;
 
 // react-navigation의 BottomTabItem 내부 정렬(padding/justifyContent 하드코딩)에
 // 의존하지 않기 위해, 버튼의 children(아이콘+라벨)을 우리가 직접 만든 height:100%
