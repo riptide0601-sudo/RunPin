@@ -22,6 +22,13 @@ function mulberry32(seed: number) {
   };
 }
 
+// daily 랭킹은 courseList를 '최근 24시간 이내 생성'으로 필터링해서 보여준다(app/(tabs)/ranking.tsx).
+// 고정된 epoch 값을 쓰면 하루만 지나도 daily 탭이 항상 비게 되므로, daily 대표 코스들은
+// 앱이 로드되는 시점(Date.now()) 기준 상대 시간으로 계산해 매번 '최근'을 유지한다.
+function hoursAgo(hours: number): number {
+  return Date.now() - hours * 60 * 60 * 1000;
+}
+
 function buildSeries(seed: number, points: number, base: number, swing: number, min: number, max: number): number[] {
   const random = mulberry32(seed);
   let value = base;
@@ -633,7 +640,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-14',
-    createdAt: 1784590971377,
+    createdAt: hoursAgo(2),
     name: '신수동 골목길 코스',
     coordinates: [
       { latitude: 37.554907, longitude: 126.934546 },
@@ -724,7 +731,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-16',
-    createdAt: 1784583771377,
+    createdAt: hoursAgo(4),
     name: '대현동 골목길 코스',
     coordinates: [
       { latitude: 37.557345, longitude: 126.945881 },
@@ -762,7 +769,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-17',
-    createdAt: 1784576571377,
+    createdAt: hoursAgo(6),
     name: '불광천 산책로',
     coordinates: [
       { latitude: 37.576522, longitude: 126.901967 },
@@ -847,7 +854,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-19',
-    createdAt: 1784569371377,
+    createdAt: hoursAgo(8),
     name: '합정동 골목길 코스',
     coordinates: [
       { latitude: 37.551877, longitude: 126.912502 },
@@ -891,7 +898,7 @@ export const mockCourses: Course[] = [
   },
   {
     id: 'course-20',
-    createdAt: 1784562171377,
+    createdAt: hoursAgo(10),
     name: '창천동 명물길 코스',
     coordinates: [
       { latitude: 37.555922, longitude: 126.937588 },
