@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,7 +17,8 @@ type ProposalStatus = 'pending' | 'accepted' | 'declined';
 
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
-  const { courses, addCourse, addRunLog } = useAppData();
+  const router = useRouter();
+  const { courses, addCourse, addRunLog, canPropose, recordProposal } = useAppData();
   const [proposalStatus, setProposalStatus] = useState<ProposalStatus>('pending');
   const [isRunning, setIsRunning] = useState(false);
   const [finishVisible, setFinishVisible] = useState(false);
@@ -24,6 +26,19 @@ export default function CommunityScreen() {
   const handleAccept = () => {
     setProposalStatus('accepted');
     Alert.alert('매칭이 수락되었습니다', '러닝 시작 버튼을 눌러 러닝을 시작하세요');
+  };
+
+  const handlePropose = () => {
+    if (canPropose) {
+      recordProposal();
+      Alert.alert('제안을 보냈어요', '상대방이 수락하면 매칭이 완료돼요');
+      return;
+    }
+
+    Alert.alert('무료 제안 횟수를 모두 사용했어요', '구독하고 무제한으로 이용해보세요', [
+      { text: '취소', style: 'cancel' },
+      { text: '구독하기', onPress: () => router.push('/subscription') },
+    ]);
   };
 
   const handleDecline = () => {
@@ -52,7 +67,7 @@ export default function CommunityScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.mapWrapper}>
-        <CommunityMap runners={mockRunnerDots} isRunning={isRunning} />
+        <CommunityMap runners={mockRunnerDots} isRunning={isRunning} onPropose={handlePropose} />
 
         {isRunning ? (
           <View style={styles.topOverlay} pointerEvents="box-none">

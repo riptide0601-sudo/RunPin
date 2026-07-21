@@ -15,6 +15,7 @@ import type { RunnerMapDot } from '@/types';
 interface CommunityMapProps {
   runners: RunnerMapDot[];
   isRunning: boolean;
+  onPropose: () => void;
 }
 
 const DEFAULT_ZOOM = 16;
@@ -24,7 +25,7 @@ const CARD_SIZE: Size = { width: 190, height: 112 };
 // full run route + current position are never hidden underneath them.
 const RUNNING_FIT_BOUNDS_PADDING = { top: 90, right: 32, bottom: 90, left: 32 };
 
-export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
+export function CommunityMap({ runners, isRunning, onPropose }: CommunityMapProps) {
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [containerSize, setContainerSize] = useState<Size>({ width: 0, height: 0 });
   const [selection, setSelection] = useState<{ runnerId: string; point: Point } | null>(null);
@@ -80,7 +81,10 @@ export function CommunityMap({ runners, isRunning }: CommunityMapProps) {
       {!isRunning && selectedRunner && selection && containerSize.width > 0 ? (
         <RunnerDetailCard
           runner={selectedRunner}
-          onPropose={() => setSelection(null)}
+          onPropose={() => {
+            onPropose();
+            setSelection(null);
+          }}
           position={getAnchoredPopupPosition(selection.point, containerSize, CARD_SIZE)}
         />
       ) : null}

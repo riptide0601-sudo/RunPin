@@ -2697,6 +2697,8 @@ export const mockProfile = {
   name: '파클로즈',
   initial: '파',
   joinedLabel: '가입일 2024.03',
+  proposalCount: 0,
+  isSubscribed: false,
 };
 
 export const mockMenuItems: MenuItemData[] = [

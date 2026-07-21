@@ -13,6 +13,8 @@ export const colors = {
   accentMatch: '#5B7C99',
   // Monotone 원칙의 예외: 좋아요(추천) 하트 전용 색상
   like: '#E63946',
+  // Monotone 원칙의 예외: 구독(프리미엄) 상태 전용 포인트 컬러
+  accentSubscribe: '#B08A3E',
 } as const;
 
 // Monotone 원칙의 예외: 유저 등급 배지 전용 색상 (1~5단계)
