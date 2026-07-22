@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,6 +17,38 @@ import { buildFinishedRunLog } from '@/lib/runSummary';
 type ProposalStatus = 'pending' | 'accepted' | 'declined';
 type InfoModal = 'none' | 'proposed' | 'limit' | 'accepted';
 
+interface InfoModalContent {
+  tone: 'default' | 'subscribe';
+  icon: 'star' | 'checkmark-circle';
+  title: string;
+  message: string;
+  showSubscribeAction: boolean;
+}
+
+const INFO_MODAL_CONTENT: Record<Exclude<InfoModal, 'none'>, InfoModalContent> = {
+  proposed: {
+    tone: 'default',
+    icon: 'checkmark-circle',
+    title: '제안을 보냈어요',
+    message: '상대방이 수락하면 매칭이 완료돼요',
+    showSubscribeAction: false,
+  },
+  accepted: {
+    tone: 'default',
+    icon: 'checkmark-circle',
+    title: '매칭이 수락되었습니다',
+    message: '러닝 시작 버튼을 눌러 러닝을 시작하세요',
+    showSubscribeAction: false,
+  },
+  limit: {
+    tone: 'subscribe',
+    icon: 'star',
+    title: '무료 제안 횟수를 모두 사용했어요',
+    message: `무료 제안 ${FREE_PROPOSAL_LIMIT}회를 모두 사용했어요. 구독하고 무제한으로 이용해보세요`,
+    showSubscribeAction: true,
+  },
+};
+
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -25,8 +57,17 @@ export default function CommunityScreen() {
   const [isRunning, setIsRunning] = useState(false);
   const [finishVisible, setFinishVisible] = useState(false);
   const [infoModal, setInfoModal] = useState<InfoModal>('none');
+  const lastInfoModalContentRef = useRef<InfoModalContent>(INFO_MODAL_CONTENT.proposed);
 
   const closeInfoModal = () => setInfoModal('none');
+
+  // Modal은 visible=false가 되어도 fade-out 애니메이션 동안 계속 리렌더되므로,
+  // infoModal이 'none'으로 바뀐 뒤에도 닫히는 애니메이션 중에는 마지막으로 보여준
+  // 내용을 유지해야 다른 문구(예: 무료 제안 소진 안내)로 잘못 바뀌어 보이지 않는다.
+  if (infoModal !== 'none') {
+    lastInfoModalContentRef.current = INFO_MODAL_CONTENT[infoModal];
+  }
+  const infoModalContent = lastInfoModalContentRef.current;
 
   const handleAccept = () => {
     setProposalStatus('accepted');
@@ -106,25 +147,15 @@ export default function CommunityScreen() {
 
       <AlertModal
         visible={infoModal !== 'none'}
-        tone={infoModal === 'limit' ? 'subscribe' : 'default'}
-        icon={infoModal === 'limit' ? 'star' : 'checkmark-circle'}
-        title={
-          infoModal === 'accepted'
-            ? '매칭이 수락되었습니다'
-            : infoModal === 'proposed'
-              ? '제안을 보냈어요'
-              : '무료 제안 횟수를 모두 사용했어요'
+        tone={infoModalContent.tone}
+        icon={infoModalContent.icon}
+        title={infoModalContent.title}
+        message={infoModalContent.message}
+        secondaryAction={
+          infoModalContent.showSubscribeAction ? { label: '취소', onPress: closeInfoModal, variant: 'outline' } : undefined
         }
-        message={
-          infoModal === 'accepted'
-            ? '러닝 시작 버튼을 눌러 러닝을 시작하세요'
-            : infoModal === 'proposed'
-              ? '상대방이 수락하면 매칭이 완료돼요'
-              : `무료 제안 ${FREE_PROPOSAL_LIMIT}회를 모두 사용했어요. 구독하고 무제한으로 이용해보세요`
-        }
-        secondaryAction={infoModal === 'limit' ? { label: '취소', onPress: closeInfoModal, variant: 'outline' } : undefined}
         primaryAction={
-          infoModal === 'limit'
+          infoModalContent.showSubscribeAction
             ? {
                 label: '구독하기',
                 onPress: () => {
