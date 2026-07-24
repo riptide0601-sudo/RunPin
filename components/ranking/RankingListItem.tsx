@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
@@ -10,14 +10,24 @@ import type { RankingEntry } from '@/types';
 interface RankingListItemProps {
   entry: RankingEntry;
   swiping?: boolean;
+  // Mirrors `swiping` but read synchronously in the handlers below, so a swipe
+  // that just started (before React has re-rendered `disabled`) still blocks
+  // the press instead of racing it. See ranking.tsx's isSwipingRef.
+  swipingRef?: RefObject<boolean>;
   onPress?: () => void;
 }
 
-export function RankingListItem({ entry, swiping, onPress }: RankingListItemProps) {
+export function RankingListItem({ entry, swiping, swipingRef, onPress }: RankingListItemProps) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(entry.likeCount);
 
   const toggleLike = () => {
+    if (swipingRef?.current) {
+      if (__DEV__) {
+        console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: like blocked (swiping)`, { entryId: entry.id });
+      }
+      return;
+    }
     if (__DEV__) {
       console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: like pressed`, { entryId: entry.id, swiping });
     }
@@ -26,6 +36,12 @@ export function RankingListItem({ entry, swiping, onPress }: RankingListItemProp
   };
 
   const handlePress = () => {
+    if (swipingRef?.current) {
+      if (__DEV__) {
+        console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: row press blocked (swiping)`, { entryId: entry.id });
+      }
+      return;
+    }
     if (__DEV__) {
       console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: row pressed`, { entryId: entry.id, swiping });
     }

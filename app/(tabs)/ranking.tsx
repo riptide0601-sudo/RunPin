@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -47,12 +47,14 @@ function RankingPage({
   rankings,
   width,
   swiping,
+  swipingRef,
   onSelectEntry,
 }: {
   period: RankingPeriod;
   rankings: RankingEntry[];
   width: number;
   swiping: boolean;
+  swipingRef: RefObject<boolean>;
   onSelectEntry: (entry: RankingEntry) => void;
 }) {
   return (
@@ -65,7 +67,13 @@ function RankingPage({
         <Text style={styles.emptyText}>오늘 업로드된 코스가 없어요</Text>
       ) : (
         rankings.map((entry) => (
-          <RankingListItem key={entry.id} entry={entry} swiping={swiping} onPress={() => onSelectEntry(entry)} />
+          <RankingListItem
+            key={entry.id}
+            entry={entry}
+            swiping={swiping}
+            swipingRef={swipingRef}
+            onPress={() => onSelectEntry(entry)}
+          />
         ))
       )}
     </ScrollView>
@@ -79,6 +87,13 @@ export default function RankingScreen() {
   const [period, setPeriod] = useState<RankingPeriod>('daily');
   const [selectedEntry, setSelectedEntry] = useState<RankingEntry | null>(null);
   const [isSwiping, setIsSwiping] = useState(false);
+  // Mirrors `isSwiping` but updates synchronously (no render/commit delay), so
+  // press handlers racing against gesture arbitration always see the latest value.
+  const isSwipingRef = useRef(false);
+  const setSwiping = useCallback((value: boolean) => {
+    isSwipingRef.current = value;
+    setIsSwiping(value);
+  }, []);
 
   const translateX = useRef(new Animated.Value(0)).current;
   // Set right before an adjacent-period snap animation finishes; consumed by the
@@ -106,7 +121,7 @@ export default function RankingScreen() {
         .failOffsetY([-10, 10])
         .onStart(() => {
           swipeLog('onStart: isSwiping -> true', { period });
-          setIsSwiping(true);
+          setSwiping(true);
         })
         .onUpdate((event) => {
           const { translationX } = event;
@@ -168,7 +183,7 @@ export default function RankingScreen() {
               swipeLog('spring(back) finished callback', { finished });
               if (finished) {
                 swipeLog('spring(back): isSwiping -> false');
-                setIsSwiping(false);
+                setSwiping(false);
               }
             });
           }
@@ -181,10 +196,10 @@ export default function RankingScreen() {
           swipeLog('onFinalize', { success });
           if (!success) {
             swipeLog('onFinalize: isSwiping -> false (cancelled)');
-            setIsSwiping(false);
+            setSwiping(false);
           }
         }),
-    [goToAdjacentPeriod, nextPeriod, period, periodIndex, prevPeriod, translateX, windowWidth],
+    [goToAdjacentPeriod, nextPeriod, period, periodIndex, prevPeriod, setSwiping, translateX, windowWidth],
   );
 
   // Runs synchronously right after `period`'s new content has committed, so the
@@ -235,6 +250,7 @@ export default function RankingScreen() {
                   rankings={prevRankings}
                   width={windowWidth}
                   swiping={isSwiping}
+                  swipingRef={isSwipingRef}
                   onSelectEntry={setSelectedEntry}
                 />
               ) : null}
@@ -244,6 +260,7 @@ export default function RankingScreen() {
               rankings={currentRankings}
               width={windowWidth}
               swiping={isSwiping}
+              swipingRef={isSwipingRef}
               onSelectEntry={setSelectedEntry}
             />
             <View style={{ width: windowWidth }}>
@@ -253,6 +270,7 @@ export default function RankingScreen() {
                   rankings={nextRankings}
                   width={windowWidth}
                   swiping={isSwiping}
+                  swipingRef={isSwipingRef}
                   onSelectEntry={setSelectedEntry}
                 />
               ) : null}
