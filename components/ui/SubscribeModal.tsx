@@ -1,11 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Pill } from '@/components/ui/Pill';
 import { RunChartMotif } from '@/components/ui/RunChartMotif';
 import { colors } from '@/constants/colors';
-
-const BENEFITS = ['함께 뛰자고 제안하기 무제한', '무료 5회 제한 없이 자유롭게 매칭 시도'];
 
 interface SubscribeModalProps {
   visible: boolean;
@@ -35,15 +32,6 @@ export function SubscribeModal({ visible, title, message, onSubscribe, onClose }
           <View style={styles.body}>
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.message}>{message}</Text>
-
-            <View style={styles.benefits}>
-              {BENEFITS.map((benefit) => (
-                <View key={benefit} style={styles.benefitRow}>
-                  <Ionicons name="checkmark-circle" size={16} color={colors.ink} />
-                  <Text style={styles.benefitText}>{benefit}</Text>
-                </View>
-              ))}
-            </View>
 
             <View style={styles.actions}>
               <Pill label="닫기" variant="outline" onPress={onClose} style={styles.actionButton} />
@@ -114,22 +102,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 20,
-  },
-  benefits: {
-    alignSelf: 'stretch',
-    gap: 8,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  benefitText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
   },
   actions: {
     flexDirection: 'row',

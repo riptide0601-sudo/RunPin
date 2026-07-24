@@ -22,29 +22,13 @@ export function RankingListItem({ entry, swiping, swipingRef, onPress }: Ranking
   const [likeCount, setLikeCount] = useState(entry.likeCount);
 
   const toggleLike = () => {
-    if (swipingRef?.current) {
-      if (__DEV__) {
-        console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: like blocked (swiping)`, { entryId: entry.id });
-      }
-      return;
-    }
-    if (__DEV__) {
-      console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: like pressed`, { entryId: entry.id, swiping });
-    }
+    if (swipingRef?.current) return;
     setLiked((prev) => !prev);
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
   const handlePress = () => {
-    if (swipingRef?.current) {
-      if (__DEV__) {
-        console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: row press blocked (swiping)`, { entryId: entry.id });
-      }
-      return;
-    }
-    if (__DEV__) {
-      console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: row pressed`, { entryId: entry.id, swiping });
-    }
+    if (swipingRef?.current) return;
     onPress?.();
   };
 
