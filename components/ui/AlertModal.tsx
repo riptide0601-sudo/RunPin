@@ -13,7 +13,6 @@ interface AlertModalAction {
 interface AlertModalProps {
   visible: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
-  tone?: 'default' | 'subscribe';
   title: string;
   message?: string;
   primaryAction: AlertModalAction;
@@ -24,14 +23,13 @@ interface AlertModalProps {
 export function AlertModal({
   visible,
   icon,
-  tone = 'default',
   title,
   message,
   primaryAction,
   secondaryAction,
   onRequestClose,
 }: AlertModalProps) {
-  const accentColor = tone === 'subscribe' ? colors.accentSubscribe : colors.ink;
+  const accentColor = colors.ink;
   const primaryVariant = primaryAction.variant ?? 'filled';
 
   return (

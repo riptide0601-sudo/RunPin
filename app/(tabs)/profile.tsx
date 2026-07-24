@@ -6,7 +6,7 @@ import { MenuList } from '@/components/profile/MenuList';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { StatsRow } from '@/components/profile/StatsRow';
 import { SubscriptionBanner } from '@/components/profile/SubscriptionBanner';
-import { AlertModal } from '@/components/ui/AlertModal';
+import { SubscribeModal } from '@/components/ui/SubscribeModal';
 import { colors } from '@/constants/colors';
 import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
@@ -51,15 +51,12 @@ export default function ProfileScreen() {
         }}
       />
       <MenuList items={mockMenuItems} onItemPress={handleMenuItemPress} />
-      <AlertModal
+      <SubscribeModal
         visible={subscribeModalVisible}
-        tone="subscribe"
-        icon="sparkles"
         title="RunPin PRO 구독"
         message="함께 뛰자고 제안하기 무제한, 무료 5회 제한 없이 자유롭게 매칭을 시도해보세요."
-        primaryAction={{ label: '구독하기', onPress: handleSubscribe }}
-        secondaryAction={{ label: '닫기', onPress: () => setSubscribeModalVisible(false) }}
-        onRequestClose={() => setSubscribeModalVisible(false)}
+        onSubscribe={handleSubscribe}
+        onClose={() => setSubscribeModalVisible(false)}
       />
     </ScrollView>
   );
