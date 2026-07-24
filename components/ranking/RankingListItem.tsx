@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState, type RefObject } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
@@ -9,31 +9,20 @@ import type { RankingEntry } from '@/types';
 
 interface RankingListItemProps {
   entry: RankingEntry;
-  swiping?: boolean;
-  // Mirrors `swiping` but read synchronously in the handlers below, so a swipe
-  // that just started (before React has re-rendered `disabled`) still blocks
-  // the press instead of racing it. See ranking.tsx's isSwipingRef.
-  swipingRef?: RefObject<boolean>;
   onPress?: () => void;
 }
 
-export function RankingListItem({ entry, swiping, swipingRef, onPress }: RankingListItemProps) {
+export function RankingListItem({ entry, onPress }: RankingListItemProps) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(entry.likeCount);
 
   const toggleLike = () => {
-    if (swipingRef?.current) return;
     setLiked((prev) => !prev);
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
-  const handlePress = () => {
-    if (swipingRef?.current) return;
-    onPress?.();
-  };
-
   return (
-    <Pressable onPress={handlePress} disabled={swiping} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
       <Card style={styles.card}>
         <Text style={styles.rank}>{entry.rank}</Text>
         <View style={styles.info}>
@@ -45,7 +34,6 @@ export function RankingListItem({ entry, swiping, swipingRef, onPress }: Ranking
           variant="outline"
           icon={<Ionicons name={liked ? 'heart' : 'heart-outline'} size={13} color={liked ? colors.like : colors.text} />}
           onPress={toggleLike}
-          disabled={swiping}
         />
       </Card>
     </Pressable>
