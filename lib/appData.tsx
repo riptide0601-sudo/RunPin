@@ -20,6 +20,8 @@ interface AppDataContextValue {
   canPropose: boolean;
   recordProposal: () => void;
   subscribe: () => void;
+  savedCourseIds: string[];
+  toggleSaveCourse: (courseId: string) => void;
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -29,6 +31,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [runLogs, setRunLogs] = useState<RunLog[]>(mockRunLogs);
   const [proposalCount, setProposalCount] = useState(mockProfile.proposalCount);
   const [isSubscribed, setIsSubscribed] = useState(mockProfile.isSubscribed);
+  const [savedCourseIds, setSavedCourseIds] = useState<string[]>([]);
 
   const value = useMemo<AppDataContextValue>(
     () => ({
@@ -44,6 +47,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         if (!isSubscribed) setProposalCount((prev) => prev + 1);
       },
       subscribe: () => setIsSubscribed(true),
+      savedCourseIds,
+      toggleSaveCourse: (courseId) => {
+        setSavedCourseIds((prev) =>
+          prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId],
+        );
+      },
       uploadRunLog: (logId, courseName) => {
         const log = runLogs.find((entry) => entry.id === logId);
         if (!log || log.isUploaded) return;
@@ -67,7 +76,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         );
       },
     }),
-    [courses, runLogs, proposalCount, isSubscribed],
+    [courses, runLogs, proposalCount, isSubscribed, savedCourseIds],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
