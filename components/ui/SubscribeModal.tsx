@@ -31,7 +31,7 @@ export function SubscribeModal({ visible, title, onSubscribe, onClose }: Subscri
           <View style={styles.body}>
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.message}>러닝 제안 무제한</Text>
-            <Text style={styles.price}>월 KRW 990</Text>
+            <Text style={styles.price}>KRW 990 / 월</Text>
 
             <View style={styles.actions}>
               <Pill label="닫기" variant="outline" onPress={onClose} style={styles.actionButton} />
