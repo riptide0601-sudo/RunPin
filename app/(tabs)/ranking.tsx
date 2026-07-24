@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -43,7 +43,10 @@ function RankingPage({
   onSelectEntry,
 }: {
   period: RankingPeriod;
-  rankings: RankingEntry[];
+  // undefined until this period has actually been fetched (see visitedPeriods
+  // below) — a real backend would fetch per period on demand instead of all
+  // four at once, so this slot has to be able to render before its data exists.
+  rankings: RankingEntry[] | undefined;
   width: number;
   swiping: boolean;
   swipingRef: RefObject<boolean>;
@@ -55,7 +58,9 @@ function RankingPage({
       contentContainerStyle={styles.listContent}
       showsVerticalScrollIndicator={false}
     >
-      {period === 'daily' && rankings.length === 0 ? (
+      {rankings === undefined ? (
+        <ActivityIndicator style={styles.loading} color={colors.textMuted} />
+      ) : period === 'daily' && rankings.length === 0 ? (
         <Text style={styles.emptyText}>오늘 업로드된 코스가 없어요</Text>
       ) : (
         rankings.map((entry) => (
@@ -176,10 +181,36 @@ export default function RankingScreen() {
     [periodIndex, setSwiping, snapToIndex, translateX, windowWidth],
   );
 
-  const rankingsByPeriod = useMemo(
-    () => PERIOD_ORDER.map((p) => getRankingsForPeriod(p, courses)),
-    [courses],
+  // Only periods the user has actually reached (or is one swipe away from)
+  // get their data loaded — never all four at once. A real backend would plug
+  // into this by making getRankingsForPeriod an async per-period fetch; the
+  // set below is what decides which periods to call it for.
+  const [visitedPeriods, setVisitedPeriods] = useState<Set<RankingPeriod>>(
+    () => new Set([PERIOD_ORDER[0]]),
   );
+  useEffect(() => {
+    const neededIndexes = [periodIndex - 1, periodIndex, periodIndex + 1];
+    setVisitedPeriods((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      for (const index of neededIndexes) {
+        const candidate = PERIOD_ORDER[index];
+        if (candidate && !next.has(candidate)) {
+          next.add(candidate);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [periodIndex]);
+
+  const rankingsCache = useMemo(() => {
+    const cache: Partial<Record<RankingPeriod, RankingEntry[]>> = {};
+    visitedPeriods.forEach((p) => {
+      cache[p] = getRankingsForPeriod(p, courses);
+    });
+    return cache;
+  }, [visitedPeriods, courses]);
 
   const selectedCourse = useMemo(
     () => (selectedEntry ? courses.find((course) => course.id === selectedEntry.courseId) ?? null : null),
@@ -201,11 +232,11 @@ export default function RankingScreen() {
               },
             ]}
           >
-            {PERIOD_ORDER.map((p, index) => (
+            {PERIOD_ORDER.map((p) => (
               <RankingPage
                 key={p}
                 period={p}
-                rankings={rankingsByPeriod[index]}
+                rankings={rankingsCache[p]}
                 width={windowWidth}
                 swiping={isSwiping}
                 swipingRef={isSwipingRef}
@@ -252,5 +283,8 @@ const styles = StyleSheet.create({
     marginTop: 40,
     fontSize: 14,
     color: colors.textMuted,
+  },
+  loading: {
+    marginTop: 40,
   },
 });
