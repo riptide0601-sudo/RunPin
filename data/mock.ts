@@ -2704,7 +2704,6 @@ export const mockProfile = {
 export const mockMenuItems: MenuItemData[] = [
   { id: 'menu-log', label: '내 러닝 기록', icon: 'time-outline' },
   { id: 'menu-saved', label: '저장한 코스', icon: 'bookmark-outline' },
-  { id: 'menu-badge', label: '뱃지 · 업적', icon: 'ribbon-outline' },
   { id: 'menu-notification', label: '알림 설정', icon: 'notifications-outline' },
   { id: 'menu-privacy', label: '개인정보 설정', icon: 'lock-closed-outline' },
   { id: 'menu-support', label: '고객센터', icon: 'help-circle-outline' },

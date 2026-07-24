@@ -19,8 +19,22 @@ export default function ProfileScreen() {
   const [subscribeModalVisible, setSubscribeModalVisible] = useState(false);
 
   const handleMenuItemPress = (id: string) => {
-    if (id === 'menu-log') {
-      router.push('/run-log');
+    switch (id) {
+      case 'menu-log':
+        router.push('/run-log');
+        break;
+      case 'menu-saved':
+        router.push('/saved-courses');
+        break;
+      case 'menu-notification':
+        router.push('/notifications');
+        break;
+      case 'menu-privacy':
+        router.push('/privacy');
+        break;
+      case 'menu-support':
+        router.push('/support');
+        break;
     }
   };
 
