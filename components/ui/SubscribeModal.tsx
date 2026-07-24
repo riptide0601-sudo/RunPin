@@ -39,7 +39,7 @@ export function SubscribeModal({ visible, title, message, onSubscribe, onClose }
             <View style={styles.benefits}>
               {BENEFITS.map((benefit) => (
                 <View key={benefit} style={styles.benefitRow}>
-                  <Ionicons name="checkmark-circle" size={16} color={colors.accentSubscribe} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.ink} />
                   <Text style={styles.benefitText}>{benefit}</Text>
                 </View>
               ))}
@@ -47,12 +47,7 @@ export function SubscribeModal({ visible, title, message, onSubscribe, onClose }
 
             <View style={styles.actions}>
               <Pill label="닫기" variant="outline" onPress={onClose} style={styles.actionButton} />
-              <Pill
-                label="구독하기"
-                variant="filled"
-                onPress={onSubscribe}
-                style={{ ...styles.actionButton, backgroundColor: colors.accentSubscribe }}
-              />
+              <Pill label="구독하기" variant="filled" onPress={onSubscribe} style={styles.actionButton} />
             </View>
           </View>
         </View>
@@ -101,7 +96,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.8,
-    color: '#F0C878',
+    color: 'rgba(255,255,255,0.55)',
   },
   body: {
     alignItems: 'center',
