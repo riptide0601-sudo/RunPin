@@ -7,7 +7,6 @@ import { colors } from '@/constants/colors';
 interface SubscribeModalProps {
   visible: boolean;
   title: string;
-  message: string;
   onSubscribe: () => void;
   onClose: () => void;
 }
@@ -15,7 +14,7 @@ interface SubscribeModalProps {
 // 커뮤니티 제안 횟수 소진, 마이페이지 구독 카드 클릭 시 공통으로 뜨는 구독 유도 팝업.
 // 프로필 SubscriptionBanner와 동일한 다크 카드 + 러닝 차트 모티프를 재사용해
 // "구독(PRO)"이라는 맥락을 시각적으로 일관되게 전달한다.
-export function SubscribeModal({ visible, title, message, onSubscribe, onClose }: SubscribeModalProps) {
+export function SubscribeModal({ visible, title, onSubscribe, onClose }: SubscribeModalProps) {
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
@@ -31,7 +30,8 @@ export function SubscribeModal({ visible, title, message, onSubscribe, onClose }
 
           <View style={styles.body}>
             <Text style={styles.title}>{title}</Text>
-            <Text style={styles.message}>{message}</Text>
+            <Text style={styles.message}>러닝 제안 무제한</Text>
+            <Text style={styles.price}>월 990원</Text>
 
             <View style={styles.actions}>
               <Pill label="닫기" variant="outline" onPress={onClose} style={styles.actionButton} />
@@ -102,6 +102,12 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
   },
   actions: {
     flexDirection: 'row',

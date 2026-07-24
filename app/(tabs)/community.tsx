@@ -36,7 +36,6 @@ const INFO_MODAL_CONTENT: Record<Exclude<InfoModal, 'none'>, InfoModalContent> =
 
 const LIMIT_MODAL_CONTENT = {
   title: '무료 제안 횟수를 모두 사용했어요',
-  message: `무료 제안 ${FREE_PROPOSAL_LIMIT}회를 모두 사용했어요. 구독하고 무제한으로 이용해보세요`,
 };
 
 export default function CommunityScreen() {
@@ -156,7 +155,6 @@ export default function CommunityScreen() {
       <SubscribeModal
         visible={limitVisible}
         title={LIMIT_MODAL_CONTENT.title}
-        message={LIMIT_MODAL_CONTENT.message}
         onClose={closeLimitModal}
         onSubscribe={() => {
           closeLimitModal();

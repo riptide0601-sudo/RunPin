@@ -54,7 +54,6 @@ export default function ProfileScreen() {
       <SubscribeModal
         visible={subscribeModalVisible}
         title="RunPin PRO 구독"
-        message="함께 뛰자고 제안하기 무제한, 무료 5회 제한 없이 자유롭게 매칭을 시도해보세요."
         onSubscribe={handleSubscribe}
         onClose={() => setSubscribeModalVisible(false)}
       />
