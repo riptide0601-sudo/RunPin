@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CourseRouteModal } from '@/components/ranking/CourseRouteModal';
@@ -10,11 +11,42 @@ import { mockRankingsByPeriod } from '@/data/mock';
 import { useAppData } from '@/lib/appData';
 import type { RankingEntry } from '@/types';
 
+const PERIOD_ORDER: RankingPeriod[] = ['daily', 'monthly', 'yearly', 'all'];
+const SWIPE_DISTANCE_THRESHOLD = 60;
+const SWIPE_VELOCITY_THRESHOLD = 600;
+
 export default function RankingScreen() {
   const insets = useSafeAreaInsets();
   const { courses } = useAppData();
   const [period, setPeriod] = useState<RankingPeriod>('daily');
   const [selectedEntry, setSelectedEntry] = useState<RankingEntry | null>(null);
+
+  const goToAdjacentPeriod = useCallback((direction: 1 | -1) => {
+    setPeriod((current) => {
+      const currentIndex = PERIOD_ORDER.indexOf(current);
+      const nextIndex = currentIndex + direction;
+      if (nextIndex < 0 || nextIndex >= PERIOD_ORDER.length) {
+        return current;
+      }
+      return PERIOD_ORDER[nextIndex];
+    });
+  }, []);
+
+  const swipeGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetX([-20, 20])
+        .failOffsetY([-10, 10])
+        .onEnd((event) => {
+          const { translationX, velocityX } = event;
+          if (translationX <= -SWIPE_DISTANCE_THRESHOLD || velocityX <= -SWIPE_VELOCITY_THRESHOLD) {
+            goToAdjacentPeriod(1);
+          } else if (translationX >= SWIPE_DISTANCE_THRESHOLD || velocityX >= SWIPE_VELOCITY_THRESHOLD) {
+            goToAdjacentPeriod(-1);
+          }
+        }),
+    [goToAdjacentPeriod],
+  );
 
   const rankings = useMemo<RankingEntry[]>(() => {
     if (period === 'daily') {
@@ -43,15 +75,17 @@ export default function RankingScreen() {
     <View style={styles.container}>
       <Text style={[styles.title, { paddingTop: insets.top + 8 }]}>랭킹</Text>
       <RankingTabs value={period} onChange={setPeriod} />
-      <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {period === 'daily' && rankings.length === 0 ? (
-          <Text style={styles.emptyText}>오늘 업로드된 코스가 없어요</Text>
-        ) : (
-          rankings.map((entry) => (
-            <RankingListItem key={entry.id} entry={entry} onPress={() => setSelectedEntry(entry)} />
-          ))
-        )}
-      </ScrollView>
+      <GestureDetector gesture={swipeGesture}>
+        <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+          {period === 'daily' && rankings.length === 0 ? (
+            <Text style={styles.emptyText}>오늘 업로드된 코스가 없어요</Text>
+          ) : (
+            rankings.map((entry) => (
+              <RankingListItem key={entry.id} entry={entry} onPress={() => setSelectedEntry(entry)} />
+            ))
+          )}
+        </ScrollView>
+      </GestureDetector>
       <CourseRouteModal
         visible={selectedEntry !== null}
         course={selectedCourse}

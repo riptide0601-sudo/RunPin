@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { MenuList } from '@/components/profile/MenuList';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { StatsRow } from '@/components/profile/StatsRow';
 import { SubscriptionBanner } from '@/components/profile/SubscriptionBanner';
+import { AlertModal } from '@/components/ui/AlertModal';
 import { colors } from '@/constants/colors';
 import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
@@ -13,13 +14,19 @@ import { calculateUserGrade } from '@/lib/userGrade';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { courses, isSubscribed, remainingProposals } = useAppData();
+  const { courses, isSubscribed, remainingProposals, subscribe } = useAppData();
   const grade = useMemo(() => calculateUserGrade(mockProfile.name, courses), [courses]);
+  const [subscribeModalVisible, setSubscribeModalVisible] = useState(false);
 
   const handleMenuItemPress = (id: string) => {
     if (id === 'menu-log') {
       router.push('/run-log');
     }
+  };
+
+  const handleSubscribe = () => {
+    subscribe();
+    setSubscribeModalVisible(false);
   };
 
   return (
@@ -39,10 +46,21 @@ export default function ProfileScreen() {
         isSubscribed={isSubscribed}
         remaining={Math.min(remainingProposals, FREE_PROPOSAL_LIMIT)}
         limit={FREE_PROPOSAL_LIMIT}
-        memberName={mockProfile.name}
-        onPress={() => router.push('/subscription')}
+        onPress={() => {
+          if (!isSubscribed) setSubscribeModalVisible(true);
+        }}
       />
       <MenuList items={mockMenuItems} onItemPress={handleMenuItemPress} />
+      <AlertModal
+        visible={subscribeModalVisible}
+        tone="subscribe"
+        icon="sparkles"
+        title="RunPin PRO 구독"
+        message="함께 뛰자고 제안하기 무제한, 무료 5회 제한 없이 자유롭게 매칭을 시도해보세요."
+        primaryAction={{ label: '구독하기', onPress: handleSubscribe }}
+        secondaryAction={{ label: '닫기', onPress: () => setSubscribeModalVisible(false) }}
+        onRequestClose={() => setSubscribeModalVisible(false)}
+      />
     </ScrollView>
   );
 }

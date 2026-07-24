@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
@@ -8,13 +7,20 @@ interface SubscriptionBannerProps {
   isSubscribed: boolean;
   remaining: number;
   limit: number;
-  memberName: string;
   onPress: () => void;
 }
 
-const MASKED_NUMBER = '••••  ••••  ••••  ••••';
+function SegmentBar({ filled, total }: { filled: number; total: number }) {
+  return (
+    <View style={styles.segmentBar}>
+      {Array.from({ length: total }, (_, index) => (
+        <View key={index} style={[styles.segment, index < filled && styles.segmentFilled]} />
+      ))}
+    </View>
+  );
+}
 
-export function SubscriptionBanner({ isSubscribed, remaining, limit, memberName, onPress }: SubscriptionBannerProps) {
+export function SubscriptionBanner({ isSubscribed, remaining, limit, onPress }: SubscriptionBannerProps) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}>
       <View style={[styles.card, isSubscribed ? styles.cardSubscribed : styles.cardDefault]}>
@@ -30,25 +36,15 @@ export function SubscriptionBanner({ isSubscribed, remaining, limit, memberName,
           </Svg>
         ) : null}
 
-        <View style={styles.topRow}>
-          <Text style={styles.brand}>RUNPIN</Text>
-          <View style={[styles.badge, isSubscribed && styles.badgeSubscribed]}>
-            <Ionicons name={isSubscribed ? 'sparkles' : 'sparkles-outline'} size={16} color={colors.textInverse} />
-          </View>
-        </View>
-
         <Text style={styles.wordmark}>RunPin PRO</Text>
 
-        <Text style={[styles.masked, isSubscribed && styles.maskedOnAccent]}>{MASKED_NUMBER}</Text>
+        <SegmentBar filled={isSubscribed ? limit : remaining} total={limit} />
 
-        <View style={styles.bottomRow}>
-          <View>
-            <Text style={[styles.bottomLabel, isSubscribed && styles.bottomLabelOnAccent]}>
-              {isSubscribed ? '이용 중' : '무료 제안'}
-            </Text>
-            <Text style={styles.bottomValue}>{isSubscribed ? '무제한' : `${remaining}/${limit}회 남음`}</Text>
-          </View>
-          <Text style={[styles.holder, isSubscribed && styles.holderOnAccent]}>{memberName.toUpperCase()}</Text>
+        <View>
+          <Text style={[styles.bottomLabel, isSubscribed && styles.bottomLabelOnAccent]}>
+            {isSubscribed ? '이용 중' : '무료 제안'}
+          </Text>
+          <Text style={styles.bottomValue}>{isSubscribed ? '무제한' : `${remaining}/${limit}회 남음`}</Text>
         </View>
       </View>
     </Pressable>
@@ -88,46 +84,24 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 7,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  brand: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: 'rgba(255,255,255,0.55)',
-  },
-  badge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-  },
-  badgeSubscribed: {
-    backgroundColor: 'rgba(255,255,255,0.22)',
-  },
   wordmark: {
     fontSize: 30,
     fontWeight: '800',
     letterSpacing: 0.5,
     color: colors.textInverse,
   },
-  masked: {
-    fontSize: 15,
-    letterSpacing: 2,
-    color: 'rgba(255,255,255,0.35)',
-  },
-  maskedOnAccent: {
-    color: 'rgba(255,255,255,0.55)',
-  },
-  bottomRow: {
+  segmentBar: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
+    gap: 4,
+  },
+  segment: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  segmentFilled: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
   },
   bottomLabel: {
     fontSize: 10,
@@ -143,14 +117,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textInverse,
     marginTop: 2,
-  },
-  holder: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    color: 'rgba(255,255,255,0.55)',
-  },
-  holderOnAccent: {
-    color: 'rgba(255,255,255,0.75)',
   },
 });
