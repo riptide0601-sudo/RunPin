@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -74,6 +74,9 @@ export default function RankingScreen() {
   const [isSwiping, setIsSwiping] = useState(false);
 
   const translateX = useRef(new Animated.Value(0)).current;
+  // Set right before an adjacent-period snap animation finishes; consumed by the
+  // layout effect below once `period`'s content has actually re-rendered.
+  const pendingSnapResetRef = useRef(false);
   const periodIndex = PERIOD_ORDER.indexOf(period);
   const prevPeriod = periodIndex > 0 ? PERIOD_ORDER[periodIndex - 1] : null;
   const nextPeriod = periodIndex < PERIOD_ORDER.length - 1 ? PERIOD_ORDER[periodIndex + 1] : null;
@@ -117,36 +120,58 @@ export default function RankingScreen() {
               toValue: -windowWidth,
               duration: SNAP_DURATION_MS,
               useNativeDriver: true,
-            }).start(() => {
+            }).start(({ finished }) => {
+              // Interrupted by a new gesture starting mid-animation — that gesture's
+              // own onStart already re-armed isSwiping, so leave everything alone.
+              if (!finished) return;
+              // Don't reset translateX here: doing it in this same tick would make the
+              // view snap back to the "center" slot's position on the native thread
+              // before `period`'s state update has re-rendered that slot's content,
+              // flashing the old page for a frame. The layout effect below resets it
+              // once the new content has actually committed, and also releases
+              // isSwiping only once that full transition is truly done.
+              pendingSnapResetRef.current = true;
               goToAdjacentPeriod(1);
-              translateX.setValue(0);
             });
           } else if (goPrev && prevPeriod) {
             Animated.timing(translateX, {
               toValue: windowWidth,
               duration: SNAP_DURATION_MS,
               useNativeDriver: true,
-            }).start(() => {
+            }).start(({ finished }) => {
+              if (!finished) return;
+              pendingSnapResetRef.current = true;
               goToAdjacentPeriod(-1);
-              translateX.setValue(0);
             });
           } else {
             Animated.spring(translateX, {
               toValue: 0,
               useNativeDriver: true,
               bounciness: 6,
-            }).start();
+            }).start(({ finished }) => {
+              if (finished) setIsSwiping(false);
+            });
           }
         })
-        .onFinalize(() => {
-          // Pressable#onPress on web fires from the trailing native `click` event,
-          // which is dispatched right after this gesture's pointerup handling. Resetting
-          // isSwiping synchronously here loses the race and lets that click slip through,
-          // so defer the reset by one tick until after the trailing click has been handled.
-          setTimeout(() => setIsSwiping(false), 0);
+        .onFinalize((_event, success) => {
+          // Cancelled before onEnd's animation ever started (e.g. interrupted by the
+          // system) — nothing else will release isSwiping, so do it here. A successful
+          // finalize is handled by the animation-completion callbacks above / the layout
+          // effect below instead, once the transition has actually finished.
+          if (!success) setIsSwiping(false);
         }),
     [goToAdjacentPeriod, nextPeriod, periodIndex, prevPeriod, translateX, windowWidth],
   );
+
+  // Runs synchronously right after `period`'s new content has committed, so the
+  // native-thread translateX reset and the re-rendered "center" slot land in the
+  // same frame instead of racing (see the comment on pendingSnapResetRef above).
+  useLayoutEffect(() => {
+    if (!pendingSnapResetRef.current) return;
+    pendingSnapResetRef.current = false;
+    translateX.setValue(0);
+    setIsSwiping(false);
+  }, [period, translateX]);
 
   const currentRankings = useMemo(() => getRankingsForPeriod(period, courses), [courses, period]);
   const prevRankings = useMemo(

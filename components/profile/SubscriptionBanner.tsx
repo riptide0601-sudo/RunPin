@@ -1,6 +1,5 @@
-import { Fragment } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { colors } from '@/constants/colors';
 
@@ -16,128 +15,59 @@ interface Point {
   y: number;
 }
 
-interface BezierSegment {
-  from: Point;
-  c1: Point;
-  c2: Point;
-  to: Point;
+// Catmull-Rom -> cubic Bezier smoothing, identical to components/charts/LineChart.tsx's
+// buildSmoothPath so this card's motif reads as the same "run chart" language the user
+// already sees on the run detail page (elevation/pace/heart-rate graphs).
+function buildSmoothPath(points: Point[]): string {
+  if (points.length === 0) return '';
+  if (points.length < 3) {
+    return points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  }
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] ?? points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
+  }
+  return d;
 }
 
-const WAVE_VIEW_WIDTH = 300;
-const WAVE_VIEW_HEIGHT = 40;
-const WAVE_MARGIN_X = 10;
-const WAVE_BASELINE_Y = 20;
-const WAVE_AMPLITUDE_PATTERN = [0, -7, 5, -5, 7, 0];
+const CHART_VIEW_WIDTH = 300;
+const CHART_VIEW_HEIGHT = 56;
+const CHART_PAD_X = 4;
+const CHART_PAD_Y = 8;
 
-function buildWavePoints(total: number): Point[] {
-  const usableWidth = WAVE_VIEW_WIDTH - WAVE_MARGIN_X * 2;
-  return Array.from({ length: total + 1 }, (_, index) => ({
-    x: WAVE_MARGIN_X + (usableWidth * index) / total,
-    y: WAVE_BASELINE_Y + WAVE_AMPLITUDE_PATTERN[index % WAVE_AMPLITUDE_PATTERN.length],
+// Decorative course-elevation-shaped sample data — asymmetric, uneven spacing so it
+// doesn't read as a periodic "wave". Not tied to any real course.
+const CHART_MAIN = [14, 20, 40, 34, 46, 26, 32, 18];
+const CHART_ECHO = [30, 12, 24, 44, 20, 36, 16, 40];
+
+function buildChartPath(values: number[]): string {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const points = values.map((value, index) => ({
+    x: CHART_PAD_X + (index / (values.length - 1)) * (CHART_VIEW_WIDTH - CHART_PAD_X * 2),
+    y: CHART_PAD_Y + (1 - (value - min) / range) * (CHART_VIEW_HEIGHT - CHART_PAD_Y * 2),
   }));
+  return buildSmoothPath(points);
 }
 
-// Catmull-Rom -> cubic Bezier conversion so the route line curves smoothly through every point.
-function buildCatmullRomSegments(points: Point[]): BezierSegment[] {
-  return points.slice(0, -1).map((from, index) => {
-    const to = points[index + 1];
-    const prev = points[index - 1] ?? from;
-    const next = points[index + 2] ?? to;
-    return {
-      from,
-      to,
-      c1: { x: from.x + (to.x - prev.x) / 6, y: from.y + (to.y - prev.y) / 6 },
-      c2: { x: to.x - (next.x - from.x) / 6, y: to.y - (next.y - from.y) / 6 },
-    };
-  });
-}
+const CHART_MAIN_PATH = buildChartPath(CHART_MAIN);
+const CHART_ECHO_PATH = buildChartPath(CHART_ECHO);
 
-function segmentsToPath(segments: BezierSegment[]): string {
-  if (segments.length === 0) return '';
-  const start = segments[0].from;
-  const curves = segments
-    .map((segment) => `C ${segment.c1.x} ${segment.c1.y}, ${segment.c2.x} ${segment.c2.y}, ${segment.to.x} ${segment.to.y}`)
-    .join(' ');
-  return `M ${start.x} ${start.y} ${curves}`;
-}
-
-interface RouteToneColors {
-  coreStroke: string;
-  glowStroke: string;
-  remainingStroke: string;
-  markerFill: string;
-  markerGlow: string;
-  markerRemainingStroke: string;
-}
-
-const ROUTE_TONE: Record<'onDark' | 'onGold', RouteToneColors> = {
-  onDark: {
-    coreStroke: '#F0C878',
-    glowStroke: 'rgba(240,200,120,0.35)',
-    remainingStroke: 'rgba(255,255,255,0.2)',
-    markerFill: '#F0C878',
-    markerGlow: 'rgba(240,200,120,0.4)',
-    markerRemainingStroke: 'rgba(255,255,255,0.4)',
-  },
-  onGold: {
-    coreStroke: '#FFFBF2',
-    glowStroke: 'rgba(255,255,255,0.4)',
-    remainingStroke: 'rgba(255,255,255,0.3)',
-    markerFill: '#FFFBF2',
-    markerGlow: 'rgba(255,255,255,0.45)',
-    markerRemainingStroke: 'rgba(255,255,255,0.5)',
-  },
-};
-
-function RouteProgressLine({ filled, total, tone }: { filled: number; total: number; tone: 'onDark' | 'onGold' }) {
-  const colorSet = ROUTE_TONE[tone];
-  const points = buildWavePoints(total);
-  const segments = buildCatmullRomSegments(points);
-  const completedPath = segmentsToPath(segments.slice(0, filled));
-  const remainingPath = segmentsToPath(segments.slice(filled));
-
+function RunChartMotif() {
   return (
-    <View style={styles.waveWrapper}>
-      <Svg width="100%" height={WAVE_VIEW_HEIGHT} viewBox={`0 0 ${WAVE_VIEW_WIDTH} ${WAVE_VIEW_HEIGHT}`} preserveAspectRatio="none">
-        {remainingPath ? (
-          <Path
-            d={remainingPath}
-            stroke={colorSet.remainingStroke}
-            strokeWidth={2}
-            strokeDasharray="1.5,5"
-            strokeLinecap="round"
-            fill="none"
-          />
-        ) : null}
-        {completedPath ? (
-          <>
-            <Path d={completedPath} stroke={colorSet.glowStroke} strokeWidth={7} strokeLinecap="round" fill="none" />
-            <Path d={completedPath} stroke={colorSet.coreStroke} strokeWidth={2.5} strokeLinecap="round" fill="none" />
-          </>
-        ) : null}
-        {points.slice(1).map((point, index) => {
-          const unitIndex = index + 1;
-          const isFilled = unitIndex <= filled;
-          if (isFilled) {
-            return (
-              <Fragment key={unitIndex}>
-                <Circle cx={point.x} cy={point.y} r={5} fill={colorSet.markerGlow} />
-                <Circle cx={point.x} cy={point.y} r={2.5} fill={colorSet.markerFill} />
-              </Fragment>
-            );
-          }
-          return (
-            <Circle
-              key={unitIndex}
-              cx={point.x}
-              cy={point.y}
-              r={3}
-              fill="none"
-              stroke={colorSet.markerRemainingStroke}
-              strokeWidth={1.5}
-            />
-          );
-        })}
+    <View style={styles.chartWrapper}>
+      <Svg width="100%" height={CHART_VIEW_HEIGHT} viewBox={`0 0 ${CHART_VIEW_WIDTH} ${CHART_VIEW_HEIGHT}`} preserveAspectRatio="none">
+        <Path d={CHART_ECHO_PATH} stroke="rgba(255,255,255,0.38)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <Path d={CHART_MAIN_PATH} stroke="rgba(255,255,255,0.85)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none" />
       </Svg>
     </View>
   );
@@ -146,28 +76,19 @@ function RouteProgressLine({ filled, total, tone }: { filled: number; total: num
 export function SubscriptionBanner({ isSubscribed, remaining, limit, onPress }: SubscriptionBannerProps) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}>
-      <View style={[styles.card, isSubscribed ? styles.cardSubscribed : styles.cardDefault]}>
-        {isSubscribed ? (
-          <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%">
-            <Defs>
-              <LinearGradient id="proGradient" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0" stopColor="#D9B36C" />
-                <Stop offset="1" stopColor="#8C6A2C" />
-              </LinearGradient>
-            </Defs>
-            <Rect x="0" y="0" width="100%" height="100%" rx={20} fill="url(#proGradient)" />
-          </Svg>
-        ) : null}
+      <View style={styles.card}>
+        <View style={styles.wordmarkRow}>
+          <Text style={styles.wordmark}>RunPin</Text>
+          {isSubscribed ? <Text style={styles.wordmarkPro}> PRO</Text> : null}
+        </View>
 
-        <Text style={styles.wordmark}>RunPin PRO</Text>
-
-        <RouteProgressLine filled={isSubscribed ? limit : remaining} total={limit} tone={isSubscribed ? 'onGold' : 'onDark'} />
+        <RunChartMotif />
 
         <View>
-          <Text style={[styles.bottomLabel, isSubscribed && styles.bottomLabelOnAccent]}>
-            {isSubscribed ? '이용 중' : '무료 제안'}
+          <Text style={[styles.bottomLabel, isSubscribed && styles.hidden]}>FREE PROPOSAL</Text>
+          <Text style={[styles.bottomValue, isSubscribed && styles.bottomValueSubscribed]}>
+            {isSubscribed ? 'UNLIMITED PROPOSAL' : `${remaining}/${limit}`}
           </Text>
-          <Text style={styles.bottomValue}>{isSubscribed ? '무제한' : `${remaining}/${limit}회 남음`}</Text>
         </View>
       </View>
     </Pressable>
@@ -188,8 +109,6 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'space-between',
     overflow: 'hidden',
-  },
-  cardDefault: {
     backgroundColor: colors.ink,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
@@ -199,36 +118,45 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 7,
   },
-  cardSubscribed: {
-    borderWidth: 0,
-    shadowColor: '#8C6A2C',
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 7,
+  wordmarkRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   wordmark: {
-    fontSize: 19,
+    fontSize: 12,
     fontWeight: '800',
-    letterSpacing: 3,
+    letterSpacing: 0.8,
     color: colors.textInverse,
   },
-  waveWrapper: {
-    height: 40,
+  wordmarkPro: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    color: '#F0C878',
+  },
+  chartWrapper: {
+    height: 56,
+  },
+  hidden: {
+    opacity: 0,
   },
   bottomLabel: {
     fontSize: 10,
     fontWeight: '600',
     letterSpacing: 0.5,
-    color: 'rgba(255,255,255,0.55)',
-  },
-  bottomLabelOnAccent: {
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.45)',
   },
   bottomValue: {
     fontSize: 14,
     fontWeight: '700',
+    lineHeight: 17,
     color: colors.textInverse,
     marginTop: 2,
+  },
+  bottomValueSubscribed: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    color: 'rgba(255,255,255,0.55)',
   },
 });
