@@ -9,10 +9,11 @@ import type { RankingEntry } from '@/types';
 
 interface RankingListItemProps {
   entry: RankingEntry;
+  swiping?: boolean;
   onPress?: () => void;
 }
 
-export function RankingListItem({ entry, onPress }: RankingListItemProps) {
+export function RankingListItem({ entry, swiping, onPress }: RankingListItemProps) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(entry.likeCount);
 
@@ -22,7 +23,7 @@ export function RankingListItem({ entry, onPress }: RankingListItemProps) {
   };
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable onPress={onPress} disabled={swiping} style={({ pressed }) => pressed && styles.pressed}>
       <Card style={styles.card}>
         <Text style={styles.rank}>{entry.rank}</Text>
         <View style={styles.info}>
@@ -34,6 +35,7 @@ export function RankingListItem({ entry, onPress }: RankingListItemProps) {
           variant="outline"
           icon={<Ionicons name={liked ? 'heart' : 'heart-outline'} size={13} color={liked ? colors.like : colors.text} />}
           onPress={toggleLike}
+          disabled={swiping}
         />
       </Card>
     </Pressable>
