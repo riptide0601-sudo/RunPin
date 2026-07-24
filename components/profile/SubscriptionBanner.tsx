@@ -39,9 +39,9 @@ function buildSmoothPath(points: Point[]): string {
 }
 
 const CHART_VIEW_WIDTH = 300;
-const CHART_VIEW_HEIGHT = 56;
+const CHART_VIEW_HEIGHT = 40;
 const CHART_PAD_X = 4;
-const CHART_PAD_Y = 8;
+const CHART_PAD_Y = 6;
 
 // Decorative course-elevation-shaped sample data — asymmetric, uneven spacing so it
 // doesn't read as a periodic "wave". Not tied to any real course.
@@ -104,9 +104,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   card: {
-    aspectRatio: 1.6,
+    aspectRatio: 2.4,
     borderRadius: 20,
-    padding: 20,
+    padding: 14,
     justifyContent: 'space-between',
     overflow: 'hidden',
     backgroundColor: colors.ink,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     color: '#F0C878',
   },
   chartWrapper: {
-    height: 56,
+    height: 40,
   },
   hidden: {
     opacity: 0,

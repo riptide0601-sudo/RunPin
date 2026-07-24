@@ -18,12 +18,22 @@ export function RankingListItem({ entry, swiping, onPress }: RankingListItemProp
   const [likeCount, setLikeCount] = useState(entry.likeCount);
 
   const toggleLike = () => {
+    if (__DEV__) {
+      console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: like pressed`, { entryId: entry.id, swiping });
+    }
     setLiked((prev) => !prev);
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
+  const handlePress = () => {
+    if (__DEV__) {
+      console.log(`[RANK-SWIPE ${Date.now()}] RankingListItem: row pressed`, { entryId: entry.id, swiping });
+    }
+    onPress?.();
+  };
+
   return (
-    <Pressable onPress={onPress} disabled={swiping} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable onPress={handlePress} disabled={swiping} style={({ pressed }) => pressed && styles.pressed}>
       <Card style={styles.card}>
         <Text style={styles.rank}>{entry.rank}</Text>
         <View style={styles.info}>

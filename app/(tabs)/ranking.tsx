@@ -17,6 +17,13 @@ const SWIPE_VELOCITY_THRESHOLD = 600;
 const SNAP_DURATION_MS = 220;
 const RUBBER_BAND_FACTOR = 0.25;
 
+// 실기기 실측용 임시 로그. 원인 확정 후 제거할 것.
+function swipeLog(...args: unknown[]) {
+  if (__DEV__) {
+    console.log(`[RANK-SWIPE ${Date.now()}]`, ...args);
+  }
+}
+
 function getRankingsForPeriod(period: RankingPeriod, courses: Course[]): RankingEntry[] {
   if (period === 'daily') {
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -98,6 +105,7 @@ export default function RankingScreen() {
         .activeOffsetX([-20, 20])
         .failOffsetY([-10, 10])
         .onStart(() => {
+          swipeLog('onStart: isSwiping -> true', { period });
           setIsSwiping(true);
         })
         .onUpdate((event) => {
@@ -114,13 +122,16 @@ export default function RankingScreen() {
           const { translationX, velocityX } = event;
           const goNext = translationX <= -SWIPE_DISTANCE_THRESHOLD || velocityX <= -SWIPE_VELOCITY_THRESHOLD;
           const goPrev = translationX >= SWIPE_DISTANCE_THRESHOLD || velocityX >= SWIPE_VELOCITY_THRESHOLD;
+          swipeLog('onEnd', { translationX, velocityX, goNext, goPrev, period });
 
           if (goNext && nextPeriod) {
+            swipeLog('onEnd: starting timing -> next', { toValue: -windowWidth });
             Animated.timing(translateX, {
               toValue: -windowWidth,
               duration: SNAP_DURATION_MS,
               useNativeDriver: true,
             }).start(({ finished }) => {
+              swipeLog('timing(next) finished callback', { finished, period });
               // Interrupted by a new gesture starting mid-animation — that gesture's
               // own onStart already re-armed isSwiping, so leave everything alone.
               if (!finished) return;
@@ -131,25 +142,34 @@ export default function RankingScreen() {
               // once the new content has actually committed, and also releases
               // isSwiping only once that full transition is truly done.
               pendingSnapResetRef.current = true;
+              swipeLog('onEnd: calling goToAdjacentPeriod(1), pendingSnapResetRef -> true');
               goToAdjacentPeriod(1);
             });
           } else if (goPrev && prevPeriod) {
+            swipeLog('onEnd: starting timing -> prev', { toValue: windowWidth });
             Animated.timing(translateX, {
               toValue: windowWidth,
               duration: SNAP_DURATION_MS,
               useNativeDriver: true,
             }).start(({ finished }) => {
+              swipeLog('timing(prev) finished callback', { finished, period });
               if (!finished) return;
               pendingSnapResetRef.current = true;
+              swipeLog('onEnd: calling goToAdjacentPeriod(-1), pendingSnapResetRef -> true');
               goToAdjacentPeriod(-1);
             });
           } else {
+            swipeLog('onEnd: snap back to 0 (no period change)');
             Animated.spring(translateX, {
               toValue: 0,
               useNativeDriver: true,
               bounciness: 6,
             }).start(({ finished }) => {
-              if (finished) setIsSwiping(false);
+              swipeLog('spring(back) finished callback', { finished });
+              if (finished) {
+                swipeLog('spring(back): isSwiping -> false');
+                setIsSwiping(false);
+              }
             });
           }
         })
@@ -158,9 +178,13 @@ export default function RankingScreen() {
           // system) — nothing else will release isSwiping, so do it here. A successful
           // finalize is handled by the animation-completion callbacks above / the layout
           // effect below instead, once the transition has actually finished.
-          if (!success) setIsSwiping(false);
+          swipeLog('onFinalize', { success });
+          if (!success) {
+            swipeLog('onFinalize: isSwiping -> false (cancelled)');
+            setIsSwiping(false);
+          }
         }),
-    [goToAdjacentPeriod, nextPeriod, periodIndex, prevPeriod, translateX, windowWidth],
+    [goToAdjacentPeriod, nextPeriod, period, periodIndex, prevPeriod, translateX, windowWidth],
   );
 
   // Runs synchronously right after `period`'s new content has committed, so the
@@ -168,6 +192,7 @@ export default function RankingScreen() {
   // same frame instead of racing (see the comment on pendingSnapResetRef above).
   useLayoutEffect(() => {
     if (!pendingSnapResetRef.current) return;
+    swipeLog('layoutEffect: consuming pendingSnapResetRef, resetting translateX and isSwiping -> false', { period });
     pendingSnapResetRef.current = false;
     translateX.setValue(0);
     setIsSwiping(false);
