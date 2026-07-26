@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
+import { useAppData } from '@/lib/appData';
 import type { Course } from '@/types';
 
 interface CourseListItemProps {
@@ -17,6 +18,9 @@ interface CourseListItemProps {
 }
 
 export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress }: CourseListItemProps) {
+  const { savedCourseIds, toggleSaveCourse } = useAppData();
+  const isSaved = savedCourseIds.has(course.id);
+
   return (
     <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
       <Card style={[styles.card, isSelected ? styles.cardSelected : undefined]}>
@@ -31,14 +35,23 @@ export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relat
               />
             ) : null}
           </View>
-          {course.isPopular ? (
-            <View
-              onStartShouldSetResponder={() => true}
-              onResponderTerminationRequest={() => false}
-            >
-              <Pill label="인기" variant="filled" />
-            </View>
-          ) : null}
+          <View style={styles.rightRow}>
+            {course.isPopular ? (
+              <View
+                onStartShouldSetResponder={() => true}
+                onResponderTerminationRequest={() => false}
+              >
+                <Pill label="인기" variant="filled" />
+              </View>
+            ) : null}
+            <Pressable hitSlop={8} onPress={() => toggleSaveCourse(course.id)}>
+              <Ionicons
+                name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                size={18}
+                color={isSaved ? colors.ink : colors.textMuted}
+              />
+            </Pressable>
+          </View>
         </View>
         <CourseMetaRow distanceKm={course.distanceKm} difficulty={course.difficulty} />
         <View style={styles.footerRow}>
@@ -70,6 +83,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  rightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   name: {
     fontSize: 15,

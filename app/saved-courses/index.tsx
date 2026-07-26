@@ -1,19 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CourseListItem } from '@/components/home/CourseListItem';
+import { CourseRouteModal } from '@/components/ranking/CourseRouteModal';
 import { colors } from '@/constants/colors';
 import { useAppData } from '@/lib/appData';
-
-const SAVED_COURSE_COUNT = 3;
+import type { Course } from '@/types';
 
 export default function SavedCoursesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { courses } = useAppData();
-  const savedCourses = courses.slice(0, SAVED_COURSE_COUNT);
+  const { courses, savedCourseIds, toggleSaveCourse } = useAppData();
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+
+  const savedCourses = useMemo(
+    () => courses.filter((course) => savedCourseIds.has(course.id)),
+    [courses, savedCourseIds],
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -30,9 +37,26 @@ export default function SavedCoursesScreen() {
             <Text style={styles.emptyText}>저장한 코스가 없어요</Text>
           </View>
         ) : (
-          savedCourses.map((course) => <CourseListItem key={course.id} course={course} />)
+          savedCourses.map((course) => (
+            <Swipeable
+              key={course.id}
+              renderRightActions={() => (
+                <Pressable style={styles.deleteButton} onPress={() => toggleSaveCourse(course.id)}>
+                  <Ionicons name="trash-outline" size={20} color={colors.textInverse} />
+                </Pressable>
+              )}
+            >
+              <CourseListItem course={course} onPress={() => setSelectedCourse(course)} />
+            </Swipeable>
+          ))
         )}
       </ScrollView>
+      <CourseRouteModal
+        visible={selectedCourse !== null}
+        course={selectedCourse}
+        onClose={() => setSelectedCourse(null)}
+        showSaveButton={false}
+      />
     </View>
   );
 }
@@ -71,5 +95,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: colors.textMuted,
+  },
+  deleteButton: {
+    backgroundColor: colors.like,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 72,
+    borderRadius: 16,
+    marginLeft: 8,
   },
 });
