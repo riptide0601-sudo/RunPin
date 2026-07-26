@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { DifficultyBadge } from '@/components/ui/DifficultyBadge';
 import { colors } from '@/constants/colors';
+import { useAppData } from '@/lib/appData';
 import type { Course } from '@/types';
 
 interface CourseGroupCarouselProps {
@@ -20,6 +22,7 @@ export function CourseGroupCarousel({ expanded, members, selectedCourseId, onSel
   const progress = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   const { width } = useWindowDimensions();
   const cardWidth = (width - LIST_HORIZONTAL_PADDING - CARD_GAP * 2) / 3;
+  const { savedCourseIds, toggleSaveCourse } = useAppData();
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -49,6 +52,7 @@ export function CourseGroupCarousel({ expanded, members, selectedCourseId, onSel
       >
         {members.map((member) => {
           const isSelected = member.id === selectedCourseId;
+          const isSaved = savedCourseIds.has(member.id);
           return (
             <Pressable
               key={member.id}
@@ -65,6 +69,13 @@ export function CourseGroupCarousel({ expanded, members, selectedCourseId, onSel
               <Text style={styles.uploader} numberOfLines={1}>
                 업로드: {member.uploaderName}
               </Text>
+              <Pressable style={styles.bookmarkButton} onPress={() => toggleSaveCourse(member.id)}>
+                <Ionicons
+                  name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                  size={13}
+                  color={isSaved ? colors.ink : colors.textMuted}
+                />
+              </Pressable>
             </Pressable>
           );
         })}
@@ -95,6 +106,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: colors.text,
+    paddingRight: 20,
+  },
+  bookmarkButton: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   distance: {
     fontSize: 11,
