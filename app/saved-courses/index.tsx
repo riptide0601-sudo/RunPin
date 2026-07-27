@@ -37,6 +37,10 @@ function SavedCourseRow({
   // 순수 탭까지 막지 않는다. react-native-gesture-handler/ReanimatedSwipeable가
   // 드래그 시작 시점에 정확히 호출해주는 콜백을 그대로 신호로 사용한다.
   const isSwipingRef = useRef(false);
+  // 탭으로 닫힐 때는 onSwipeableCloseStartDrag가 호출되지 않으므로,
+  // 닫히는 스프링 애니메이션이 완전히 끝날 때까지 카드의 눌림 시각효과와
+  // onPress를 별도로 잠가서 삭제 버튼이 사라지기 전에 다음 터치가 겹치지 않게 한다.
+  const [isRowLocked, setIsRowLocked] = useState(false);
 
   const opacity = useSharedValue(1);
   const scale = useSharedValue(1);
@@ -57,48 +61,53 @@ function SavedCourseRow({
 
   return (
     <Animated.View style={deletingStyle}>
-      <View style={styles.rowWrapper}>
-        <Swipeable
-          ref={swipeableRef}
-          friction={1.6}
-          overshootFriction={8}
-          renderRightActions={() => (
-            <Pressable style={styles.deleteButton} onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={20} color={colors.textInverse} />
-            </Pressable>
-          )}
-          onSwipeableOpenStartDrag={() => {
-            isSwipingRef.current = true;
-            if (openRowRef.current && openRowRef.current.id !== course.id) {
-              openRowRef.current.close();
-            }
-          }}
-          onSwipeableCloseStartDrag={() => {
-            isSwipingRef.current = true;
-          }}
-          onSwipeableOpen={() => {
-            isSwipingRef.current = false;
-            openRowRef.current = {
-              id: course.id,
-              close: () => swipeableRef.current?.close(),
-            };
-          }}
-          onSwipeableClose={() => {
-            isSwipingRef.current = false;
-            if (openRowRef.current?.id === course.id) {
-              openRowRef.current = null;
-            }
-          }}
-        >
+      <Swipeable
+        ref={swipeableRef}
+        friction={1.6}
+        overshootFriction={8}
+        renderRightActions={() => (
+          <Pressable style={styles.deleteButton} onPress={handleDelete}>
+            <Ionicons name="trash-outline" size={20} color={colors.textInverse} />
+          </Pressable>
+        )}
+        onSwipeableOpenStartDrag={() => {
+          isSwipingRef.current = true;
+          if (openRowRef.current && openRowRef.current.id !== course.id) {
+            openRowRef.current.close();
+          }
+        }}
+        onSwipeableCloseStartDrag={() => {
+          isSwipingRef.current = true;
+        }}
+        onSwipeableOpen={() => {
+          isSwipingRef.current = false;
+          openRowRef.current = {
+            id: course.id,
+            close: () => swipeableRef.current?.close(),
+          };
+        }}
+        onSwipeableWillClose={() => {
+          setIsRowLocked(true);
+        }}
+        onSwipeableClose={() => {
+          isSwipingRef.current = false;
+          setIsRowLocked(false);
+          if (openRowRef.current?.id === course.id) {
+            openRowRef.current = null;
+          }
+        }}
+      >
+        <View style={styles.cardInset}>
           <CourseListItem
             course={course}
+            disabled={isRowLocked}
             onPress={() => {
               if (isSwipingRef.current) return;
               onPress();
             }}
           />
-        </Swipeable>
-      </View>
+        </View>
+      </Swipeable>
     </Animated.View>
   );
 }
@@ -179,7 +188,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: 20,
     paddingBottom: 24,
     gap: 8,
   },
@@ -193,16 +201,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
   },
-  // 둥근 모서리로 overflow를 클리핑하는 경계. Swipeable 자체도 overflow:hidden을
-  // 쓰지만 각지게 잘리므로, 이 래퍼가 바깥에서 둥글게 한 번 더 감싼다.
-  rowWrapper: {
-    borderRadius: 16,
-    overflow: 'hidden',
+  // Swipeable 자체는 화면 끝까지 꽉 채워서(full-bleed) 삭제 버튼이 화면 오른쪽
+  // 끝까지 밀리게 하고, 닫혀있을 때의 카드 모양(좌우 여백)은 안쪽 wrapper의
+  // marginHorizontal로 낸다.
+  cardInset: {
+    marginHorizontal: 20,
   },
   deleteButton: {
     backgroundColor: colors.like,
     justifyContent: 'center',
     alignItems: 'center',
     width: 72,
+    borderRadius: 16,
   },
 });

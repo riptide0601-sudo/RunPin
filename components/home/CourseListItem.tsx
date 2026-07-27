@@ -16,14 +16,15 @@ interface CourseListItemProps {
   isExpanded?: boolean;
   relatedCount?: number;
   onPress?: () => void;
+  disabled?: boolean;
 }
 
-export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress }: CourseListItemProps) {
+export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress, disabled }: CourseListItemProps) {
   const { savedCourseIds, toggleSaveCourse } = useAppData();
   const isSaved = savedCourseIds.has(course.id);
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable onPress={onPress} disabled={disabled} style={({ pressed }) => pressed && styles.pressed}>
       <Card style={[styles.card, isSelected ? styles.cardSelected : undefined]}>
         <View style={styles.row}>
           <View style={styles.nameRow}>
