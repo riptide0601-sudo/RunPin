@@ -32,6 +32,27 @@ const DELETE_DURATION = 220;
 const DELETE_ACTION_PUSH_OFFSET = 24;
 // 카드와 삭제 버튼이 거의 붙어 보이도록 남기는 최소 간격.
 const DELETE_ACTION_GAP = 6;
+// 카드가 정지(닫힌) 상태일 때만 좌우 여백을 주는 값. 스와이프 컨테이너 자체에 항상
+// marginHorizontal을 고정하면 드래그 중/열린 상태에서도 좌우에 여백이 그대로 남아
+// "여백 + 버튼 사이 간격 + 여백"이 겹쳐 보여 부자연스럽다. 그래서 이 값은 고정 스타일이
+// 아니라 아래 containerMargin 셰어드 값으로 애니메이션해서, 드래그가 시작되는 즉시
+// 0으로 접히고 완전히 닫혀 정지했을 때만 되돌아오게 한다.
+const SWIPE_CONTAINER_REST_MARGIN = 20;
+const SWIPE_CONTAINER_MARGIN_DURATION = 180;
+// 삭제 버튼 opacity를 progress 기준으로 직접 페이드시키는 구간. ReanimatedSwipeable
+// 라이브러리가 액션 래퍼 opacity를 progress===0일 때만 0, 그 외엔 무조건 1로 켜는
+// "이진(boolean) 스냅" 방식이라, 닫히는 도중에는 끝까지 불투명하게 보이다가 정확히
+// 0이 되는 마지막 프레임에 훅 사라지는 것처럼 보인다. 그래서 우리 쪽 버튼을 이 구간
+// 안에서 미리 투명하게 만들어두면, 라이브러리의 스냅이 일어날 때는 이미 안 보이는
+// 상태라 "잠깐 보였다가 확 사라지는" 현상이 생기지 않는다.
+const DELETE_ACTION_FADE_RANGE: [number, number] = [0, 0.15];
+// ReanimatedSwipeable의 기본 스프링(mass:2, damping:1000, stiffness:700)은
+// 임계감쇠(critical damping, 이 조합에서 약 75)의 13배가 넘는 심한 과감쇠라
+// 눈에 보이는 이동은 금방 끝난 것처럼 보여도 "완전히 정지" 판정(그리고 그
+// 시점에 삭제 버튼 opacity가 0으로 꺼지는 것)까지는 아주 오래 걸린다. 이게
+// "닫아도 삭제 버튼이 한참 안 사라진다"의 원인이라, 임계감쇠에 가까운 값으로
+// 덮어써서 닫힘 모션 자체를 빠르고 매끄럽게 만든다.
+const SWIPE_ANIMATION_OPTIONS = { mass: 0.5, damping: 30, stiffness: 400 };
 
 // TODO(swipe-touch-leak): 스와이프 도중 터치가 새는 원인을 실기기 로그로 확정하기 위한
 // 임시 계측. 원인 확정 후 반드시 제거할 것 (CLAUDE.md 9.1).
@@ -48,6 +69,12 @@ function DeleteAction({
   onPress: () => void;
 }) {
   const pushStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      progress.value,
+      DELETE_ACTION_FADE_RANGE,
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
     transform: [
       {
         translateX: interpolate(
@@ -92,10 +119,16 @@ function SavedCourseRow({
 
   const opacity = useSharedValue(1);
   const scale = useSharedValue(1);
+  // 닫힌 채 정지해 있을 때만 좌우 여백을 보여주고, 드래그가 시작되는 순간 0으로 접는다.
+  const containerMargin = useSharedValue(SWIPE_CONTAINER_REST_MARGIN);
 
   const deletingStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],
+  }));
+
+  const containerMarginStyle = useAnimatedStyle(() => ({
+    marginHorizontal: containerMargin.value,
   }));
 
   const handleDelete = () => {
@@ -113,11 +146,13 @@ function SavedCourseRow({
         ref={swipeableRef}
         friction={1.6}
         overshootFriction={8}
-        containerStyle={styles.swipeContainer}
+        animationOptions={SWIPE_ANIMATION_OPTIONS}
+        containerStyle={[styles.swipeContainer, containerMarginStyle]}
         renderRightActions={(progress) => <DeleteAction progress={progress} onPress={handleDelete} />}
         onSwipeableOpenStartDrag={() => {
           swipeDebugLog(course.id, '제스처 인식 확정 (open start drag)');
           isSwipingRef.current = true;
+          containerMargin.value = withTiming(0, { duration: SWIPE_CONTAINER_MARGIN_DURATION });
           if (openRowRef.current && openRowRef.current.id !== course.id) {
             openRowRef.current.close();
           }
@@ -125,6 +160,7 @@ function SavedCourseRow({
         onSwipeableCloseStartDrag={() => {
           swipeDebugLog(course.id, '제스처 인식 확정 (close start drag)');
           isSwipingRef.current = true;
+          containerMargin.value = withTiming(0, { duration: SWIPE_CONTAINER_MARGIN_DURATION });
         }}
         onSwipeableOpen={() => {
           isSwipingRef.current = false;
@@ -139,6 +175,9 @@ function SavedCourseRow({
         onSwipeableClose={() => {
           isSwipingRef.current = false;
           setIsRowLocked(false);
+          containerMargin.value = withTiming(SWIPE_CONTAINER_REST_MARGIN, {
+            duration: SWIPE_CONTAINER_MARGIN_DURATION,
+          });
           if (openRowRef.current?.id === course.id) {
             openRowRef.current = null;
           }
@@ -251,17 +290,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
   },
-  // Swipeable 컨테이너 자체를 좌우로 인셋해서, 카드가 스와이프로 열렸을 때
-  // 삭제 버튼이 이 인셋된 폭 안에서 카드와 거의 붙어 나타나게 한다. (카드 쪽에
-  // 별도 marginHorizontal을 주면 스와이프로 열려도 그 여백만큼 카드와 버튼
-  // 사이에 항상 간격이 남기 때문에, 인셋을 컨테이너로 옮겨야 간격이 좁아진다.)
-  swipeContainer: {
-    marginHorizontal: 20,
-  },
+  // 실제 좌우 여백은 SavedCourseRow의 containerMarginStyle(marginHorizontal
+  // 애니메이션)이 담당한다. 카드가 정지(닫힌) 상태일 때만 여백을 보여주고 드래그
+  // 시작과 동시에 0으로 접어서, 스와이프 중에 여백+버튼 간격이 겹쳐 보이지 않게
+  // 한다. 이 style은 향후 비-애니메이션 컨테이너 속성을 위한 자리로 남겨둔다.
+  swipeContainer: {},
   deleteButtonWrap: {
     marginLeft: DELETE_ACTION_GAP,
   },
   deleteButton: {
+    flex: 1,
     backgroundColor: colors.like,
     justifyContent: 'center',
     alignItems: 'center',
