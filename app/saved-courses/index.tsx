@@ -33,6 +33,13 @@ const DELETE_ACTION_PUSH_OFFSET = 24;
 // 카드와 삭제 버튼이 거의 붙어 보이도록 남기는 최소 간격.
 const DELETE_ACTION_GAP = 6;
 
+// TODO(swipe-touch-leak): 스와이프 도중 터치가 새는 원인을 실기기 로그로 확정하기 위한
+// 임시 계측. 원인 확정 후 반드시 제거할 것 (CLAUDE.md 9.1).
+function swipeDebugLog(courseId: string, label: string) {
+  if (!__DEV__) return;
+  console.log(`[swipe-debug] ${Date.now()} course=${courseId} ${label}`);
+}
+
 function DeleteAction({
   progress,
   onPress,
@@ -109,12 +116,14 @@ function SavedCourseRow({
         containerStyle={styles.swipeContainer}
         renderRightActions={(progress) => <DeleteAction progress={progress} onPress={handleDelete} />}
         onSwipeableOpenStartDrag={() => {
+          swipeDebugLog(course.id, '제스처 인식 확정 (open start drag)');
           isSwipingRef.current = true;
           if (openRowRef.current && openRowRef.current.id !== course.id) {
             openRowRef.current.close();
           }
         }}
         onSwipeableCloseStartDrag={() => {
+          swipeDebugLog(course.id, '제스처 인식 확정 (close start drag)');
           isSwipingRef.current = true;
         }}
         onSwipeableOpen={() => {
@@ -138,8 +147,13 @@ function SavedCourseRow({
         <CourseListItem
           course={course}
           disabled={isRowLocked}
+          onPressIn={() => {
+            swipeDebugLog(course.id, '터치 시작 (onPressIn)');
+          }}
           onPress={() => {
+            swipeDebugLog(course.id, `onPress 발동 (isSwipingRef=${isSwipingRef.current})`);
             if (isSwipingRef.current) return;
+            swipeDebugLog(course.id, 'onPress 통과 -> 실제 실행');
             onPress();
           }}
         />
