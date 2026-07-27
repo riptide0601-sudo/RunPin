@@ -60,12 +60,10 @@ function SavedCourseRow({
         <Swipeable
           ref={swipeableRef}
           friction={1.6}
-          rightThreshold={80}
           overshootFriction={8}
           renderRightActions={() => (
-            <Pressable style={styles.deleteButton} onPress={handleDelete} hitSlop={4}>
-              <Ionicons name="trash-outline" size={22} color={colors.textInverse} />
-              <Text style={styles.deleteLabel}>삭제</Text>
+            <Pressable style={styles.deleteButton} onPress={handleDelete}>
+              <Ionicons name="trash-outline" size={20} color={colors.textInverse} />
             </Pressable>
           )}
           onSwipeableOpenStartDrag={() => {
@@ -201,17 +199,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   deleteButton: {
-    width: '85%',
-    height: '100%',
     backgroundColor: colors.like,
-    borderRadius: 16,
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-  },
-  deleteLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textInverse,
+    alignItems: 'center',
+    width: 72,
   },
 });
