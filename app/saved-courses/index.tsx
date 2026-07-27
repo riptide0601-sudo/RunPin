@@ -4,7 +4,14 @@ import { useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -20,6 +27,40 @@ import type { Course } from '@/types';
 type OpenRowRef = { id: string; close: () => void } | null;
 
 const DELETE_DURATION = 220;
+// 카드가 스와이프로 밀려날 때 삭제 버튼이 반대편에서 "함께 밀려 들어오는" 느낌을 주기 위한
+// 시작 오프셋. progress(0~1)에 맞춰 이 값만큼 translateX를 주고 0으로 수렴시킨다.
+const DELETE_ACTION_PUSH_OFFSET = 24;
+// 카드와 삭제 버튼이 거의 붙어 보이도록 남기는 최소 간격.
+const DELETE_ACTION_GAP = 6;
+
+function DeleteAction({
+  progress,
+  onPress,
+}: {
+  progress: SharedValue<number>;
+  onPress: () => void;
+}) {
+  const pushStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: interpolate(
+          progress.value,
+          [0, 1],
+          [DELETE_ACTION_PUSH_OFFSET, 0],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+
+  return (
+    <Animated.View style={[styles.deleteButtonWrap, pushStyle]}>
+      <Pressable style={styles.deleteButton} onPress={onPress}>
+        <Ionicons name="trash-outline" size={20} color={colors.textInverse} />
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 function SavedCourseRow({
   course,
@@ -65,11 +106,8 @@ function SavedCourseRow({
         ref={swipeableRef}
         friction={1.6}
         overshootFriction={8}
-        renderRightActions={() => (
-          <Pressable style={styles.deleteButton} onPress={handleDelete}>
-            <Ionicons name="trash-outline" size={20} color={colors.textInverse} />
-          </Pressable>
-        )}
+        containerStyle={styles.swipeContainer}
+        renderRightActions={(progress) => <DeleteAction progress={progress} onPress={handleDelete} />}
         onSwipeableOpenStartDrag={() => {
           isSwipingRef.current = true;
           if (openRowRef.current && openRowRef.current.id !== course.id) {
@@ -97,16 +135,14 @@ function SavedCourseRow({
           }
         }}
       >
-        <View style={styles.cardInset}>
-          <CourseListItem
-            course={course}
-            disabled={isRowLocked}
-            onPress={() => {
-              if (isSwipingRef.current) return;
-              onPress();
-            }}
-          />
-        </View>
+        <CourseListItem
+          course={course}
+          disabled={isRowLocked}
+          onPress={() => {
+            if (isSwipingRef.current) return;
+            onPress();
+          }}
+        />
       </Swipeable>
     </Animated.View>
   );
@@ -201,11 +237,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
   },
-  // Swipeable 자체는 화면 끝까지 꽉 채워서(full-bleed) 삭제 버튼이 화면 오른쪽
-  // 끝까지 밀리게 하고, 닫혀있을 때의 카드 모양(좌우 여백)은 안쪽 wrapper의
-  // marginHorizontal로 낸다.
-  cardInset: {
+  // Swipeable 컨테이너 자체를 좌우로 인셋해서, 카드가 스와이프로 열렸을 때
+  // 삭제 버튼이 이 인셋된 폭 안에서 카드와 거의 붙어 나타나게 한다. (카드 쪽에
+  // 별도 marginHorizontal을 주면 스와이프로 열려도 그 여백만큼 카드와 버튼
+  // 사이에 항상 간격이 남기 때문에, 인셋을 컨테이너로 옮겨야 간격이 좁아진다.)
+  swipeContainer: {
     marginHorizontal: 20,
+  },
+  deleteButtonWrap: {
+    marginLeft: DELETE_ACTION_GAP,
   },
   deleteButton: {
     backgroundColor: colors.like,
