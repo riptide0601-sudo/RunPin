@@ -19,7 +19,7 @@ interface CourseListItemProps {
 
 export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress }: CourseListItemProps) {
   const { savedCourseIds, toggleSaveCourse } = useAppData();
-  const isSaved = savedCourseIds.includes(course.id);
+  const isSaved = savedCourseIds.has(course.id);
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
@@ -35,7 +35,7 @@ export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relat
               />
             ) : null}
           </View>
-          <View style={styles.badges}>
+          <View style={styles.rightRow}>
             {course.isPopular ? (
               <View
                 onStartShouldSetResponder={() => true}
@@ -47,7 +47,7 @@ export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relat
             <Pressable hitSlop={8} onPress={() => toggleSaveCourse(course.id)}>
               <Ionicons
                 name={isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={20}
+                size={18}
                 color={isSaved ? colors.ink : colors.textMuted}
               />
             </Pressable>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  badges: {
+  rightRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,

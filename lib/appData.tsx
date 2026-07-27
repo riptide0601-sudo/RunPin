@@ -14,14 +14,14 @@ interface AppDataContextValue {
   addCourse: (course: Course) => void;
   addRunLog: (log: RunLog) => void;
   uploadRunLog: (logId: string, courseName: string) => void;
+  savedCourseIds: Set<string>;
+  toggleSaveCourse: (courseId: string) => void;
   proposalCount: number;
   isSubscribed: boolean;
   remainingProposals: number;
   canPropose: boolean;
   recordProposal: () => void;
   subscribe: () => void;
-  savedCourseIds: string[];
-  toggleSaveCourse: (courseId: string) => void;
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -31,7 +31,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [runLogs, setRunLogs] = useState<RunLog[]>(mockRunLogs);
   const [proposalCount, setProposalCount] = useState(mockProfile.proposalCount);
   const [isSubscribed, setIsSubscribed] = useState(mockProfile.isSubscribed);
-  const [savedCourseIds, setSavedCourseIds] = useState<string[]>([]);
+  const [savedCourseIds, setSavedCourseIds] = useState<Set<string>>(new Set());
 
   const value = useMemo<AppDataContextValue>(
     () => ({
@@ -39,6 +39,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       runLogs,
       addCourse: (course) => setCourses((prev) => [course, ...prev]),
       addRunLog: (log) => setRunLogs((prev) => [log, ...prev]),
+      savedCourseIds,
+      toggleSaveCourse: (courseId) =>
+        setSavedCourseIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(courseId)) {
+            next.delete(courseId);
+          } else {
+            next.add(courseId);
+          }
+          return next;
+        }),
       proposalCount,
       isSubscribed,
       remainingProposals: isSubscribed ? Infinity : Math.max(0, FREE_PROPOSAL_LIMIT - proposalCount),
@@ -47,12 +58,6 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         if (!isSubscribed) setProposalCount((prev) => prev + 1);
       },
       subscribe: () => setIsSubscribed(true),
-      savedCourseIds,
-      toggleSaveCourse: (courseId) => {
-        setSavedCourseIds((prev) =>
-          prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId],
-        );
-      },
       uploadRunLog: (logId, courseName) => {
         const log = runLogs.find((entry) => entry.id === logId);
         if (!log || log.isUploaded) return;
@@ -76,7 +81,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         );
       },
     }),
-    [courses, runLogs, proposalCount, isSubscribed, savedCourseIds],
+    [courses, runLogs, savedCourseIds, proposalCount, isSubscribed],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

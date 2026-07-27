@@ -22,7 +22,7 @@ export function CourseRouteModal({ visible, course, onClose, showSaveButton = tr
     return null;
   }
 
-  const isSaved = savedCourseIds.includes(course.id);
+  const isSaved = savedCourseIds.has(course.id);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -38,11 +38,15 @@ export function CourseRouteModal({ visible, course, onClose, showSaveButton = tr
             </View>
             <View style={styles.headerActions}>
               {showSaveButton ? (
-                <Pressable onPress={() => toggleSaveCourse(course.id)} hitSlop={12}>
+                <Pressable
+                  onPress={() => toggleSaveCourse(course.id)}
+                  hitSlop={12}
+                  style={({ pressed }) => pressed && styles.closePressed}
+                >
                   <Ionicons
                     name={isSaved ? 'bookmark' : 'bookmark-outline'}
                     size={22}
-                    color={isSaved ? colors.ink : colors.textMuted}
+                    color={isSaved ? colors.ink : colors.text}
                   />
                 </Pressable>
               ) : null}
