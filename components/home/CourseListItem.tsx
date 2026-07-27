@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
 import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
@@ -36,14 +37,7 @@ export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relat
             ) : null}
           </View>
           <View style={styles.rightRow}>
-            {course.isPopular ? (
-              <View
-                onStartShouldSetResponder={() => true}
-                onResponderTerminationRequest={() => false}
-              >
-                <Pill label="인기" variant="filled" />
-              </View>
-            ) : null}
+            {course.isPopular ? <Pill label="인기" variant="filled" /> : null}
             <Pressable hitSlop={8} onPress={() => toggleSaveCourse(course.id)}>
               <Ionicons
                 name={isSaved ? 'bookmark' : 'bookmark-outline'}
