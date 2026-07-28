@@ -105,14 +105,6 @@ const SWIPE_FRICTION = 1;
 // 수평 이동이 있으면 pan이 먼저 활성화되어 내부 Tap과의 경쟁에서 이기도록 한다.
 const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
 
-// TODO(swipe-touch-leak, swipe-height-jump): 스와이프 도중 터치가 새는 현상과
-// 카드 높이가 흔들리는 현상의 원인을 실기기 로그로 확정하기 위한 임시 계측.
-// 원인 확정 후 반드시 제거할 것 (CLAUDE.md 9.1).
-function swipeDebugLog(courseId: string, label: string) {
-  if (!__DEV__) return;
-  console.log(`[swipe-debug] ${Date.now()} course=${courseId} ${label}`);
-}
-
 function DeleteAction({
   progress,
   onPress,
@@ -194,12 +186,7 @@ function SavedCourseRow({
   };
 
   return (
-    <Animated.View
-      style={deletingStyle}
-      onLayout={(event) => {
-        swipeDebugLog(course.id, `row height=${event.nativeEvent.layout.height.toFixed(1)}`);
-      }}
-    >
+    <Animated.View style={deletingStyle}>
       <Swipeable
         ref={swipeableRef}
         friction={SWIPE_FRICTION}
@@ -213,13 +200,8 @@ function SavedCourseRow({
         childrenContainerStyle={styles.swipeContent}
         renderRightActions={(progress) => <DeleteAction progress={progress} onPress={handleDelete} />}
         onSwipeableOpenStartDrag={() => {
-          swipeDebugLog(course.id, '제스처 인식 확정 (open start drag)');
           isSwipingRef.current = true;
           if (openRowRef.current && openRowRef.current.id !== course.id) {
-            swipeDebugLog(
-              course.id,
-              `[close-call:openStartDrag] target=${openRowRef.current.id} close() 호출`,
-            );
             openRowRef.current.close();
           }
           // openRowRef는 원래 onSwipeableOpen(스프링 애니메이션이 완전히 끝난 시점)에서만
@@ -235,11 +217,9 @@ function SavedCourseRow({
           };
         }}
         onSwipeableCloseStartDrag={() => {
-          swipeDebugLog(course.id, '제스처 인식 확정 (close start drag)');
           isSwipingRef.current = true;
         }}
         onSwipeableOpen={() => {
-          swipeDebugLog(course.id, '실제 열림 (onSwipeableOpen)');
           isSwipingRef.current = false;
           openRowRef.current = {
             id: course.id,
@@ -247,11 +227,9 @@ function SavedCourseRow({
           };
         }}
         onSwipeableWillClose={() => {
-          swipeDebugLog(course.id, '닫힘 시작 (onSwipeableWillClose)');
           setIsRowLocked(true);
         }}
         onSwipeableClose={() => {
-          swipeDebugLog(course.id, '실제 닫힘 (onSwipeableClose)');
           isSwipingRef.current = false;
           setIsRowLocked(false);
           if (openRowRef.current?.id === course.id) {
@@ -263,19 +241,13 @@ function SavedCourseRow({
           course={course}
           disabled={isRowLocked}
           onPressIn={() => {
-            swipeDebugLog(course.id, '터치 시작 (onPressIn)');
             // 다른 행이 열려있는 상태에서 이 행을 누르기 시작하면, 탭인지 스와이프인지
             // 결정되기 전에 즉시 열린 행을 닫는다 (터치 시작 시점은 레이스가 없다).
             if (openRowRef.current && openRowRef.current.id !== course.id) {
-              swipeDebugLog(
-                course.id,
-                `[close-call:onPressIn] target=${openRowRef.current.id} close() 호출`,
-              );
               openRowRef.current.close();
             }
           }}
           onPress={() => {
-            swipeDebugLog(course.id, `onPress 발동 (isSwipingRef=${isSwipingRef.current})`);
             if (isSwipingRef.current) return;
             if (pressConfirmTimeoutRef.current) {
               clearTimeout(pressConfirmTimeoutRef.current);
@@ -292,11 +264,9 @@ function SavedCourseRow({
               // 이 행 자체가 열려있는 상태에서 카드(삭제 버튼이 아닌 부분)를 누르면
               // 코스를 열지 않고 닫기만 한다.
               if (openRowRef.current?.id === course.id) {
-                swipeDebugLog(course.id, '[close-call:onPress-self] 자기 자신 close() 호출');
                 swipeableRef.current?.close();
                 return;
               }
-              swipeDebugLog(course.id, 'onPress 통과 -> 실제 실행');
               onPress();
             }, TAP_CONFIRM_DELAY);
           }}
@@ -329,12 +299,6 @@ export default function SavedCoursesScreen() {
   // 각 행 자체를 누르는 경우는 SavedCourseRow의 onPressIn에서 더 먼저(레이스 없이)
   // 처리하므로, 여기서는 행 바깥 영역을 누른 경우만 걸러진다.
   const closeOpenRow = () => {
-    if (openRowRef.current) {
-      swipeDebugLog(
-        '(outer)',
-        `[close-call:outerPress] target=${openRowRef.current.id} close() 호출`,
-      );
-    }
     openRowRef.current?.close();
   };
 

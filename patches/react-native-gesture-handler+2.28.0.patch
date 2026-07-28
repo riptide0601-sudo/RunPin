@@ -1,18 +1,8 @@
 diff --git a/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js b/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
-index 053051f..23b963a 100644
+index 053051f..a95a26e 100644
 --- a/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
 +++ b/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
-@@ -246,6 +246,9 @@ const Swipeable = props => {
-         toValue = -rightWidth.value;
-       }
-     }
-+    if (__DEV__) {
-+      console.log('[swipe-debug-release]', 'rowState=' + rowState.value, 'translationX=' + translationX.toFixed(1), 'userDrag=' + userDrag.value.toFixed(1), 'velocityX=' + velocityX.toFixed(1), 'rightThreshold=' + rightThresholdProp, 'rightWidth=' + rightWidth.value, 'toValue=' + toValue);
-+    }
-     animateRow(toValue, velocityX / friction);
-   }, [animateRow, friction, leftThreshold, leftWidth, rightThreshold, rightWidth, rowState, userDrag]);
-   const close = (0, _react.useCallback)(() => {
-@@ -254,17 +257,6 @@ const Swipeable = props => {
+@@ -254,17 +254,6 @@ const Swipeable = props => {
      animateRow(0);
    }, [animateRow]);
    const dragStarted = (0, _reactNativeReanimated.useSharedValue)(false);
@@ -30,7 +20,7 @@ index 053051f..23b963a 100644
    const panGesture = (0, _react.useMemo)(() => {
      const pan = _2.Gesture.Pan().enabled(enabled !== false).enableTrackpadTwoFingerGesture(enableTrackpadTwoFingerGesture).activeOffsetX([-dragOffsetFromRightEdge, dragOffsetFromLeftEdge]).onStart(updateElementWidths).onUpdate(event => {
        userDrag.value = event.translationX;
-@@ -288,6 +280,24 @@ const Swipeable = props => {
+@@ -288,6 +277,21 @@ const Swipeable = props => {
      });
      return pan;
    }, [enabled, enableTrackpadTwoFingerGesture, dragOffsetFromRightEdge, dragOffsetFromLeftEdge, updateElementWidths, relationProps, userDrag, rowState, dragStarted, updateAnimatedEvent, onSwipeableOpenStartDrag, onSwipeableCloseStartDrag, handleRelease]);
@@ -40,9 +30,6 @@ index 053051f..23b963a 100644
 +  // close()가 호출되던 레이스를 없앤다.
 +  const tapGesture = (0, _react.useMemo)(() => {
 +    const tap = _2.Gesture.Tap().shouldCancelWhenOutside(true).requireExternalGestureToFail(panGesture).onStart(() => {
-+      if (__DEV__) {
-+        console.log('[swipe-debug-tap]', Date.now(), 'tapGesture onStart fired, rowState=' + rowState.value);
-+      }
 +      if (rowState.value !== 0) {
 +        close();
 +      }
@@ -56,20 +43,10 @@ index 053051f..23b963a 100644
    const animatedStyle = (0, _reactNativeReanimated.useAnimatedStyle)(() => ({
      transform: [{
 diff --git a/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js b/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
-index 5d0b9e3..6b957a6 100644
+index 5d0b9e3..f506326 100644
 --- a/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
 +++ b/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
-@@ -241,6 +241,9 @@ const Swipeable = props => {
-         toValue = -rightWidth.value;
-       }
-     }
-+    if (__DEV__) {
-+      console.log('[swipe-debug-release]', 'rowState=' + rowState.value, 'translationX=' + translationX.toFixed(1), 'userDrag=' + userDrag.value.toFixed(1), 'velocityX=' + velocityX.toFixed(1), 'rightThreshold=' + rightThresholdProp, 'rightWidth=' + rightWidth.value, 'toValue=' + toValue);
-+    }
-     animateRow(toValue, velocityX / friction);
-   }, [animateRow, friction, leftThreshold, leftWidth, rightThreshold, rightWidth, rowState, userDrag]);
-   const close = useCallback(() => {
-@@ -249,17 +252,6 @@ const Swipeable = props => {
+@@ -249,17 +249,6 @@ const Swipeable = props => {
      animateRow(0);
    }, [animateRow]);
    const dragStarted = useSharedValue(false);
@@ -87,7 +64,7 @@ index 5d0b9e3..6b957a6 100644
    const panGesture = useMemo(() => {
      const pan = Gesture.Pan().enabled(enabled !== false).enableTrackpadTwoFingerGesture(enableTrackpadTwoFingerGesture).activeOffsetX([-dragOffsetFromRightEdge, dragOffsetFromLeftEdge]).onStart(updateElementWidths).onUpdate(event => {
        userDrag.value = event.translationX;
-@@ -283,6 +275,24 @@ const Swipeable = props => {
+@@ -283,6 +272,21 @@ const Swipeable = props => {
      });
      return pan;
    }, [enabled, enableTrackpadTwoFingerGesture, dragOffsetFromRightEdge, dragOffsetFromLeftEdge, updateElementWidths, relationProps, userDrag, rowState, dragStarted, updateAnimatedEvent, onSwipeableOpenStartDrag, onSwipeableCloseStartDrag, handleRelease]);
@@ -97,9 +74,6 @@ index 5d0b9e3..6b957a6 100644
 +  // close()가 호출되던 레이스를 없앤다.
 +  const tapGesture = useMemo(() => {
 +    const tap = Gesture.Tap().shouldCancelWhenOutside(true).requireExternalGestureToFail(panGesture).onStart(() => {
-+      if (__DEV__) {
-+        console.log('[swipe-debug-tap]', Date.now(), 'tapGesture onStart fired, rowState=' + rowState.value);
-+      }
 +      if (rowState.value !== 0) {
 +        close();
 +      }
@@ -113,33 +87,10 @@ index 5d0b9e3..6b957a6 100644
    const animatedStyle = useAnimatedStyle(() => ({
      transform: [{
 diff --git a/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx b/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
-index 53cce68..c13f741 100644
+index 53cce68..4cd8e29 100644
 --- a/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
 +++ b/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
-@@ -444,6 +444,22 @@ const Swipeable = (props: SwipeableProps) => {
-         }
-       }
- 
-+      if (__DEV__) {
-+        // TODO(swipe-debug-release, RunPin): 재스와이프 시 threshold를 넘겼는데도
-+        // 닫혀버리는 것으로 보이는 문제의 원인을 실기기 로그로 확정하기 위한 임시 계측.
-+        // 원인 확정 후 반드시 제거할 것 (CLAUDE.md 9.1).
-+        console.log(
-+          '[swipe-debug-release]',
-+          'rowState=' + rowState.value,
-+          'translationX=' + translationX.toFixed(1),
-+          'userDrag=' + userDrag.value.toFixed(1),
-+          'velocityX=' + velocityX.toFixed(1),
-+          'rightThreshold=' + rightThresholdProp,
-+          'rightWidth=' + rightWidth.value,
-+          'toValue=' + toValue
-+        );
-+      }
-+
-       animateRow(toValue, velocityX / friction);
-     },
-     [
-@@ -465,26 +481,6 @@ const Swipeable = (props: SwipeableProps) => {
+@@ -465,26 +465,6 @@ const Swipeable = (props: SwipeableProps) => {
  
    const dragStarted = useSharedValue<boolean>(false);
  
@@ -166,7 +117,7 @@ index 53cce68..c13f741 100644
    const panGesture = useMemo(() => {
      const pan = Gesture.Pan()
        .enabled(enabled !== false)
-@@ -548,6 +544,45 @@ const Swipeable = (props: SwipeableProps) => {
+@@ -548,6 +528,38 @@ const Swipeable = (props: SwipeableProps) => {
      handleRelease,
    ]);
  
@@ -186,13 +137,6 @@ index 53cce68..c13f741 100644
 +      .shouldCancelWhenOutside(true)
 +      .requireExternalGestureToFail(panGesture)
 +      .onStart(() => {
-+        if (__DEV__) {
-+          console.log(
-+            '[swipe-debug-tap]',
-+            Date.now(),
-+            'tapGesture onStart fired, rowState=' + rowState.value
-+          );
-+        }
 +        if (rowState.value !== 0) {
 +          close();
 +        }
