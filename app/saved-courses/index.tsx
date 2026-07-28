@@ -240,6 +240,7 @@ function SavedCourseRow({
         <CourseListItem
           course={course}
           disabled={isRowLocked}
+          showSaveButton={false}
           onPressIn={() => {
             // 다른 행이 열려있는 상태에서 이 행을 누르기 시작하면, 탭인지 스와이프인지
             // 결정되기 전에 즉시 열린 행을 닫는다 (터치 시작 시점은 레이스가 없다).

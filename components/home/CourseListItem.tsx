@@ -18,9 +18,10 @@ interface CourseListItemProps {
   onPress?: () => void;
   onPressIn?: () => void;
   disabled?: boolean;
+  showSaveButton?: boolean;
 }
 
-export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress, onPressIn, disabled }: CourseListItemProps) {
+export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress, onPressIn, disabled, showSaveButton = true }: CourseListItemProps) {
   const { savedCourseIds, toggleSaveCourse } = useAppData();
   const isSaved = savedCourseIds.has(course.id);
 
@@ -40,13 +41,15 @@ export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relat
           </View>
           <View style={styles.rightRow}>
             {course.isPopular ? <Pill label="인기" variant="filled" /> : null}
-            <Pressable hitSlop={8} onPress={() => toggleSaveCourse(course.id)}>
-              <Ionicons
-                name={isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={18}
-                color={isSaved ? colors.ink : colors.textMuted}
-              />
-            </Pressable>
+            {showSaveButton ? (
+              <Pressable hitSlop={8} onPress={() => toggleSaveCourse(course.id)}>
+                <Ionicons
+                  name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                  size={18}
+                  color={isSaved ? colors.ink : colors.textMuted}
+                />
+              </Pressable>
+            ) : null}
           </View>
         </View>
         <CourseMetaRow distanceKm={course.distanceKm} difficulty={course.difficulty} />
