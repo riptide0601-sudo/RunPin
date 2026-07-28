@@ -54,7 +54,21 @@ const DELETE_ACTION_FADE_RANGE: [number, number] = [0, 0.15];
 // damping:22, stiffness:180(감쇠비 약 1.06)으로도 손을 뗐을 때 여전히 뚝
 // 떨어지는 느낌이라는 피드백이 있어, 감쇠비(약 1.06)는 유지한 채 stiffness를
 // 더 낮춰(고유진동수 ω=sqrt(stiffness/mass) 기준 약 1.5배 더 느리게) 재조정했다.
-const SWIPE_ANIMATION_OPTIONS = { mass: 0.6, damping: 14, stiffness: 75 };
+// 그런데도 손을 뗐을 때 급격히 돌아온다는 피드백이 다시 반복되어, stiffness/
+// damping을 또 낮추는 대신 라이브러리 소스(ReanimatedSwipeable.tsx의
+// animateRow)를 직접 읽었다. 카드 실제 위치(appliedTranslation)를 움직이는
+// 이 스프링은 우리가 넘기는 mass/damping/stiffness와 무관하게 "손을 뗄 때의
+// 실제 손가락 속도"(event.velocityX, 압축 없는 raw px/s)를 항상 초기 속도로
+// 그대로 사용한다. 화면상 이동량은 friction/overshootFriction으로 압축되는데
+// 이 속도값은 압축되지 않은 원본이라, 빠르게 스와이프하고 뗄수록(특히 과스와이프
+// 바운스 구간) 실제 화면 이동량 대비 훨씬 큰 초기 속도로 스프링이 시작되고,
+// mass/stiffness를 낮출수록(계의 반응이 빨라질수록) 그 속도의 영향이 오히려
+// 더 커져 "급격한 스냅"으로 보인 것이다. 즉 지금까지 반복 실패한 이유는
+// 잘못된 변수(stiffness/damping)만 조정하고 있었기 때문이다. animationOptions는
+// 라이브러리 기본 config 뒤에 스프레드되어 velocity 필드도 덮어쓸 수 있으므로,
+// velocity:0을 명시해 손가락 속도를 완전히 무시하고 항상 mass/damping/stiffness
+// 로만 정의되는 일정하고 느린 궤적으로 복귀하도록 고정한다.
+const SWIPE_ANIMATION_OPTIONS = { mass: 0.6, damping: 14, stiffness: 75, velocity: 0 };
 // 실기기 로그(course-57 사례)에서 onPress가 68ms 만에 발동한 뒤 87ms가 더 지나서야
 // onSwipeableOpenStartDrag(스와이프 제스처 확정)가 호출된 사례가 확인됐다. 같은
 // 터치인데 tap 인식이 pan(스와이프) 인식보다 먼저 JS로 전달되는 레이스라, isSwipingRef
