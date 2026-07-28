@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js b/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
-index 053051f..7d90011 100644
+index 053051f..23b963a 100644
 --- a/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
 +++ b/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
 @@ -246,6 +246,9 @@ const Swipeable = props => {
@@ -30,7 +30,7 @@ index 053051f..7d90011 100644
    const panGesture = (0, _react.useMemo)(() => {
      const pan = _2.Gesture.Pan().enabled(enabled !== false).enableTrackpadTwoFingerGesture(enableTrackpadTwoFingerGesture).activeOffsetX([-dragOffsetFromRightEdge, dragOffsetFromLeftEdge]).onStart(updateElementWidths).onUpdate(event => {
        userDrag.value = event.translationX;
-@@ -288,6 +280,21 @@ const Swipeable = props => {
+@@ -288,6 +280,24 @@ const Swipeable = props => {
      });
      return pan;
    }, [enabled, enableTrackpadTwoFingerGesture, dragOffsetFromRightEdge, dragOffsetFromLeftEdge, updateElementWidths, relationProps, userDrag, rowState, dragStarted, updateAnimatedEvent, onSwipeableOpenStartDrag, onSwipeableCloseStartDrag, handleRelease]);
@@ -40,6 +40,9 @@ index 053051f..7d90011 100644
 +  // close()가 호출되던 레이스를 없앤다.
 +  const tapGesture = (0, _react.useMemo)(() => {
 +    const tap = _2.Gesture.Tap().shouldCancelWhenOutside(true).requireExternalGestureToFail(panGesture).onStart(() => {
++      if (__DEV__) {
++        console.log('[swipe-debug-tap]', Date.now(), 'tapGesture onStart fired, rowState=' + rowState.value);
++      }
 +      if (rowState.value !== 0) {
 +        close();
 +      }
@@ -53,7 +56,7 @@ index 053051f..7d90011 100644
    const animatedStyle = (0, _reactNativeReanimated.useAnimatedStyle)(() => ({
      transform: [{
 diff --git a/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js b/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
-index 5d0b9e3..3d09607 100644
+index 5d0b9e3..6b957a6 100644
 --- a/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
 +++ b/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
 @@ -241,6 +241,9 @@ const Swipeable = props => {
@@ -84,7 +87,7 @@ index 5d0b9e3..3d09607 100644
    const panGesture = useMemo(() => {
      const pan = Gesture.Pan().enabled(enabled !== false).enableTrackpadTwoFingerGesture(enableTrackpadTwoFingerGesture).activeOffsetX([-dragOffsetFromRightEdge, dragOffsetFromLeftEdge]).onStart(updateElementWidths).onUpdate(event => {
        userDrag.value = event.translationX;
-@@ -283,6 +275,21 @@ const Swipeable = props => {
+@@ -283,6 +275,24 @@ const Swipeable = props => {
      });
      return pan;
    }, [enabled, enableTrackpadTwoFingerGesture, dragOffsetFromRightEdge, dragOffsetFromLeftEdge, updateElementWidths, relationProps, userDrag, rowState, dragStarted, updateAnimatedEvent, onSwipeableOpenStartDrag, onSwipeableCloseStartDrag, handleRelease]);
@@ -94,6 +97,9 @@ index 5d0b9e3..3d09607 100644
 +  // close()가 호출되던 레이스를 없앤다.
 +  const tapGesture = useMemo(() => {
 +    const tap = Gesture.Tap().shouldCancelWhenOutside(true).requireExternalGestureToFail(panGesture).onStart(() => {
++      if (__DEV__) {
++        console.log('[swipe-debug-tap]', Date.now(), 'tapGesture onStart fired, rowState=' + rowState.value);
++      }
 +      if (rowState.value !== 0) {
 +        close();
 +      }
@@ -107,7 +113,7 @@ index 5d0b9e3..3d09607 100644
    const animatedStyle = useAnimatedStyle(() => ({
      transform: [{
 diff --git a/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx b/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
-index 53cce68..d94b658 100644
+index 53cce68..c13f741 100644
 --- a/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
 +++ b/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
 @@ -444,6 +444,22 @@ const Swipeable = (props: SwipeableProps) => {
@@ -160,7 +166,7 @@ index 53cce68..d94b658 100644
    const panGesture = useMemo(() => {
      const pan = Gesture.Pan()
        .enabled(enabled !== false)
-@@ -548,6 +544,38 @@ const Swipeable = (props: SwipeableProps) => {
+@@ -548,6 +544,45 @@ const Swipeable = (props: SwipeableProps) => {
      handleRelease,
    ]);
  
@@ -180,6 +186,13 @@ index 53cce68..d94b658 100644
 +      .shouldCancelWhenOutside(true)
 +      .requireExternalGestureToFail(panGesture)
 +      .onStart(() => {
++        if (__DEV__) {
++          console.log(
++            '[swipe-debug-tap]',
++            Date.now(),
++            'tapGesture onStart fired, rowState=' + rowState.value
++          );
++        }
 +        if (rowState.value !== 0) {
 +          close();
 +        }

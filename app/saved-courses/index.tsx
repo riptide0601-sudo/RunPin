@@ -222,6 +222,17 @@ function SavedCourseRow({
             );
             openRowRef.current.close();
           }
+          // openRowRef는 원래 onSwipeableOpen(스프링 애니메이션이 완전히 끝난 시점)에서만
+          // 등록됐다. 그런데 열림 애니메이션 자체가 느리게(수백ms~1초) 튜닝되어 있어서,
+          // A행이 아직 애니메이션 중일 때 B행을 만지면 openRowRef.current가 여전히 null이라
+          // "닫을 대상 없음"으로 판단해 A가 안 닫히고, 그 다음 C행을 만져야 그제서야 뒤늦게
+          // 등록된 A가 타겟으로 잡혀 닫히는 버그가 있었다(실기기 로그로 확정). 열림 제스처가
+          // 확정된 이 시점에 곧바로 자신을 등록해 "닫을 대상" 판단이 애니메이션 완료를
+          // 기다리지 않도록 한다.
+          openRowRef.current = {
+            id: course.id,
+            close: () => swipeableRef.current?.close(),
+          };
         }}
         onSwipeableCloseStartDrag={() => {
           swipeDebugLog(course.id, '제스처 인식 확정 (close start drag)');

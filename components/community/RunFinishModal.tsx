@@ -3,7 +3,6 @@ import {
   Animated,
   Easing,
   Keyboard,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -17,6 +16,7 @@ import {
 import { Card } from '@/components/ui/Card';
 import { DifficultySlider } from '@/components/ui/DifficultySlider';
 import { Pill } from '@/components/ui/Pill';
+import { SlideUpModal } from '@/components/ui/SlideUpModal';
 import { colors } from '@/constants/colors';
 import { generateCourseName } from '@/lib/courseName';
 import { routeDistanceKm } from '@/lib/geo';
@@ -156,87 +156,85 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
   ];
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={() => onSkip(difficulty)}>
-      <View style={styles.backdrop}>
-        <Pressable style={styles.backdropSpacer} onPress={handleBackdropPress} />
-        <Animated.View style={{ paddingBottom: keyboardOffset }}>
-          <View
-            style={styles.sheet}
-            // Capture fires at touch-start, before any descendant (the text
-            // input, option Pressables, the difficulty slider's own
-            // PanGestureHandler) gets a chance to react — this matters
-            // because on Android, tapping outside a focused TextInput can
-            // get consumed by the native view's own focus-clearing behavior
-            // before it ever reaches the JS responder chain, which is why a
-            // release-based handler on the bubble phase needed a second tap
-            // to actually fire. Returning false here means this view never
-            // claims the responder, so it's purely a side-effect hook: every
-            // other tap (buttons, options, the slider, the input itself)
-            // still behaves exactly as before.
-            onStartShouldSetResponderCapture={() => {
-              if (isKeyboardVisible) {
-                Keyboard.dismiss();
-              }
-              return false;
-            }}
-          >
-            <View style={styles.summaryBar}>
-              <View style={styles.summaryStats}>
-                {summaryItems.map((item, index) => (
-                  <Fragment key={item.label}>
-                    {index > 0 ? <View style={styles.summaryDivider} /> : null}
-                    <View style={styles.summaryItem}>
-                      <Text style={styles.summaryItemLabel}>{item.label}</Text>
-                      <Text style={styles.summaryItemValue}>{item.value}</Text>
-                    </View>
-                  </Fragment>
-                ))}
-              </View>
-            </View>
-
-            <Text style={styles.title}>이 코스를{'\n'}업로드할까요?</Text>
-
-            <View style={styles.options}>
-              {matchedCourse ? (
-                <OptionRow selected={optionId === 'matched'} onPress={() => setOptionId('matched')} title={matchedCourse.name} />
-              ) : null}
-
-              <OptionRow selected={optionId === 'auto'} onPress={() => setOptionId('auto')} title={autoSuggestion.name} />
-
-              <OptionRow selected={optionId === 'custom'} onPress={() => setOptionId('custom')} title="직접 입력">
-                <TextInput
-                  style={styles.input}
-                  value={customName}
-                  onChangeText={(text) => {
-                    setCustomName(text);
-                    setOptionId('custom');
-                  }}
-                  onBlur={() => {
-                    // Safety net: if blur fires after some other dismiss attempt
-                    // (or the keyboard re-focuses the input before it can close),
-                    // force it closed once more here.
-                    Keyboard.dismiss();
-                  }}
-                  placeholder="코스 이름을 입력하세요"
-                  placeholderTextColor={colors.textMuted}
-                />
-              </OptionRow>
-            </View>
-
-            <Card style={styles.difficultyCard}>
-              <DifficultySlider value={difficulty} onChange={setDifficulty} />
-            </Card>
-
-            <View style={styles.actions}>
-              <Pressable onPress={() => onSkip(difficulty)} hitSlop={8} style={({ pressed }) => pressed && styles.pressed}>
-                <Text style={styles.skipText}>나중에 할게요</Text>
-              </Pressable>
-              <Pill label="업로드" variant="filled" onPress={handleSave} disabled={!canSave} style={styles.saveButton} />
+    <SlideUpModal visible={visible} onRequestClose={() => onSkip(difficulty)}>
+      <Pressable style={styles.backdropSpacer} onPress={handleBackdropPress} />
+      <Animated.View style={{ paddingBottom: keyboardOffset }}>
+        <View
+          style={styles.sheet}
+          // Capture fires at touch-start, before any descendant (the text
+          // input, option Pressables, the difficulty slider's own
+          // PanGestureHandler) gets a chance to react — this matters
+          // because on Android, tapping outside a focused TextInput can
+          // get consumed by the native view's own focus-clearing behavior
+          // before it ever reaches the JS responder chain, which is why a
+          // release-based handler on the bubble phase needed a second tap
+          // to actually fire. Returning false here means this view never
+          // claims the responder, so it's purely a side-effect hook: every
+          // other tap (buttons, options, the slider, the input itself)
+          // still behaves exactly as before.
+          onStartShouldSetResponderCapture={() => {
+            if (isKeyboardVisible) {
+              Keyboard.dismiss();
+            }
+            return false;
+          }}
+        >
+          <View style={styles.summaryBar}>
+            <View style={styles.summaryStats}>
+              {summaryItems.map((item, index) => (
+                <Fragment key={item.label}>
+                  {index > 0 ? <View style={styles.summaryDivider} /> : null}
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryItemLabel}>{item.label}</Text>
+                    <Text style={styles.summaryItemValue}>{item.value}</Text>
+                  </View>
+                </Fragment>
+              ))}
             </View>
           </View>
-        </Animated.View>
-      </View>
-    </Modal>
+
+          <Text style={styles.title}>이 코스를{'\n'}업로드할까요?</Text>
+
+          <View style={styles.options}>
+            {matchedCourse ? (
+              <OptionRow selected={optionId === 'matched'} onPress={() => setOptionId('matched')} title={matchedCourse.name} />
+            ) : null}
+
+            <OptionRow selected={optionId === 'auto'} onPress={() => setOptionId('auto')} title={autoSuggestion.name} />
+
+            <OptionRow selected={optionId === 'custom'} onPress={() => setOptionId('custom')} title="직접 입력">
+              <TextInput
+                style={styles.input}
+                value={customName}
+                onChangeText={(text) => {
+                  setCustomName(text);
+                  setOptionId('custom');
+                }}
+                onBlur={() => {
+                  // Safety net: if blur fires after some other dismiss attempt
+                  // (or the keyboard re-focuses the input before it can close),
+                  // force it closed once more here.
+                  Keyboard.dismiss();
+                }}
+                placeholder="코스 이름을 입력하세요"
+                placeholderTextColor={colors.textMuted}
+              />
+            </OptionRow>
+          </View>
+
+          <Card style={styles.difficultyCard}>
+            <DifficultySlider value={difficulty} onChange={setDifficulty} />
+          </Card>
+
+          <View style={styles.actions}>
+            <Pressable onPress={() => onSkip(difficulty)} hitSlop={8} style={({ pressed }) => pressed && styles.pressed}>
+              <Text style={styles.skipText}>나중에 할게요</Text>
+            </Pressable>
+            <Pill label="업로드" variant="filled" onPress={handleSave} disabled={!canSave} style={styles.saveButton} />
+          </View>
+        </View>
+      </Animated.View>
+    </SlideUpModal>
   );
 }
 
@@ -266,10 +264,6 @@ function OptionRow({ selected, onPress, title, children }: OptionRowProps) {
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
   backdropSpacer: {
     flex: 1,
   },
