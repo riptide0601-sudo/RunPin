@@ -207,6 +207,7 @@ function SavedCourseRow({
           isSwipingRef.current = true;
         }}
         onSwipeableOpen={() => {
+          swipeDebugLog(course.id, '실제 열림 (onSwipeableOpen)');
           isSwipingRef.current = false;
           openRowRef.current = {
             id: course.id,
@@ -214,9 +215,11 @@ function SavedCourseRow({
           };
         }}
         onSwipeableWillClose={() => {
+          swipeDebugLog(course.id, '닫힘 시작 (onSwipeableWillClose)');
           setIsRowLocked(true);
         }}
         onSwipeableClose={() => {
+          swipeDebugLog(course.id, '실제 닫힘 (onSwipeableClose)');
           isSwipingRef.current = false;
           setIsRowLocked(false);
           if (openRowRef.current?.id === course.id) {
