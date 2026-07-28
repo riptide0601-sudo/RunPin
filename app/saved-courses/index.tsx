@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable as RNPressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, {
@@ -50,8 +50,11 @@ const DELETE_ACTION_FADE_RANGE: [number, number] = [0, 0.15];
 // stiffness:400 → 감쇠비 약 1.06 이었을 때는 이 조건은 만족하지만 stiffness가
 // 높아 모션 자체가 너무 빠르고 뚝뚝 끊기듯 보인다는 피드백이 있어, 감쇠비는
 // 그대로 유지한 채 stiffness/mass만 낮춰 같은 "빠르게 정지 판정" 특성은
-// 지키면서 이동 자체는 더 느리고 부드럽게 보이도록 조정했다.)
-const SWIPE_ANIMATION_OPTIONS = { mass: 0.6, damping: 22, stiffness: 180 };
+// 지키면서 이동 자체는 더 느리고 부드럽게 보이도록 조정했다. 이후 mass:0.6,
+// damping:22, stiffness:180(감쇠비 약 1.06)으로도 손을 뗐을 때 여전히 뚝
+// 떨어지는 느낌이라는 피드백이 있어, 감쇠비(약 1.06)는 유지한 채 stiffness를
+// 더 낮춰(고유진동수 ω=sqrt(stiffness/mass) 기준 약 1.5배 더 느리게) 재조정했다.
+const SWIPE_ANIMATION_OPTIONS = { mass: 0.6, damping: 14, stiffness: 75 };
 // 실기기 로그(course-57 사례)에서 onPress가 68ms 만에 발동한 뒤 87ms가 더 지나서야
 // onSwipeableOpenStartDrag(스와이프 제스처 확정)가 호출된 사례가 확인됐다. 같은
 // 터치인데 tap 인식이 pan(스와이프) 인식보다 먼저 JS로 전달되는 레이스라, isSwipingRef
@@ -311,7 +314,12 @@ export default function SavedCoursesScreen() {
   };
 
   return (
-    <RNPressable style={[styles.container, { paddingTop: insets.top + 8 }]} onPress={closeOpenRow}>
+    // react-native 코어 Pressable(레거시 responder)이 아니라 react-native-gesture-handler의
+    // Pressable을 써야 한다. 코어 Pressable을 쓰면, 스와이프(RNGH pan 제스처)를 끝내는
+    // 터치-업이 RNGH 트리 밖에 있는 레거시 responder 시스템으로도 별도 전달되어, 방금 연
+    // 행을 "바깥 탭"으로 오인해 곧바로 다시 닫아버리는 레이스가 있었다(열림 후 2~4ms 안에
+    // 자기 자신이 close()되는 재발 버그의 근본 원인, swipe-debug 로그로 확정).
+    <Pressable style={[styles.container, { paddingTop: insets.top + 8 }]} onPress={closeOpenRow}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={colors.text} />
@@ -342,7 +350,7 @@ export default function SavedCoursesScreen() {
         onClose={() => setSelectedCourse(null)}
         showSaveButton={false}
       />
-    </RNPressable>
+    </Pressable>
   );
 }
 
