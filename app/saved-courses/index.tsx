@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -105,7 +105,7 @@ const SWIPE_FRICTION = 1;
 // 수평 이동이 있으면 pan이 먼저 활성화되어 내부 Tap과의 경쟁에서 이기도록 한다.
 const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
 
-function DeleteAction({
+const DeleteAction = memo(function DeleteAction({
   progress,
   onPress,
 }: {
@@ -132,16 +132,16 @@ function DeleteAction({
       </Pressable>
     </Animated.View>
   );
-}
+});
 
-function SavedCourseRow({
+const SavedCourseRow = memo(function SavedCourseRowImpl({
   course,
-  onPress,
+  onSelect,
   openRowRef,
   onDelete,
 }: {
   course: Course;
-  onPress: () => void;
+  onSelect: (course: Course) => void;
   openRowRef: React.RefObject<OpenRowRef>;
   onDelete: (courseId: string) => void;
 }) {
@@ -185,6 +185,13 @@ function SavedCourseRow({
     });
   };
 
+  const registerAsOpenRow = () => {
+    openRowRef.current = {
+      id: course.id,
+      close: () => swipeableRef.current?.close(),
+    };
+  };
+
   return (
     <Animated.View style={deletingStyle}>
       <Swipeable
@@ -211,20 +218,14 @@ function SavedCourseRow({
           // 등록된 A가 타겟으로 잡혀 닫히는 버그가 있었다(실기기 로그로 확정). 열림 제스처가
           // 확정된 이 시점에 곧바로 자신을 등록해 "닫을 대상" 판단이 애니메이션 완료를
           // 기다리지 않도록 한다.
-          openRowRef.current = {
-            id: course.id,
-            close: () => swipeableRef.current?.close(),
-          };
+          registerAsOpenRow();
         }}
         onSwipeableCloseStartDrag={() => {
           isSwipingRef.current = true;
         }}
         onSwipeableOpen={() => {
           isSwipingRef.current = false;
-          openRowRef.current = {
-            id: course.id,
-            close: () => swipeableRef.current?.close(),
-          };
+          registerAsOpenRow();
         }}
         onSwipeableWillClose={() => {
           setIsRowLocked(true);
@@ -268,14 +269,14 @@ function SavedCourseRow({
                 swipeableRef.current?.close();
                 return;
               }
-              onPress();
+              onSelect(course);
             }, TAP_CONFIRM_DELAY);
           }}
         />
       </Swipeable>
     </Animated.View>
   );
-}
+});
 
 export default function SavedCoursesScreen() {
   const insets = useSafeAreaInsets();
@@ -289,12 +290,23 @@ export default function SavedCoursesScreen() {
     [courses, savedCourseIds],
   );
 
-  const handleDelete = (courseId: string) => {
-    if (openRowRef.current?.id === courseId) {
-      openRowRef.current = null;
-    }
-    toggleSaveCourse(courseId);
-  };
+  // SavedCourseRow는 React.memo로 감싸여 있으므로, 여기서 매 렌더마다 새 함수를
+  // 만들어 내려주면(예: selectedCourse가 바뀔 때마다) props 참조가 달라져서 memo가
+  // 무의미해지고 화면에 떠 있는 모든 행(Reanimated 값, 제스처 핸들러 포함)이 다시
+  // 렌더링된다. useCallback으로 참조를 고정해 실제로 관련 있는 행만 리렌더되게 한다.
+  const handleDelete = useCallback(
+    (courseId: string) => {
+      if (openRowRef.current?.id === courseId) {
+        openRowRef.current = null;
+      }
+      toggleSaveCourse(courseId);
+    },
+    [toggleSaveCourse],
+  );
+
+  const handleSelectCourse = useCallback((course: Course) => {
+    setSelectedCourse(course);
+  }, []);
 
   // 화면의 다른 부분(헤더, 리스트 여백 등)을 누르면 열려있는 삭제 버튼을 닫는다.
   // 각 행 자체를 누르는 경우는 SavedCourseRow의 onPressIn에서 더 먼저(레이스 없이)
@@ -327,7 +339,7 @@ export default function SavedCoursesScreen() {
             <SavedCourseRow
               key={course.id}
               course={course}
-              onPress={() => setSelectedCourse(course)}
+              onSelect={handleSelectCourse}
               openRowRef={openRowRef}
               onDelete={handleDelete}
             />

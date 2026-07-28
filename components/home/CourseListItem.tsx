@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { memo } from 'react';
 import { Pressable } from 'react-native-gesture-handler';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -21,9 +22,9 @@ interface CourseListItemProps {
   showSaveButton?: boolean;
 }
 
-export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress, onPressIn, disabled, showSaveButton = true }: CourseListItemProps) {
+export const CourseListItem = memo(function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress, onPressIn, disabled, showSaveButton = true }: CourseListItemProps) {
   const { savedCourseIds, toggleSaveCourse } = useAppData();
-  const isSaved = savedCourseIds.has(course.id);
+  const isSaved = showSaveButton && savedCourseIds.has(course.id);
 
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} disabled={disabled} style={({ pressed }) => pressed && styles.pressed}>
@@ -60,7 +61,7 @@ export function CourseListItem({ course, isSelected, hasGroup, isExpanded, relat
       </Card>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   pressed: {
