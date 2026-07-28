@@ -221,20 +221,24 @@ function SavedCourseRow({
           onPress={() => {
             swipeDebugLog(course.id, `onPress 발동 (isSwipingRef=${isSwipingRef.current})`);
             if (isSwipingRef.current) return;
-            // 이 행 자체가 열려있는 상태에서 카드(삭제 버튼이 아닌 부분)를 누르면
-            // 코스를 열지 않고 닫기만 한다.
-            if (openRowRef.current?.id === course.id) {
-              swipeableRef.current?.close();
-              return;
-            }
             if (pressConfirmTimeoutRef.current) {
               clearTimeout(pressConfirmTimeoutRef.current);
             }
-            // TAP_CONFIRM_DELAY 동안 기다렸다가, 그 사이 스와이프 제스처가 확정되지
-            // 않았을 때만 실제 탭 동작을 실행한다.
+            // "이미 열린 행을 다시 왼쪽으로 스와이프"하는 경우에도 onPress가 실제
+            // 스와이프 제스처 확정(onSwipeableCloseStartDrag)보다 먼저 오는 동일한
+            // 레이스가 발생한다. 예전에는 "행이 열려있으면 닫기" 분기가 이 지연 없이
+            // 즉시 close()를 호출해서, 스와이프를 더 진행하려던 터치까지 닫아버렸다.
+            // 그래서 이 분기도 TAP_CONFIRM_DELAY 동안 기다렸다가 그 사이 스와이프가
+            // 확정되지 않았을 때만 실행한다.
             pressConfirmTimeoutRef.current = setTimeout(() => {
               pressConfirmTimeoutRef.current = null;
               if (isSwipingRef.current) return;
+              // 이 행 자체가 열려있는 상태에서 카드(삭제 버튼이 아닌 부분)를 누르면
+              // 코스를 열지 않고 닫기만 한다.
+              if (openRowRef.current?.id === course.id) {
+                swipeableRef.current?.close();
+                return;
+              }
               swipeDebugLog(course.id, 'onPress 통과 -> 실제 실행');
               onPress();
             }, TAP_CONFIRM_DELAY);
