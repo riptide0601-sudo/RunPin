@@ -154,9 +154,12 @@ function SavedCourseRow({
       <Swipeable
         ref={swipeableRef}
         friction={1.6}
-        overshootFriction={8}
+        overshootRight={false}
+        dragOffsetFromLeftEdge={4}
+        dragOffsetFromRightEdge={4}
         animationOptions={SWIPE_ANIMATION_OPTIONS}
         containerStyle={styles.swipeContainer}
+        childrenContainerStyle={styles.swipeContent}
         renderRightActions={(progress) => <DeleteAction progress={progress} onPress={handleDelete} />}
         onSwipeableOpenStartDrag={() => {
           swipeDebugLog(course.id, '제스처 인식 확정 (open start drag)');
@@ -321,12 +324,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
   },
-  // 좌우 여백은 스와이프 상태와 무관하게 항상 고정. 카드가 삭제 버튼 폭만큼
-  // 밀리는 모션은 Swipeable 내부 translateX(transform)가 처리하므로, 여기서는
-  // 레이아웃 속성(margin)을 건드리지 않는다.
+  // Swipeable 최상위 컨테이너는 overflow:hidden으로 스와이프 가능 영역을 클리핑한다.
+  // 여기에 marginLeft를 주면 카드가 아무리 왼쪽으로 밀려도 그 여백 지점에서
+  // 잘려버려(clip) "끝까지 스와이프해도 왼쪽 여백이 안 없어지는" 문제가 생긴다.
+  // 그래서 왼쪽은 컨테이너가 아니라 실제로 translateX와 함께 움직이는
+  // swipeContent(children) 쪽에 여백을 준다. 오른쪽 여백은 삭제 버튼이 항상
+  // 이 경계 안에서만 드러나야 하므로 컨테이너에 그대로 유지한다.
   swipeContainer: {
-    marginLeft: SWIPE_CONTAINER_REST_MARGIN,
     marginRight: SWIPE_CONTAINER_REST_MARGIN,
+  },
+  swipeContent: {
+    marginLeft: SWIPE_CONTAINER_REST_MARGIN,
   },
   deleteButtonWrap: {
     marginLeft: DELETE_ACTION_GAP,
