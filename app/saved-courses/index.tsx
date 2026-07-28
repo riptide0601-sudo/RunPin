@@ -61,6 +61,15 @@ const TAP_CONFIRM_DELAY = 180;
 // 열림 상태로 고정되도록(닫기는 반대로 스와이프하거나 화면 다른 곳을 눌러야만)
 // 임계값을 아주 낮게 잡는다.
 const SWIPE_OPEN_THRESHOLD = 8;
+// overshootRight={false}(기본 동작)는 삭제 버튼 폭을 넘어서는 드래그를 완전히 막아버려서,
+// 왼쪽으로 과하게 스와이프해도 손가락을 따라가지 않고 그 자리에 딱 멈춰버린다(탄성 없음).
+// 요구사항은 "너무 많이 밀어도 살짝 튕기듯 돌아가면서 계속 열려있어야" 하므로, overshootRight를
+// 켜서 폭을 넘어가는 구간도 드래그를 따라가게 한 뒤(overshootFriction으로 저항을 줘서 과하게
+// 늘어지지 않게) 손을 떼면 SWIPE_ANIMATION_OPTIONS 스프링이 삭제 버튼 폭 지점으로 되돌아오며
+// bounce처럼 보이게 한다. release 시점에 "열림"으로 확정되는지는 라이브러리의 handleRelease가
+// 이미 담당한다: rowState가 열린 상태에서는 오른쪽으로 rightThreshold 이상 스와이프해서 끝나는
+// 경우에만 닫히고, 그 외(왼쪽으로 더 밀거나 그 자리에서 손을 뗀 경우)는 계속 열림을 유지한다.
+const SWIPE_OVERSHOOT_FRICTION = 8;
 
 // TODO(swipe-touch-leak, swipe-height-jump): 스와이프 도중 터치가 새는 현상과
 // 카드 높이가 흔들리는 현상의 원인을 실기기 로그로 확정하기 위한 임시 계측.
@@ -160,7 +169,8 @@ function SavedCourseRow({
       <Swipeable
         ref={swipeableRef}
         friction={1.6}
-        overshootRight={false}
+        overshootRight
+        overshootFriction={SWIPE_OVERSHOOT_FRICTION}
         dragOffsetFromLeftEdge={4}
         dragOffsetFromRightEdge={4}
         rightThreshold={SWIPE_OPEN_THRESHOLD}
