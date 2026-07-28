@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable as RNPressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, {
@@ -27,18 +27,13 @@ import type { Course } from '@/types';
 type OpenRowRef = { id: string; close: () => void } | null;
 
 const DELETE_DURATION = 220;
-// 카드가 스와이프로 밀려날 때 삭제 버튼이 반대편에서 "함께 밀려 들어오는" 느낌을 주기 위한
-// 시작 오프셋. progress(0~1)에 맞춰 이 값만큼 translateX를 주고 0으로 수렴시킨다.
-const DELETE_ACTION_PUSH_OFFSET = 24;
 // 카드와 삭제 버튼이 거의 붙어 보이도록 남기는 최소 간격.
 const DELETE_ACTION_GAP = 6;
-// 카드가 정지(닫힌) 상태일 때만 좌우 여백을 주는 값. 스와이프 컨테이너 자체에 항상
-// marginHorizontal을 고정하면 드래그 중/열린 상태에서도 좌우에 여백이 그대로 남아
-// "여백 + 버튼 사이 간격 + 여백"이 겹쳐 보여 부자연스럽다. 그래서 이 값은 고정 스타일이
-// 아니라 아래 containerMargin 셰어드 값으로 애니메이션해서, 드래그가 시작되는 즉시
-// 0으로 접히고 완전히 닫혀 정지했을 때만 되돌아오게 한다.
+// 카드가 정지(닫힌) 상태일 때의 좌우 여백. 스와이프 상태와 무관하게 항상 고정값을
+// 유지한다 (여백 자체를 늘리거나 접으면 박스 폭이 바뀌어 보이는 문제가 있었음).
+// 실제 슬라이드 모션은 Swipeable 내부의 translateX(레이아웃이 아닌 transform)가
+// 카드 전체를 삭제 버튼 폭만큼 그대로 밀어내는 것으로만 처리한다.
 const SWIPE_CONTAINER_REST_MARGIN = 20;
-const SWIPE_CONTAINER_MARGIN_DURATION = 180;
 // 삭제 버튼 opacity를 progress 기준으로 직접 페이드시키는 구간. ReanimatedSwipeable
 // 라이브러리가 액션 래퍼 opacity를 progress===0일 때만 0, 그 외엔 무조건 1로 켜는
 // "이진(boolean) 스냅" 방식이라, 닫히는 도중에는 끝까지 불투명하게 보이다가 정확히
@@ -53,9 +48,17 @@ const DELETE_ACTION_FADE_RANGE: [number, number] = [0, 0.15];
 // "닫아도 삭제 버튼이 한참 안 사라진다"의 원인이라, 임계감쇠에 가까운 값으로
 // 덮어써서 닫힘 모션 자체를 빠르고 매끄럽게 만든다.
 const SWIPE_ANIMATION_OPTIONS = { mass: 0.5, damping: 30, stiffness: 400 };
+// 실기기 로그(course-57 사례)에서 onPress가 68ms 만에 발동한 뒤 87ms가 더 지나서야
+// onSwipeableOpenStartDrag(스와이프 제스처 확정)가 호출된 사례가 확인됐다. 같은
+// 터치인데 tap 인식이 pan(스와이프) 인식보다 먼저 JS로 전달되는 레이스라, isSwipingRef
+// 값만 그 순간 확인해서는 못 걸러낸다. 그래서 onPress 실행을 짧게 지연시키고, 지연
+// 도중 isSwipingRef가 true로 바뀌면 실행을 취소한다. 관측된 지연폭(~150ms)보다
+// 여유를 둔 값.
+const TAP_CONFIRM_DELAY = 180;
 
-// TODO(swipe-touch-leak): 스와이프 도중 터치가 새는 원인을 실기기 로그로 확정하기 위한
-// 임시 계측. 원인 확정 후 반드시 제거할 것 (CLAUDE.md 9.1).
+// TODO(swipe-touch-leak, swipe-height-jump): 스와이프 도중 터치가 새는 현상과
+// 카드 높이가 흔들리는 현상의 원인을 실기기 로그로 확정하기 위한 임시 계측.
+// 원인 확정 후 반드시 제거할 것 (CLAUDE.md 9.1).
 function swipeDebugLog(courseId: string, label: string) {
   if (!__DEV__) return;
   console.log(`[swipe-debug] ${Date.now()} course=${courseId} ${label}`);
@@ -68,6 +71,10 @@ function DeleteAction({
   progress: SharedValue<number>;
   onPress: () => void;
 }) {
+  // 삭제 버튼 자체에 translateX를 추가로 얹으면, 라이브러리가 이미 처리하는
+  // 액션 패널의 우->좌 슬라이드와 겹쳐 "오른쪽으로 갔다가 왼쪽으로 오는" bounce처럼
+  // 보인다. 그래서 우리 쪽은 opacity 페이드만 담당하고, 위치 이동은 라이브러리의
+  // 단방향 슬라이드 하나만 남긴다.
   const pushStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       progress.value,
@@ -75,16 +82,6 @@ function DeleteAction({
       [0, 1],
       Extrapolation.CLAMP,
     ),
-    transform: [
-      {
-        translateX: interpolate(
-          progress.value,
-          [0, 1],
-          [DELETE_ACTION_PUSH_OFFSET, 0],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
   }));
 
   return (
@@ -117,18 +114,25 @@ function SavedCourseRow({
   // onPress를 별도로 잠가서 삭제 버튼이 사라지기 전에 다음 터치가 겹치지 않게 한다.
   const [isRowLocked, setIsRowLocked] = useState(false);
 
+  // onPress가 스와이프 제스처 확정보다 먼저 JS로 전달되는 레이스(TAP_CONFIRM_DELAY
+  // 주석 참고)를 막기 위해, onPress 실행을 지연시켰다가 그 사이 isSwipingRef가
+  // true가 되면 취소한다. 이 타이머 핸들을 보관해둔다.
+  const pressConfirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pressConfirmTimeoutRef.current) {
+        clearTimeout(pressConfirmTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const opacity = useSharedValue(1);
   const scale = useSharedValue(1);
-  // 닫힌 채 정지해 있을 때만 좌우 여백을 보여주고, 드래그가 시작되는 순간 0으로 접는다.
-  const containerMargin = useSharedValue(SWIPE_CONTAINER_REST_MARGIN);
 
   const deletingStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],
-  }));
-
-  const containerMarginStyle = useAnimatedStyle(() => ({
-    marginHorizontal: containerMargin.value,
   }));
 
   const handleDelete = () => {
@@ -141,18 +145,22 @@ function SavedCourseRow({
   };
 
   return (
-    <Animated.View style={deletingStyle}>
+    <Animated.View
+      style={deletingStyle}
+      onLayout={(event) => {
+        swipeDebugLog(course.id, `row height=${event.nativeEvent.layout.height.toFixed(1)}`);
+      }}
+    >
       <Swipeable
         ref={swipeableRef}
         friction={1.6}
         overshootFriction={8}
         animationOptions={SWIPE_ANIMATION_OPTIONS}
-        containerStyle={[styles.swipeContainer, containerMarginStyle]}
+        containerStyle={styles.swipeContainer}
         renderRightActions={(progress) => <DeleteAction progress={progress} onPress={handleDelete} />}
         onSwipeableOpenStartDrag={() => {
           swipeDebugLog(course.id, '제스처 인식 확정 (open start drag)');
           isSwipingRef.current = true;
-          containerMargin.value = withTiming(0, { duration: SWIPE_CONTAINER_MARGIN_DURATION });
           if (openRowRef.current && openRowRef.current.id !== course.id) {
             openRowRef.current.close();
           }
@@ -160,7 +168,6 @@ function SavedCourseRow({
         onSwipeableCloseStartDrag={() => {
           swipeDebugLog(course.id, '제스처 인식 확정 (close start drag)');
           isSwipingRef.current = true;
-          containerMargin.value = withTiming(0, { duration: SWIPE_CONTAINER_MARGIN_DURATION });
         }}
         onSwipeableOpen={() => {
           isSwipingRef.current = false;
@@ -175,9 +182,6 @@ function SavedCourseRow({
         onSwipeableClose={() => {
           isSwipingRef.current = false;
           setIsRowLocked(false);
-          containerMargin.value = withTiming(SWIPE_CONTAINER_REST_MARGIN, {
-            duration: SWIPE_CONTAINER_MARGIN_DURATION,
-          });
           if (openRowRef.current?.id === course.id) {
             openRowRef.current = null;
           }
@@ -188,12 +192,32 @@ function SavedCourseRow({
           disabled={isRowLocked}
           onPressIn={() => {
             swipeDebugLog(course.id, '터치 시작 (onPressIn)');
+            // 다른 행이 열려있는 상태에서 이 행을 누르기 시작하면, 탭인지 스와이프인지
+            // 결정되기 전에 즉시 열린 행을 닫는다 (터치 시작 시점은 레이스가 없다).
+            if (openRowRef.current && openRowRef.current.id !== course.id) {
+              openRowRef.current.close();
+            }
           }}
           onPress={() => {
             swipeDebugLog(course.id, `onPress 발동 (isSwipingRef=${isSwipingRef.current})`);
             if (isSwipingRef.current) return;
-            swipeDebugLog(course.id, 'onPress 통과 -> 실제 실행');
-            onPress();
+            // 이 행 자체가 열려있는 상태에서 카드(삭제 버튼이 아닌 부분)를 누르면
+            // 코스를 열지 않고 닫기만 한다.
+            if (openRowRef.current?.id === course.id) {
+              swipeableRef.current?.close();
+              return;
+            }
+            if (pressConfirmTimeoutRef.current) {
+              clearTimeout(pressConfirmTimeoutRef.current);
+            }
+            // TAP_CONFIRM_DELAY 동안 기다렸다가, 그 사이 스와이프 제스처가 확정되지
+            // 않았을 때만 실제 탭 동작을 실행한다.
+            pressConfirmTimeoutRef.current = setTimeout(() => {
+              pressConfirmTimeoutRef.current = null;
+              if (isSwipingRef.current) return;
+              swipeDebugLog(course.id, 'onPress 통과 -> 실제 실행');
+              onPress();
+            }, TAP_CONFIRM_DELAY);
           }}
         />
       </Swipeable>
@@ -220,8 +244,15 @@ export default function SavedCoursesScreen() {
     toggleSaveCourse(courseId);
   };
 
+  // 화면의 다른 부분(헤더, 리스트 여백 등)을 누르면 열려있는 삭제 버튼을 닫는다.
+  // 각 행 자체를 누르는 경우는 SavedCourseRow의 onPressIn에서 더 먼저(레이스 없이)
+  // 처리하므로, 여기서는 행 바깥 영역을 누른 경우만 걸러진다.
+  const closeOpenRow = () => {
+    openRowRef.current?.close();
+  };
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+    <RNPressable style={[styles.container, { paddingTop: insets.top + 8 }]} onPress={closeOpenRow}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={colors.text} />
@@ -252,7 +283,7 @@ export default function SavedCoursesScreen() {
         onClose={() => setSelectedCourse(null)}
         showSaveButton={false}
       />
-    </View>
+    </RNPressable>
   );
 }
 
@@ -290,11 +321,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
   },
-  // 실제 좌우 여백은 SavedCourseRow의 containerMarginStyle(marginHorizontal
-  // 애니메이션)이 담당한다. 카드가 정지(닫힌) 상태일 때만 여백을 보여주고 드래그
-  // 시작과 동시에 0으로 접어서, 스와이프 중에 여백+버튼 간격이 겹쳐 보이지 않게
-  // 한다. 이 style은 향후 비-애니메이션 컨테이너 속성을 위한 자리로 남겨둔다.
-  swipeContainer: {},
+  // 좌우 여백은 스와이프 상태와 무관하게 항상 고정. 카드가 삭제 버튼 폭만큼
+  // 밀리는 모션은 Swipeable 내부 translateX(transform)가 처리하므로, 여기서는
+  // 레이아웃 속성(margin)을 건드리지 않는다.
+  swipeContainer: {
+    marginLeft: SWIPE_CONTAINER_REST_MARGIN,
+    marginRight: SWIPE_CONTAINER_REST_MARGIN,
+  },
   deleteButtonWrap: {
     marginLeft: DELETE_ACTION_GAP,
   },
