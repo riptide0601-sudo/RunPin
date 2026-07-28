@@ -199,6 +199,10 @@ function SavedCourseRow({
           swipeDebugLog(course.id, '제스처 인식 확정 (open start drag)');
           isSwipingRef.current = true;
           if (openRowRef.current && openRowRef.current.id !== course.id) {
+            swipeDebugLog(
+              course.id,
+              `[close-call:openStartDrag] target=${openRowRef.current.id} close() 호출`,
+            );
             openRowRef.current.close();
           }
         }}
@@ -235,6 +239,10 @@ function SavedCourseRow({
             // 다른 행이 열려있는 상태에서 이 행을 누르기 시작하면, 탭인지 스와이프인지
             // 결정되기 전에 즉시 열린 행을 닫는다 (터치 시작 시점은 레이스가 없다).
             if (openRowRef.current && openRowRef.current.id !== course.id) {
+              swipeDebugLog(
+                course.id,
+                `[close-call:onPressIn] target=${openRowRef.current.id} close() 호출`,
+              );
               openRowRef.current.close();
             }
           }}
@@ -256,6 +264,7 @@ function SavedCourseRow({
               // 이 행 자체가 열려있는 상태에서 카드(삭제 버튼이 아닌 부분)를 누르면
               // 코스를 열지 않고 닫기만 한다.
               if (openRowRef.current?.id === course.id) {
+                swipeDebugLog(course.id, '[close-call:onPress-self] 자기 자신 close() 호출');
                 swipeableRef.current?.close();
                 return;
               }
@@ -292,6 +301,12 @@ export default function SavedCoursesScreen() {
   // 각 행 자체를 누르는 경우는 SavedCourseRow의 onPressIn에서 더 먼저(레이스 없이)
   // 처리하므로, 여기서는 행 바깥 영역을 누른 경우만 걸러진다.
   const closeOpenRow = () => {
+    if (openRowRef.current) {
+      swipeDebugLog(
+        '(outer)',
+        `[close-call:outerPress] target=${openRowRef.current.id} close() 호출`,
+      );
+    }
     openRowRef.current?.close();
   };
 
