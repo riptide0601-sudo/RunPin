@@ -45,9 +45,13 @@ const DELETE_ACTION_FADE_RANGE: [number, number] = [0, 0.15];
 // 임계감쇠(critical damping, 이 조합에서 약 75)의 13배가 넘는 심한 과감쇠라
 // 눈에 보이는 이동은 금방 끝난 것처럼 보여도 "완전히 정지" 판정(그리고 그
 // 시점에 삭제 버튼 opacity가 0으로 꺼지는 것)까지는 아주 오래 걸린다. 이게
-// "닫아도 삭제 버튼이 한참 안 사라진다"의 원인이라, 임계감쇠에 가까운 값으로
-// 덮어써서 닫힘 모션 자체를 빠르고 매끄럽게 만든다.
-const SWIPE_ANIMATION_OPTIONS = { mass: 0.5, damping: 30, stiffness: 400 };
+// "닫아도 삭제 버튼이 한참 안 사라진다"의 원인이라, 임계감쇠 근처 값으로
+// 덮어써서 "완전히 정지" 판정이 오래 안 걸리게 한다. (mass:0.5, damping:30,
+// stiffness:400 → 감쇠비 약 1.06 이었을 때는 이 조건은 만족하지만 stiffness가
+// 높아 모션 자체가 너무 빠르고 뚝뚝 끊기듯 보인다는 피드백이 있어, 감쇠비는
+// 그대로 유지한 채 stiffness/mass만 낮춰 같은 "빠르게 정지 판정" 특성은
+// 지키면서 이동 자체는 더 느리고 부드럽게 보이도록 조정했다.)
+const SWIPE_ANIMATION_OPTIONS = { mass: 0.6, damping: 22, stiffness: 180 };
 // 실기기 로그(course-57 사례)에서 onPress가 68ms 만에 발동한 뒤 87ms가 더 지나서야
 // onSwipeableOpenStartDrag(스와이프 제스처 확정)가 호출된 사례가 확인됐다. 같은
 // 터치인데 tap 인식이 pan(스와이프) 인식보다 먼저 JS로 전달되는 레이스라, isSwipingRef
