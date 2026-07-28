@@ -1,9 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { memo, useEffect, useRef } from 'react';
+import { Animated, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 
-import { DifficultyBadge } from '@/components/ui/DifficultyBadge';
-import { colors } from '@/constants/colors';
+import { CourseGroupCarouselCard } from '@/components/home/CourseGroupCarouselCard';
 import { useAppData } from '@/lib/appData';
 import type { Course } from '@/types';
 
@@ -18,7 +16,12 @@ const CONTAINER_HEIGHT = 114;
 const CARD_GAP = 10;
 const LIST_HORIZONTAL_PADDING = 40; // components/home/RecommendedCourseList.tsx의 좌우 paddingHorizontal 합
 
-export function CourseGroupCarousel({ expanded, members, selectedCourseId, onSelectMember }: CourseGroupCarouselProps) {
+export const CourseGroupCarousel = memo(function CourseGroupCarousel({
+  expanded,
+  members,
+  selectedCourseId,
+  onSelectMember,
+}: CourseGroupCarouselProps) {
   const progress = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   const { width } = useWindowDimensions();
   const cardWidth = (width - LIST_HORIZONTAL_PADDING - CARD_GAP * 2) / 3;
@@ -50,39 +53,21 @@ export function CourseGroupCarousel({ expanded, members, selectedCourseId, onSel
         snapToAlignment="start"
         contentContainerStyle={styles.scrollContent}
       >
-        {members.map((member) => {
-          const isSelected = member.id === selectedCourseId;
-          const isSaved = savedCourseIds.has(member.id);
-          return (
-            <Pressable
-              key={member.id}
-              onPress={() => onSelectMember(member.id)}
-              style={[styles.card, { width: cardWidth }, isSelected ? styles.cardSelected : undefined]}
-            >
-              <Text style={styles.name} numberOfLines={1}>
-                {member.name}
-              </Text>
-              <Text style={styles.distance}>{member.distanceKm}km</Text>
-              <View style={styles.metaRow}>
-                <DifficultyBadge difficulty={member.difficulty} />
-              </View>
-              <Text style={styles.uploader} numberOfLines={1}>
-                업로드: {member.uploaderName}
-              </Text>
-              <Pressable style={styles.bookmarkButton} onPress={() => toggleSaveCourse(member.id)}>
-                <Ionicons
-                  name={isSaved ? 'bookmark' : 'bookmark-outline'}
-                  size={13}
-                  color={isSaved ? colors.ink : colors.textMuted}
-                />
-              </Pressable>
-            </Pressable>
-          );
-        })}
+        {members.map((member) => (
+          <CourseGroupCarouselCard
+            key={member.id}
+            member={member}
+            width={cardWidth}
+            isSelected={member.id === selectedCourseId}
+            isSaved={savedCourseIds.has(member.id)}
+            onSelect={onSelectMember}
+            onToggleSave={toggleSaveCourse}
+          />
+        ))}
       </ScrollView>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -91,50 +76,5 @@ const styles = StyleSheet.create({
   scrollContent: {
     gap: CARD_GAP,
     paddingBottom: 4,
-  },
-  card: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 14,
-    padding: 10,
-    gap: 6,
-  },
-  cardSelected: {
-    borderWidth: 1.5,
-    borderColor: colors.ink,
-  },
-  name: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-    paddingRight: 20,
-  },
-  bookmarkButton: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(234, 234, 234, 0.55)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  distance: {
-    fontSize: 11,
-    color: colors.textMuted,
-  },
-  uploader: {
-    fontSize: 10,
-    color: colors.textMuted,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
   },
 });

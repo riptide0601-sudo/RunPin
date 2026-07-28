@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { CourseGroupCarousel } from '@/components/home/CourseGroupCarousel';
@@ -25,6 +25,17 @@ export function RecommendedCourseList({
   // representative course closes the carousel only when this is false —
   // otherwise it first just re-selects the representative and resets this flag.
   const [pickedMemberInExpandedGroup, setPickedMemberInExpandedGroup] = useState(false);
+
+  // CourseGroupCarousel은 React.memo로 감싸여 있으므로, 여기서 매 렌더마다 새 함수를
+  // 만들어 내려주면 props 참조가 달라져서 memo가 무의미해지고 화면에 떠 있는 모든
+  // 캐러셀(펼쳐지지 않은 것 포함)이 다시 렌더링된다. useCallback으로 참조를 고정한다.
+  const handleSelectMember = useCallback(
+    (memberId: string) => {
+      setPickedMemberInExpandedGroup(true);
+      onSelectCourse?.(memberId);
+    },
+    [onSelectCourse],
+  );
 
   return (
     <View style={styles.container}>
@@ -72,10 +83,7 @@ export function RecommendedCourseList({
                   expanded={isExpanded}
                   members={members}
                   selectedCourseId={selectedCourseId}
-                  onSelectMember={(memberId) => {
-                    setPickedMemberInExpandedGroup(true);
-                    onSelectCourse?.(memberId);
-                  }}
+                  onSelectMember={handleSelectMember}
                 />
               ) : null}
             </View>
