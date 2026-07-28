@@ -1,0 +1,158 @@
+diff --git a/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js b/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
+index 053051f..a95a26e 100644
+--- a/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
++++ b/node_modules/react-native-gesture-handler/lib/commonjs/components/ReanimatedSwipeable/ReanimatedSwipeable.js
+@@ -254,17 +254,6 @@ const Swipeable = props => {
+     animateRow(0);
+   }, [animateRow]);
+   const dragStarted = (0, _reactNativeReanimated.useSharedValue)(false);
+-  const tapGesture = (0, _react.useMemo)(() => {
+-    const tap = _2.Gesture.Tap().shouldCancelWhenOutside(true).onStart(() => {
+-      if (rowState.value !== 0) {
+-        close();
+-      }
+-    });
+-    Object.entries(relationProps).forEach(([relationName, relation]) => {
+-      (0, _utils.applyRelationProp)(tap, relationName, relation);
+-    });
+-    return tap;
+-  }, [close, relationProps, rowState]);
+   const panGesture = (0, _react.useMemo)(() => {
+     const pan = _2.Gesture.Pan().enabled(enabled !== false).enableTrackpadTwoFingerGesture(enableTrackpadTwoFingerGesture).activeOffsetX([-dragOffsetFromRightEdge, dragOffsetFromLeftEdge]).onStart(updateElementWidths).onUpdate(event => {
+       userDrag.value = event.translationX;
+@@ -288,6 +277,21 @@ const Swipeable = props => {
+     });
+     return pan;
+   }, [enabled, enableTrackpadTwoFingerGesture, dragOffsetFromRightEdge, dragOffsetFromLeftEdge, updateElementWidths, relationProps, userDrag, rowState, dragStarted, updateAnimatedEvent, onSwipeableOpenStartDrag, onSwipeableCloseStartDrag, handleRelease]);
++
++  // PATCH(runpin, swipeable-tap-pan-race): pan이 실패해야만 children-tap이
++  // 발동하도록 명시적 우선순위를 걸어, 재스와이프 시 tap이 먼저 이겨 즉시
++  // close()가 호출되던 레이스를 없앤다.
++  const tapGesture = (0, _react.useMemo)(() => {
++    const tap = _2.Gesture.Tap().shouldCancelWhenOutside(true).requireExternalGestureToFail(panGesture).onStart(() => {
++      if (rowState.value !== 0) {
++        close();
++      }
++    });
++    Object.entries(relationProps).forEach(([relationName, relation]) => {
++      (0, _utils.applyRelationProp)(tap, relationName, relation);
++    });
++    return tap;
++  }, [close, relationProps, rowState, panGesture]);
+   (0, _react.useImperativeHandle)(ref, () => swipeableMethods, [swipeableMethods]);
+   const animatedStyle = (0, _reactNativeReanimated.useAnimatedStyle)(() => ({
+     transform: [{
+diff --git a/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js b/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
+index 5d0b9e3..f506326 100644
+--- a/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
++++ b/node_modules/react-native-gesture-handler/lib/module/components/ReanimatedSwipeable/ReanimatedSwipeable.js
+@@ -249,17 +249,6 @@ const Swipeable = props => {
+     animateRow(0);
+   }, [animateRow]);
+   const dragStarted = useSharedValue(false);
+-  const tapGesture = useMemo(() => {
+-    const tap = Gesture.Tap().shouldCancelWhenOutside(true).onStart(() => {
+-      if (rowState.value !== 0) {
+-        close();
+-      }
+-    });
+-    Object.entries(relationProps).forEach(([relationName, relation]) => {
+-      applyRelationProp(tap, relationName, relation);
+-    });
+-    return tap;
+-  }, [close, relationProps, rowState]);
+   const panGesture = useMemo(() => {
+     const pan = Gesture.Pan().enabled(enabled !== false).enableTrackpadTwoFingerGesture(enableTrackpadTwoFingerGesture).activeOffsetX([-dragOffsetFromRightEdge, dragOffsetFromLeftEdge]).onStart(updateElementWidths).onUpdate(event => {
+       userDrag.value = event.translationX;
+@@ -283,6 +272,21 @@ const Swipeable = props => {
+     });
+     return pan;
+   }, [enabled, enableTrackpadTwoFingerGesture, dragOffsetFromRightEdge, dragOffsetFromLeftEdge, updateElementWidths, relationProps, userDrag, rowState, dragStarted, updateAnimatedEvent, onSwipeableOpenStartDrag, onSwipeableCloseStartDrag, handleRelease]);
++
++  // PATCH(runpin, swipeable-tap-pan-race): pan이 실패해야만 children-tap이
++  // 발동하도록 명시적 우선순위를 걸어, 재스와이프 시 tap이 먼저 이겨 즉시
++  // close()가 호출되던 레이스를 없앤다.
++  const tapGesture = useMemo(() => {
++    const tap = Gesture.Tap().shouldCancelWhenOutside(true).requireExternalGestureToFail(panGesture).onStart(() => {
++      if (rowState.value !== 0) {
++        close();
++      }
++    });
++    Object.entries(relationProps).forEach(([relationName, relation]) => {
++      applyRelationProp(tap, relationName, relation);
++    });
++    return tap;
++  }, [close, relationProps, rowState, panGesture]);
+   useImperativeHandle(ref, () => swipeableMethods, [swipeableMethods]);
+   const animatedStyle = useAnimatedStyle(() => ({
+     transform: [{
+diff --git a/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx b/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
+index 53cce68..4cd8e29 100644
+--- a/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
++++ b/node_modules/react-native-gesture-handler/src/components/ReanimatedSwipeable/ReanimatedSwipeable.tsx
+@@ -465,26 +465,6 @@ const Swipeable = (props: SwipeableProps) => {
+ 
+   const dragStarted = useSharedValue<boolean>(false);
+ 
+-  const tapGesture = useMemo(() => {
+-    const tap = Gesture.Tap()
+-      .shouldCancelWhenOutside(true)
+-      .onStart(() => {
+-        if (rowState.value !== 0) {
+-          close();
+-        }
+-      });
+-
+-    Object.entries(relationProps).forEach(([relationName, relation]) => {
+-      applyRelationProp(
+-        tap,
+-        relationName as RelationPropName,
+-        relation as RelationPropType
+-      );
+-    });
+-
+-    return tap;
+-  }, [close, relationProps, rowState]);
+-
+   const panGesture = useMemo(() => {
+     const pan = Gesture.Pan()
+       .enabled(enabled !== false)
+@@ -548,6 +528,38 @@ const Swipeable = (props: SwipeableProps) => {
+     handleRelease,
+   ]);
+ 
++  // PATCH(runpin, swipeable-tap-pan-race): 원래 라이브러리는 이 children-tap
++  // 제스처와 위 pan 제스처가 서로 아무 관계 없이(각자 독립적으로) 인식되도록
++  // 되어있었다. 그래서 "이미 열린 행을 짧고 빠르게 다시 스와이프"하는 경우처럼
++  // pan이 이겨야 하는 상황에서도, 두 제스처가 거의 동시에 조건을 만족하면
++  // 어느 쪽이 먼저 인식되는지가 프레임 타이밍에 따라 갈려서 tap이 먼저
++  // 이겨버리고(onStart에서 rowState !== 0이면 무조건 close() 호출) 열려있던
++  // 행이 즉시 닫혀버리는 문제가 있었다(RunPin 이슈: 재스와이프 시 삭제 버튼이
++  // 저절로 닫힘). requireExternalGestureToFail로 "pan이 실패해야만 tap이
++  // 발동"하도록 명시적 우선순위를 걸어, 조금이라도 pan이 성립하는(활성화 임계값을
++  // 넘는) 터치는 항상 pan이 이기고, 순수하게 pan이 실패하는 진짜 탭에서만
++  // tap이 close()를 호출하도록 경쟁 자체를 없앤다.
++  const tapGesture = useMemo(() => {
++    const tap = Gesture.Tap()
++      .shouldCancelWhenOutside(true)
++      .requireExternalGestureToFail(panGesture)
++      .onStart(() => {
++        if (rowState.value !== 0) {
++          close();
++        }
++      });
++
++    Object.entries(relationProps).forEach(([relationName, relation]) => {
++      applyRelationProp(
++        tap,
++        relationName as RelationPropName,
++        relation as RelationPropType
++      );
++    });
++
++    return tap;
++  }, [close, relationProps, rowState, panGesture]);
++
+   useImperativeHandle(ref, () => swipeableMethods, [swipeableMethods]);
+ 
+   const animatedStyle = useAnimatedStyle(

@@ -29,6 +29,7 @@
     "eslint": "^9.0.0",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.8",
+    "patch-package": "^8.0.1",
     "prettier": "^3.9.4",
     "typescript": "~5.9.2"
   },
@@ -39,7 +40,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "format": "prettier --write .",
-    "fetch-routes": "node scripts/fetch-routes.js"
+    "fetch-routes": "node scripts/fetch-routes.js",
+    "postinstall": "patch-package"
   },
   "private": true
 }
