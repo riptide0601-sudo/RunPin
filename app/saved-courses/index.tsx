@@ -70,6 +70,19 @@ const SWIPE_OPEN_THRESHOLD = 8;
 // 이미 담당한다: rowState가 열린 상태에서는 오른쪽으로 rightThreshold 이상 스와이프해서 끝나는
 // 경우에만 닫히고, 그 외(왼쪽으로 더 밀거나 그 자리에서 손을 뗀 경우)는 계속 열림을 유지한다.
 const SWIPE_OVERSHOOT_FRICTION = 8;
+// friction 값이 1보다 크면 손가락 이동 거리보다 카드가 덜 움직여서 "스와이프해도
+// 카드가 잘 안 밀리는" 느낌을 준다. 실제 손가락 이동량과 카드 이동량이 거의 1:1로
+// 느껴지도록 저항을 없앤다(1은 라이브러리 기본값과 동일).
+const SWIPE_FRICTION = 1;
+// ReanimatedSwipeable는 우리가 쓰는 pan 제스처와 별개로, children(카드) 위에서의
+// 탭을 감지해 rowState !== 0(열림)이면 무조건 닫아버리는 자체 Tap 제스처를 라이브러리
+// 내부에 갖고 있다(공개 prop으로 끌 수 없음). 이 내부 Tap 제스처는 이동 거리 제한이
+// 없고 500ms 안에만 손을 떼면 성립하므로, dragOffsetFromLeftEdge/RightEdge 임계값을
+// 넘기지 못할 만큼 짧게 밀었다 뗀 터치는 우리 pan 제스처가 활성화되기도 전에 이 내부
+// Tap이 먼저 이겨버려서 "이미 열린 카드를 다시 살짝 왼쪽으로 밀었을 뿐인데 닫혀버리는"
+// 원인이 된다(기존 4는 이 경쟁에서 지기 쉬운 값이었음). 임계값을 최소화해서 조금이라도
+// 수평 이동이 있으면 pan이 먼저 활성화되어 내부 Tap과의 경쟁에서 이기도록 한다.
+const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
 
 // TODO(swipe-touch-leak, swipe-height-jump): 스와이프 도중 터치가 새는 현상과
 // 카드 높이가 흔들리는 현상의 원인을 실기기 로그로 확정하기 위한 임시 계측.
@@ -168,11 +181,11 @@ function SavedCourseRow({
     >
       <Swipeable
         ref={swipeableRef}
-        friction={1.6}
+        friction={SWIPE_FRICTION}
         overshootRight
         overshootFriction={SWIPE_OVERSHOOT_FRICTION}
-        dragOffsetFromLeftEdge={4}
-        dragOffsetFromRightEdge={4}
+        dragOffsetFromLeftEdge={SWIPE_DRAG_ACTIVATION_OFFSET}
+        dragOffsetFromRightEdge={SWIPE_DRAG_ACTIVATION_OFFSET}
         rightThreshold={SWIPE_OPEN_THRESHOLD}
         animationOptions={SWIPE_ANIMATION_OPTIONS}
         containerStyle={styles.swipeContainer}
