@@ -55,6 +55,12 @@ const SWIPE_ANIMATION_OPTIONS = { mass: 0.5, damping: 30, stiffness: 400 };
 // 도중 isSwipingRef가 true로 바뀌면 실행을 취소한다. 관측된 지연폭(~150ms)보다
 // 여유를 둔 값.
 const TAP_CONFIRM_DELAY = 180;
+// rightThreshold 미지정 시 라이브러리 기본값은 삭제 버튼 폭의 절반(약 39px)이라,
+// friction(1.6)까지 겹치면 60px 넘게 밀어야 "열림"으로 확정되고 그보다 적게 밀고
+// 손을 떼면 자동으로 다시 닫혀버린다. 삭제박스가 살짝만 보여도 손을 떼면 그대로
+// 열림 상태로 고정되도록(닫기는 반대로 스와이프하거나 화면 다른 곳을 눌러야만)
+// 임계값을 아주 낮게 잡는다.
+const SWIPE_OPEN_THRESHOLD = 8;
 
 // TODO(swipe-touch-leak, swipe-height-jump): 스와이프 도중 터치가 새는 현상과
 // 카드 높이가 흔들리는 현상의 원인을 실기기 로그로 확정하기 위한 임시 계측.
@@ -157,6 +163,7 @@ function SavedCourseRow({
         overshootRight={false}
         dragOffsetFromLeftEdge={4}
         dragOffsetFromRightEdge={4}
+        rightThreshold={SWIPE_OPEN_THRESHOLD}
         animationOptions={SWIPE_ANIMATION_OPTIONS}
         containerStyle={styles.swipeContainer}
         childrenContainerStyle={styles.swipeContent}
