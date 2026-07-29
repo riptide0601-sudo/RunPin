@@ -5,21 +5,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppDataProvider } from '@/lib/appData';
 import { AuthProvider } from '@/lib/auth';
-import { RequireAuthProvider } from '@/lib/useRequireAuth';
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <RequireAuthProvider>
-            <AppDataProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" />
-              </Stack>
-              <StatusBar style="auto" />
-            </AppDataProvider>
-          </RequireAuthProvider>
+          <AppDataProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+            <StatusBar style="auto" />
+          </AppDataProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

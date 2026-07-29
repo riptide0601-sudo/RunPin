@@ -5,7 +5,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
-import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { RankingEntry } from '@/types';
 
 interface RankingListItemProps {
@@ -14,15 +13,12 @@ interface RankingListItemProps {
 }
 
 export function RankingListItem({ entry, onPress }: RankingListItemProps) {
-  const requireAuth = useRequireAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(entry.likeCount);
 
   const toggleLike = () => {
-    requireAuth(() => {
-      setLiked((prev) => !prev);
-      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-    });
+    setLiked((prev) => !prev);
+    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
   return (

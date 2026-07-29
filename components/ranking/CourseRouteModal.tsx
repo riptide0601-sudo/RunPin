@@ -8,7 +8,6 @@ import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { SlideUpModal } from '@/components/ui/SlideUpModal';
 import { colors } from '@/constants/colors';
 import { useAppData, useIsCourseSaved } from '@/lib/appData';
-import { useRequireAuth } from '@/lib/useRequireAuth';
 import type { Course } from '@/types';
 
 interface CourseRouteModalProps {
@@ -20,7 +19,6 @@ interface CourseRouteModalProps {
 
 export function CourseRouteModal({ visible, course, onClose, showSaveButton = true }: CourseRouteModalProps) {
   const { toggleSaveCourse } = useAppData();
-  const requireAuth = useRequireAuth();
   // 호출부(app/saved-courses/index.tsx 등)는 onClose에서 course를 곧바로 null로
   // 만들면서 visible도 함께 false가 되므로, course를 그대로 렌더 조건에 쓰면
   // SlideUpModal이 닫히는 애니메이션을 시작하기도 전에 이 컴포넌트 자체가
@@ -54,7 +52,7 @@ export function CourseRouteModal({ visible, course, onClose, showSaveButton = tr
           <View style={styles.headerActions}>
             {showSaveButton ? (
               <Pressable
-                onPress={() => requireAuth(() => toggleSaveCourse(renderedCourse.id))}
+                onPress={() => toggleSaveCourse(renderedCourse.id)}
                 hitSlop={12}
                 style={({ pressed }) => pressed && styles.closePressed}
               >
