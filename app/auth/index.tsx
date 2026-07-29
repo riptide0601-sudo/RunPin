@@ -28,24 +28,30 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const switchMode = (next: Mode) => {
     setMode(next);
     setError(null);
+    setSuccessMessage(null);
   };
 
   const handleSubmit = async () => {
     if (submitting) return;
     setError(null);
+    setSuccessMessage(null);
     setSubmitting(true);
     try {
       if (mode === 'login') {
         await signIn(email.trim(), password);
+        router.back();
       } else {
         await signUp(email.trim(), password, displayName);
+        setPassword('');
+        setSuccessMessage('회원가입이 완료됐어요. 로그인해주세요.');
+        setMode('login');
       }
-      router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : '문제가 발생했어요. 잠시 후 다시 시도해주세요');
     } finally {
@@ -121,7 +127,11 @@ export default function AuthScreen() {
             />
           </View>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : successMessage ? (
+            <Text style={styles.successText}>{successMessage}</Text>
+          ) : null}
 
           <Pill
             label={submitting ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입'}
@@ -201,6 +211,11 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     color: colors.like,
+    marginTop: -8,
+  },
+  successText: {
+    fontSize: 13,
+    color: colors.accentMatch,
     marginTop: -8,
   },
   submitButton: {

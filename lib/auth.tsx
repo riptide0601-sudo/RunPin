@@ -81,8 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const credential = await createUserWithEmailAndPassword(auth, email, password);
           if (displayName.trim()) {
             await updateProfile(credential.user, { displayName: displayName.trim() });
-            setUser(toAuthUser(credential.user));
           }
+          await firebaseSignOut(auth);
         } catch (error) {
           throw new Error(toAuthErrorMessage(error));
         }
