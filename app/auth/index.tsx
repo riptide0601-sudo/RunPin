@@ -1,11 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -45,7 +43,7 @@ export default function AuthScreen() {
     try {
       if (mode === 'login') {
         await signIn(email.trim(), password);
-        router.back();
+        router.replace('/');
       } else {
         await signUp(email.trim(), password, displayName);
         setPassword('');
@@ -77,9 +75,6 @@ export default function AuthScreen() {
         }}
       >
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={22} color={colors.text} />
-          </Pressable>
           <Text style={styles.title}>{mode === 'login' ? '로그인' : '회원가입'}</Text>
         </View>
 
