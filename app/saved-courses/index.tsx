@@ -9,12 +9,10 @@ import Animated, {
   interpolate,
   LinearTransition,
   useAnimatedStyle,
-  useSharedValue,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { scheduleOnRN } from 'react-native-worklets';
 
 import { CourseListItem } from '@/components/home/CourseListItem';
 import { CourseRouteModal } from '@/components/ranking/CourseRouteModal';
@@ -107,9 +105,27 @@ const SWIPE_FRICTION = 1;
 const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
 // 삭제로 한 행이 목록에서 빠지면 그 아래 행들의 y좌표가 즉시(애니메이션 없이) 바뀐다.
 // 남은 행들이 그 위치 변화를 부드럽게 따라가도록, 각 행 최상위 Animated.View에
-// layout transition을 걸어둔다. 사라지는 행 자체의 페이드/스케일(DELETE_DURATION)과
-// 길이를 맞춰, 삭제 모션이 끝남과 동시에 나머지 행들의 이동도 끝나 보이게 한다.
+// layout transition을 걸어둔다. 사라지는 행 자체의 exiting 애니메이션(아래
+// ROW_EXITING)과 길이를 맞춰, 두 모션이 동시에 시작해서 동시에 끝나 보이게 한다.
 const ROW_LAYOUT_TRANSITION = LinearTransition.duration(DELETE_DURATION);
+// 예전에는 opacity/scale을 직접 애니메이션시킨 뒤 그 콜백이 끝나야 목록 배열에서
+// 실제로 항목을 제거했다. 그래서 "삭제 버튼을 누른 시점"과 "남은 행들이 올라오기
+// 시작하는 시점" 사이에 DELETE_DURATION만큼 그대로 지연이 생겼다(배열이 바뀌어야
+// 아래 행들의 layout transition이 트리거되는데, 배열 변경 자체가 애니메이션이 끝난
+// 뒤에야 일어났기 때문). 이제는 항목을 누른 즉시 배열에서 제거하고, 사라지는 카드
+// 자체의 페이드/스케일은 Reanimated exiting 애니메이션으로 처리한다. exiting은
+// 언마운트되는 뷰가 화면에서 실제로 빠질 때 트리거되므로, 배열 변경과 동시에
+// 시작되어 남은 행들의 layout transition과 완전히 같은 시점에 함께 움직인다.
+const ROW_EXITING = (): { initialValues: Record<string, unknown>; animations: Record<string, unknown> } => {
+  'worklet';
+  return {
+    initialValues: { opacity: 1, transform: [{ scale: 1 }] },
+    animations: {
+      opacity: withTiming(0, { duration: DELETE_DURATION }),
+      transform: [{ scale: withTiming(0.85, { duration: DELETE_DURATION }) }],
+    },
+  };
+};
 
 const DeleteAction = memo(function DeleteAction({
   progress,
@@ -174,21 +190,8 @@ const SavedCourseRow = memo(function SavedCourseRowImpl({
     };
   }, []);
 
-  const opacity = useSharedValue(1);
-  const scale = useSharedValue(1);
-
-  const deletingStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
-
   const handleDelete = () => {
-    opacity.value = withTiming(0, { duration: DELETE_DURATION });
-    scale.value = withTiming(0.85, { duration: DELETE_DURATION }, (finished) => {
-      if (finished) {
-        scheduleOnRN(onDelete, course.id);
-      }
-    });
+    onDelete(course.id);
   };
 
   const registerAsOpenRow = () => {
@@ -199,7 +202,7 @@ const SavedCourseRow = memo(function SavedCourseRowImpl({
   };
 
   return (
-    <Animated.View style={deletingStyle} layout={ROW_LAYOUT_TRANSITION}>
+    <Animated.View layout={ROW_LAYOUT_TRANSITION} exiting={ROW_EXITING}>
       <Swipeable
         ref={swipeableRef}
         friction={SWIPE_FRICTION}
