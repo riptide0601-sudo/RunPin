@@ -16,10 +16,10 @@ export class NicknameTakenError extends Error {
 
 export class NicknameInvalidError extends Error {}
 
-// 대소문자/공백 차이로 인한 중복("Kim" vs "kim")을 막기 위해 소문자로 정규화한 값을
-// Firestore 문서 ID로 쓴다. 원래 표기는 displayName 필드/Auth 프로필에 별도 저장.
+// 앞뒤 공백만 제거하고 대소문자는 그대로 유지한다("Kim"과 "kim"은 서로 다른 닉네임).
+// 이 값이 그대로 Firestore 문서 ID로 쓰인다.
 function normalizeNickname(raw: string): string {
-  return raw.trim().toLowerCase();
+  return raw.trim();
 }
 
 // firestore.rules의 create 조건(길이 등)과 반드시 동일하게 유지할 것 — 어긋나면 규칙
