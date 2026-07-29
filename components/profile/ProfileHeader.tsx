@@ -1,22 +1,51 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GradeBadge } from '@/components/ui/GradeBadge';
 import { colors } from '@/constants/colors';
-import type { GradeLevel } from '@/types';
+import { formatDateLabel } from '@/lib/format';
+import type { AuthUser, GradeLevel } from '@/types';
 
 interface ProfileHeaderProps {
-  name: string;
-  initial: string;
-  joinedLabel: string;
+  user: AuthUser | null;
+  initializing: boolean;
   gradeLevel: GradeLevel;
+  onPress: () => void;
 }
 
-export function ProfileHeader({ name, initial, joinedLabel, gradeLevel }: ProfileHeaderProps) {
+export function ProfileHeader({ user, initializing, gradeLevel, onPress }: ProfileHeaderProps) {
   const insets = useSafeAreaInsets();
 
+  if (!user) {
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={initializing}
+        style={({ pressed }) => [styles.row, { paddingTop: insets.top + 8 }, pressed && styles.pressed]}
+      >
+        <View style={styles.avatar}>
+          <Ionicons name="person-circle-outline" size={32} color={colors.textMuted} />
+        </View>
+        <View style={styles.info}>
+          <Text style={styles.guestText}>{initializing ? '불러오는 중...' : '로그인이 필요해요'}</Text>
+        </View>
+        {initializing ? null : (
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} style={styles.chevron} />
+        )}
+      </Pressable>
+    );
+  }
+
+  const name = user.displayName ?? user.email ?? '이름 없음';
+  const initial = name.charAt(0).toUpperCase();
+  const joinedLabel = user.createdAt ? `가입일 ${formatDateLabel(user.createdAt)}` : null;
+
   return (
-    <View style={[styles.row, { paddingTop: insets.top + 8 }]}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, { paddingTop: insets.top + 8 }, pressed && styles.pressed]}
+    >
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{initial}</Text>
       </View>
@@ -25,9 +54,9 @@ export function ProfileHeader({ name, initial, joinedLabel, gradeLevel }: Profil
           <Text style={styles.name}>{name}</Text>
           <GradeBadge level={gradeLevel} size={25} />
         </View>
-        <Text style={styles.meta}>{joinedLabel}</Text>
+        {joinedLabel ? <Text style={styles.meta}>{joinedLabel}</Text> : null}
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -38,6 +67,9 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingHorizontal: 20,
     paddingBottom: 16,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   avatar: {
     width: 56,
@@ -53,6 +85,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   info: {
+    flex: 1,
     gap: 4,
   },
   nameRow: {
@@ -68,5 +101,13 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 13,
     color: colors.textMuted,
+  },
+  guestText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  chevron: {
+    marginLeft: 'auto',
   },
 });

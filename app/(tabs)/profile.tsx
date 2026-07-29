@@ -6,17 +6,34 @@ import { MenuList } from '@/components/profile/MenuList';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { StatsRow } from '@/components/profile/StatsRow';
 import { SubscriptionBanner } from '@/components/profile/SubscriptionBanner';
+import { AlertModal } from '@/components/ui/AlertModal';
 import { SubscribeModal } from '@/components/ui/SubscribeModal';
 import { colors } from '@/constants/colors';
 import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
+import { useAuth } from '@/lib/auth';
 import { calculateUserGrade } from '@/lib/userGrade';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { courses, isSubscribed, remainingProposals, subscribe } = useAppData();
+  const { user, initializing, signOut } = useAuth();
   const grade = useMemo(() => calculateUserGrade(mockProfile.name, courses), [courses]);
   const [subscribeModalVisible, setSubscribeModalVisible] = useState(false);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
+
+  const handleProfilePress = () => {
+    if (user) {
+      setLogoutConfirmVisible(true);
+    } else {
+      router.push('/auth');
+    }
+  };
+
+  const handleLogout = () => {
+    setLogoutConfirmVisible(false);
+    signOut();
+  };
 
   const handleMenuItemPress = (id: string) => {
     switch (id) {
@@ -50,10 +67,10 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       <ProfileHeader
-        name={mockProfile.name}
-        initial={mockProfile.initial}
-        joinedLabel={mockProfile.joinedLabel}
+        user={user}
+        initializing={initializing}
         gradeLevel={grade.level}
+        onPress={handleProfilePress}
       />
       <StatsRow stats={mockProfileStats} />
       <SubscriptionBanner
@@ -70,6 +87,15 @@ export default function ProfileScreen() {
         title="RunPin PRO 구독"
         onSubscribe={handleSubscribe}
         onClose={() => setSubscribeModalVisible(false)}
+      />
+      <AlertModal
+        visible={logoutConfirmVisible}
+        icon="log-out-outline"
+        title="로그아웃 하시겠어요?"
+        message={user?.email ?? undefined}
+        primaryAction={{ label: '로그아웃', onPress: handleLogout }}
+        secondaryAction={{ label: '취소', onPress: () => setLogoutConfirmVisible(false) }}
+        onRequestClose={() => setLogoutConfirmVisible(false)}
       />
     </ScrollView>
   );

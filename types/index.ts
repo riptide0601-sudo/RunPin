@@ -13,6 +13,15 @@ export interface User {
   paceHistory: number[];
 }
 
+// Firebase Auth로 로그인한 실제 유저 정보. mock 데이터 기반인 위 User와 달리
+// Firestore 연동 전까지는 이 필드들(uid/email/displayName/createdAt)만 실제 값이다.
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  createdAt: number | null;
+}
+
 export interface Course {
   id: string;
   name: string;

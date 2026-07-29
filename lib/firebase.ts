@@ -1,8 +1,7 @@
-// 향후 로그인/DB 연동 예정. 아직 앱 어디에서도 import해서 쓰지 않는 상태이며,
-// 그 기능이 실제로 붙기 전까지는 의도적으로 미사용 상태로 남겨둔다.
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, initializeAuth, getReactNativePersistence, type Auth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -15,5 +14,18 @@ const firebaseConfig = {
 };
 
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+let authInstance: Auth;
+try {
+  authInstance = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch {
+  // Fast Refresh re-runs this module without recreating the Firebase app instance,
+  // and initializeAuth throws if an Auth instance already exists for that app.
+  // getAuth just returns the existing (already-persistent) instance in that case.
+  authInstance = getAuth(app);
+}
+export const auth = authInstance;
+
 export const database = getDatabase(app);
