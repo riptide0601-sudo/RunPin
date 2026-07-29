@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -8,8 +9,11 @@ import {
   type ReactNode,
 } from 'react';
 
-import { mockCourses, mockProfile, mockRunLogs } from '@/data/mock';
+import { mockCourses, mockProfile } from '@/data/mock';
+import { useAuth } from '@/lib/auth';
+import { createCourse, subscribeToCourses, type NewCourseDraft } from '@/lib/courses';
 import { findMatchingCourse } from '@/lib/matching';
+import { createRunLog, markRunLogUploaded, subscribeToRunLogs, type NewRunLogDraft } from '@/lib/runLogs';
 import type { Course, RunLog } from '@/types';
 
 // "함께 뛰자고 제안" 액션에만 적용되는 무료 한도. 러닝 제안 수락/코스 추천/코스
@@ -77,9 +81,9 @@ class SavedCourseStore {
 interface AppDataContextValue {
   courses: Course[];
   runLogs: RunLog[];
-  addCourse: (course: Course) => void;
-  addRunLog: (log: RunLog) => void;
-  uploadRunLog: (logId: string, courseName: string) => void;
+  addCourse: (draft: NewCourseDraft) => Promise<void>;
+  addRunLog: (draft: NewRunLogDraft) => Promise<void>;
+  uploadRunLog: (logId: string, courseName: string) => Promise<void>;
   savedCourseStore: SavedCourseStore;
   toggleSaveCourse: (courseId: string) => void;
   proposalCount: number;
@@ -93,8 +97,28 @@ interface AppDataContextValue {
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const [courses, setCourses] = useState<Course[]>(mockCourses);
-  const [runLogs, setRunLogs] = useState<RunLog[]>(mockRunLogs);
+  const { user } = useAuth();
+  // 코스는 로그인 여부와 무관하게 항상 공개 카탈로그를 구독하고, mock 코스를 그 앞에 이어붙여
+  // 보여준다 — Firestore가 비어 있어도 홈 화면이 항상 채워져 보이게 하기 위함 (검증된 mock
+  // 도로 좌표 데이터는 건드리지 않는다).
+  const [firestoreCourses, setFirestoreCourses] = useState<Course[]>([]);
+  const courses = useMemo(() => [...mockCourses, ...firestoreCourses], [firestoreCourses]);
+
+  useEffect(() => {
+    return subscribeToCourses(setFirestoreCourses);
+  }, []);
+
+  // 러닝 기록은 "내 것"만 의미가 있어서 mock과 합치지 않는다. 로그인 상태가 아니면 구독하지
+  // 않고 빈 배열을 보여준다 — 로그인/로그아웃 시(uid 변경) 새 uid로 다시 구독한다.
+  const [runLogs, setRunLogs] = useState<RunLog[]>([]);
+  useEffect(() => {
+    if (!user?.uid) {
+      setRunLogs([]);
+      return;
+    }
+    return subscribeToRunLogs(user.uid, setRunLogs);
+  }, [user?.uid]);
+
   const [proposalCount, setProposalCount] = useState(mockProfile.proposalCount);
   const [isSubscribed, setIsSubscribed] = useState(mockProfile.isSubscribed);
   const savedCourseStoreRef = useRef<SavedCourseStore | null>(null);
@@ -107,8 +131,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     () => ({
       courses,
       runLogs,
-      addCourse: (course) => setCourses((prev) => [course, ...prev]),
-      addRunLog: (log) => setRunLogs((prev) => [log, ...prev]),
+      addCourse: async (draft) => {
+        if (!user) return;
+        await createCourse(user.uid, user.displayName ?? '러너', draft);
+      },
+      addRunLog: async (draft) => {
+        if (!user) return;
+        await createRunLog(user.uid, draft);
+      },
       savedCourseStore,
       toggleSaveCourse: savedCourseStore.toggle,
       proposalCount,
@@ -119,30 +149,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         if (!isSubscribed) setProposalCount((prev) => prev + 1);
       },
       subscribe: () => setIsSubscribed(true),
-      uploadRunLog: (logId, courseName) => {
+      uploadRunLog: async (logId, courseName) => {
+        if (!user) return;
         const log = runLogs.find((entry) => entry.id === logId);
         if (!log || log.isUploaded) return;
 
         if (!findMatchingCourse(log.trajectory, courses)) {
-          const newCourse: Course = {
-            id: `course-${Date.now()}`,
+          await createCourse(user.uid, user.displayName ?? '러너', {
             name: courseName,
             coordinates: log.trajectory,
             category: '골목길',
             difficulty: log.difficulty,
             distanceKm: log.distanceKm,
-            uploaderName: mockProfile.name,
-            createdAt: Date.now(),
-          };
-          setCourses((prev) => [newCourse, ...prev]);
+          });
         }
 
-        setRunLogs((prev) =>
-          prev.map((entry) => (entry.id === logId ? { ...entry, courseName, isUploaded: true } : entry)),
-        );
+        await markRunLogUploaded(logId, courseName);
       },
     }),
-    [courses, runLogs, savedCourseStore, proposalCount, isSubscribed],
+    [courses, runLogs, savedCourseStore, proposalCount, isSubscribed, user],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

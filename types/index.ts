@@ -30,6 +30,9 @@ export interface Course {
   difficulty: 1 | 2 | 3 | 4 | 5;
   distanceKm: number;
   uploaderName: string;
+  // Firestore로 실제 업로드된 코스에만 있는 필드(업로더 uid). data/mock.ts의 기존 코스에는
+  // 없으므로 옵션으로 둔다 — 필수로 만들면 mock 코스 데이터를 전부 고쳐야 한다.
+  uploaderId?: string;
   isPopular?: boolean;
   likeCount?: number;
   createdAt: number;

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LineChart } from '@/components/charts/LineChart';
@@ -111,9 +111,13 @@ export default function RunLogDetailScreen() {
           visible={showUpload}
           myRoute={log.trajectory}
           courses={courses}
-          onSave={(result) => {
-            uploadRunLog(log.id, result.courseName);
+          onSave={async (result) => {
             setShowUpload(false);
+            try {
+              await uploadRunLog(log.id, result.courseName);
+            } catch {
+              Alert.alert('업로드하지 못했어요', '잠시 후 다시 시도해주세요');
+            }
           }}
           onSkip={() => setShowUpload(false)}
         />

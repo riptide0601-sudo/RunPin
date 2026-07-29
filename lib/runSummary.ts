@@ -27,15 +27,14 @@ function randomSeries(base: number, swing: number, min: number, max: number, poi
   });
 }
 
+// id/userId는 Firestore 쓰기 시점에 채워지므로(lib/runLogs.ts의 createRunLog) 여기선 만들지 않는다.
 export function buildFinishedRunLog(
   courseName: string,
   trajectory: LatLng[],
   difficulty: 1 | 2 | 3 | 4 | 5,
   isUploaded: boolean,
-): RunLog {
+): Omit<RunLog, 'id' | 'userId'> {
   return {
-    id: `runlog-${Date.now()}`,
-    userId: 'user-me',
     trajectory,
     startedAt: Date.now() - RUN_SUMMARY.durationSec * 1000,
     durationSec: RUN_SUMMARY.durationSec,

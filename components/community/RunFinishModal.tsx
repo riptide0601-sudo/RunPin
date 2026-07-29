@@ -19,10 +19,10 @@ import { Pill } from '@/components/ui/Pill';
 import { SlideUpModal } from '@/components/ui/SlideUpModal';
 import { colors } from '@/constants/colors';
 import { generateCourseName } from '@/lib/courseName';
+import type { NewCourseDraft } from '@/lib/courses';
 import { routeDistanceKm } from '@/lib/geo';
 import { findNearestCourse } from '@/lib/matching';
 import { RUN_SUMMARY, RUN_SUMMARY_TIME_LABEL } from '@/lib/runSummary';
-import { mockProfile } from '@/data/mock';
 import type { Course, LatLng } from '@/types';
 
 type OptionId = 'matched' | 'auto' | 'custom';
@@ -45,7 +45,7 @@ const KEYBOARD_EASING: Record<KeyboardEventEasing, (value: number) => number> = 
 
 export interface SaveCourseResult {
   courseName: string;
-  newCourse: Course | null;
+  newCourse: NewCourseDraft | null;
   difficulty: 1 | 2 | 3 | 4 | 5;
 }
 
@@ -134,15 +134,12 @@ export function RunFinishModal({ visible, myRoute, courses, onSave, onSkip }: Ru
       return;
     }
 
-    const newCourse: Course = {
-      id: `course-${Date.now()}`,
+    const newCourse: NewCourseDraft = {
       name: selectedName.trim(),
       coordinates: myRoute,
       category: optionId === 'auto' ? autoSuggestion.category : '골목길',
       difficulty,
       distanceKm: routeDistanceKm(myRoute),
-      uploaderName: mockProfile.name,
-      createdAt: Date.now(),
     };
     onSave({ courseName: newCourse.name, newCourse, difficulty });
   };

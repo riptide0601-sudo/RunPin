@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CommunityMap } from '@/components/community/CommunityMap';
@@ -13,6 +13,7 @@ import { SubscribeModal } from '@/components/ui/SubscribeModal';
 import { colors } from '@/constants/colors';
 import { mockMyRunningRoute, mockRunnerDots } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
+import { useAuth } from '@/lib/auth';
 import { buildFinishedRunLog } from '@/lib/runSummary';
 
 type ProposalStatus = 'pending' | 'accepted' | 'declined';
@@ -42,11 +43,13 @@ export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { courses, addCourse, addRunLog, canPropose, recordProposal, proposalCount, isSubscribed } = useAppData();
+  const { user } = useAuth();
   const [proposalStatus, setProposalStatus] = useState<ProposalStatus>('pending');
   const [isRunning, setIsRunning] = useState(false);
   const [finishVisible, setFinishVisible] = useState(false);
   const [infoModal, setInfoModal] = useState<InfoModal>('none');
   const [limitVisible, setLimitVisible] = useState(false);
+  const [loginPromptVisible, setLoginPromptVisible] = useState(false);
   const lastInfoModalContentRef = useRef<InfoModalContent>(INFO_MODAL_CONTENT.proposed);
 
   const closeInfoModal = () => setInfoModal('none');
@@ -86,23 +89,39 @@ export default function CommunityScreen() {
     setProposalStatus('declined');
   };
 
+  const handleStartRun = () => {
+    if (!user) {
+      setLoginPromptVisible(true);
+      return;
+    }
+    setIsRunning(true);
+  };
+
   const handleEndRun = () => {
     setIsRunning(false);
     setProposalStatus('pending');
     setFinishVisible(true);
   };
 
-  const handleSaveCourse = (result: SaveCourseResult) => {
-    if (result.newCourse) {
-      addCourse(result.newCourse);
-    }
-    addRunLog(buildFinishedRunLog(result.courseName, mockMyRunningRoute, result.difficulty, true));
+  const handleSaveCourse = async (result: SaveCourseResult) => {
     setFinishVisible(false);
+    try {
+      if (result.newCourse) {
+        await addCourse(result.newCourse);
+      }
+      await addRunLog(buildFinishedRunLog(result.courseName, mockMyRunningRoute, result.difficulty, true));
+    } catch {
+      Alert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요');
+    }
   };
 
-  const handleSkipSaveCourse = (difficulty: 1 | 2 | 3 | 4 | 5) => {
-    addRunLog(buildFinishedRunLog('이름 없는 러닝', mockMyRunningRoute, difficulty, false));
+  const handleSkipSaveCourse = async (difficulty: 1 | 2 | 3 | 4 | 5) => {
     setFinishVisible(false);
+    try {
+      await addRunLog(buildFinishedRunLog('이름 없는 러닝', mockMyRunningRoute, difficulty, false));
+    } catch {
+      Alert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요');
+    }
   };
 
   return (
@@ -116,7 +135,7 @@ export default function CommunityScreen() {
           </View>
         ) : (
           <View style={styles.startButtonWrapper}>
-            <Pill label="러닝 시작" variant="graySolid" size="lg" onPress={() => setIsRunning(true)} />
+            <Pill label="러닝 시작" variant="graySolid" size="lg" onPress={handleStartRun} />
           </View>
         )}
 
@@ -160,6 +179,22 @@ export default function CommunityScreen() {
           closeLimitModal();
           router.push('/subscription');
         }}
+      />
+
+      <AlertModal
+        visible={loginPromptVisible}
+        icon="log-in-outline"
+        title="로그인이 필요해요"
+        message="러닝 기록을 저장하려면 먼저 로그인해주세요"
+        primaryAction={{
+          label: '로그인하기',
+          onPress: () => {
+            setLoginPromptVisible(false);
+            router.push('/auth');
+          },
+        }}
+        secondaryAction={{ label: '취소', onPress: () => setLoginPromptVisible(false) }}
+        onRequestClose={() => setLoginPromptVisible(false)}
       />
     </View>
   );

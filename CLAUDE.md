@@ -148,3 +148,9 @@ UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-ke
   닉네임은 이미 Firestore에 등록됐는데 `updateProfile` 호출만 실패하면 그대로
   넘어간다 (`lib/auth.tsx`). Firestore의 닉네임과 Firebase Auth의 displayName이
   어긋난 채 남을 수 있어, 배포 전 재시도 로직이나 마이그레이션 스크립트가 필요하다.
+- **마이 탭 등급 계산이 실제 로그인 유저를 안 봄** — `app/(tabs)/profile.tsx`의
+  `calculateUserGrade(mockProfile.name, courses)`가 하드코딩된 `mockProfile.name`과
+  코스의 `uploaderName`을 비교한다. 러닝 종료 흐름을 Firestore로 전환하면서 코스의
+  `uploaderName`은 실제 로그인 유저 이름이 되므로, 이 비교가 항상 어긋나 실제로 코스를
+  올려도 마이 탭 등급에는 반영되지 않는다. `useAuth()`의 실제 유저 기준(가능하면 이름 대신
+  `uploaderId`/`uid` 매칭)으로 고쳐야 한다.

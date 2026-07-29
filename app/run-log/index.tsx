@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RunFinishModal } from '@/components/community/RunFinishModal';
@@ -27,6 +27,7 @@ export default function RunLogListScreen() {
         <Text style={styles.title}>내 러닝 기록</Text>
       </View>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+        {runLogs.length === 0 ? <Text style={styles.emptyText}>아직 러닝 기록이 없어요</Text> : null}
         {runLogs.map((log) => (
           <Pressable
             key={log.id}
@@ -78,9 +79,15 @@ export default function RunLogListScreen() {
         visible={uploadTarget !== null}
         myRoute={uploadTarget?.trajectory ?? []}
         courses={courses}
-        onSave={(result) => {
-          if (uploadTarget) uploadRunLog(uploadTarget.id, result.courseName);
+        onSave={async (result) => {
+          const target = uploadTarget;
           setUploadTarget(null);
+          if (!target) return;
+          try {
+            await uploadRunLog(target.id, result.courseName);
+          } catch {
+            Alert.alert('업로드하지 못했어요', '잠시 후 다시 시도해주세요');
+          }
         }}
         onSkip={() => setUploadTarget(null)}
       />
@@ -111,6 +118,12 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 24,
+  },
+  emptyText: {
+    paddingTop: 24,
+    textAlign: 'center',
+    fontSize: 14,
+    color: colors.textMuted,
   },
   pressed: {
     opacity: 0.7,
