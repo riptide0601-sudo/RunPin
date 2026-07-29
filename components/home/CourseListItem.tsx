@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
-import { useAppData } from '@/lib/appData';
+import { useAppData, useIsCourseSaved } from '@/lib/appData';
 import type { Course } from '@/types';
 
 interface CourseListItemProps {
@@ -23,8 +23,9 @@ interface CourseListItemProps {
 }
 
 export const CourseListItem = memo(function CourseListItem({ course, isSelected, hasGroup, isExpanded, relatedCount, onPress, onPressIn, disabled, showSaveButton = true }: CourseListItemProps) {
-  const { savedCourseIds, toggleSaveCourse } = useAppData();
-  const isSaved = showSaveButton && savedCourseIds.has(course.id);
+  const { toggleSaveCourse } = useAppData();
+  const isCourseSaved = useIsCourseSaved(course.id);
+  const isSaved = showSaveButton && isCourseSaved;
 
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} disabled={disabled} style={({ pressed }) => pressed && styles.pressed}>

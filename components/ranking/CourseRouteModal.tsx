@@ -7,7 +7,7 @@ import { LeafletMap } from '@/components/map/LeafletMap';
 import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { SlideUpModal } from '@/components/ui/SlideUpModal';
 import { colors } from '@/constants/colors';
-import { useAppData } from '@/lib/appData';
+import { useAppData, useIsCourseSaved } from '@/lib/appData';
 import type { Course } from '@/types';
 
 interface CourseRouteModalProps {
@@ -18,12 +18,15 @@ interface CourseRouteModalProps {
 }
 
 export function CourseRouteModal({ visible, course, onClose, showSaveButton = true }: CourseRouteModalProps) {
-  const { savedCourseIds, toggleSaveCourse } = useAppData();
+  const { toggleSaveCourse } = useAppData();
   // 호출부(app/saved-courses/index.tsx 등)는 onClose에서 course를 곧바로 null로
   // 만들면서 visible도 함께 false가 되므로, course를 그대로 렌더 조건에 쓰면
   // SlideUpModal이 닫히는 애니메이션을 시작하기도 전에 이 컴포넌트 자체가
   // 언마운트돼버린다. 닫히는 동안 보여줄 마지막 course를 별도로 들고 있는다.
   const [renderedCourse, setRenderedCourse] = useState(course);
+  // renderedCourse가 null인 동안에도 훅 호출 순서를 유지해야 하므로, 아래 early
+  // return보다 먼저 호출한다.
+  const isSaved = useIsCourseSaved(renderedCourse?.id ?? '');
 
   useEffect(() => {
     if (course) {
@@ -34,8 +37,6 @@ export function CourseRouteModal({ visible, course, onClose, showSaveButton = tr
   if (!renderedCourse) {
     return null;
   }
-
-  const isSaved = savedCourseIds.has(renderedCourse.id);
 
   return (
     <SlideUpModal visible={visible} onRequestClose={onClose}>

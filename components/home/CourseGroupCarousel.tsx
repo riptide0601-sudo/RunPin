@@ -8,7 +8,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { CourseGroupCarouselCard } from '@/components/home/CourseGroupCarouselCard';
-import { useAppData } from '@/lib/appData';
 import type { Course } from '@/types';
 
 interface CourseGroupCarouselProps {
@@ -31,7 +30,6 @@ export const CourseGroupCarousel = memo(function CourseGroupCarousel({
   const progress = useSharedValue(expanded ? 1 : 0);
   const { width } = useWindowDimensions();
   const cardWidth = (width - LIST_HORIZONTAL_PADDING - CARD_GAP * 2) / 3;
-  const { savedCourseIds, toggleSaveCourse } = useAppData();
 
   useEffect(() => {
     progress.value = withTiming(expanded ? 1 : 0, { duration: 220 });
@@ -58,9 +56,7 @@ export const CourseGroupCarousel = memo(function CourseGroupCarousel({
             member={member}
             width={cardWidth}
             isSelected={member.id === selectedCourseId}
-            isSaved={savedCourseIds.has(member.id)}
             onSelect={onSelectMember}
-            onToggleSave={toggleSaveCourse}
           />
         ))}
       </ScrollView>

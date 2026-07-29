@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CourseListItem } from '@/components/home/CourseListItem';
 import { CourseRouteModal } from '@/components/ranking/CourseRouteModal';
 import { colors } from '@/constants/colors';
-import { useAppData } from '@/lib/appData';
+import { useAppData, useSavedCourseIds } from '@/lib/appData';
 import type { Course } from '@/types';
 
 // 한 번에 하나의 카드만 열려있도록, 현재 열린 행의 식별자와 닫기 함수를
@@ -290,7 +290,8 @@ const SavedCourseRow = memo(function SavedCourseRowImpl({
 export default function SavedCoursesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { courses, savedCourseIds, toggleSaveCourse } = useAppData();
+  const { courses, toggleSaveCourse } = useAppData();
+  const savedCourseIds = useSavedCourseIds();
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const openRowRef = useRef<OpenRowRef>(null);
 

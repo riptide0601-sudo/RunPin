@@ -4,25 +4,25 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DifficultyBadge } from '@/components/ui/DifficultyBadge';
 import { colors } from '@/constants/colors';
+import { useAppData, useIsCourseSaved } from '@/lib/appData';
 import type { Course } from '@/types';
 
 interface CourseGroupCarouselCardProps {
   member: Course;
   width: number;
   isSelected: boolean;
-  isSaved: boolean;
   onSelect: (courseId: string) => void;
-  onToggleSave: (courseId: string) => void;
 }
 
 export const CourseGroupCarouselCard = memo(function CourseGroupCarouselCard({
   member,
   width,
   isSelected,
-  isSaved,
   onSelect,
-  onToggleSave,
 }: CourseGroupCarouselCardProps) {
+  const { toggleSaveCourse } = useAppData();
+  const isSaved = useIsCourseSaved(member.id);
+
   return (
     <Pressable
       onPress={() => onSelect(member.id)}
@@ -38,7 +38,7 @@ export const CourseGroupCarouselCard = memo(function CourseGroupCarouselCard({
       <Text style={styles.uploader} numberOfLines={1}>
         업로드: {member.uploaderName}
       </Text>
-      <Pressable style={styles.bookmarkButton} onPress={() => onToggleSave(member.id)}>
+      <Pressable style={styles.bookmarkButton} onPress={() => toggleSaveCourse(member.id)}>
         <Ionicons
           name={isSaved ? 'bookmark' : 'bookmark-outline'}
           size={13}
