@@ -105,9 +105,12 @@ const SWIPE_FRICTION = 1;
 const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
 // 삭제로 한 행이 목록에서 빠지면 그 아래 행들의 y좌표가 즉시(애니메이션 없이) 바뀐다.
 // 남은 행들이 그 위치 변화를 부드럽게 따라가도록, 각 행 최상위 Animated.View에
-// layout transition을 걸어둔다. 사라지는 행 자체의 exiting 애니메이션(아래
-// ROW_EXITING)과 길이를 맞춰, 두 모션이 동시에 시작해서 동시에 끝나 보이게 한다.
-const ROW_LAYOUT_TRANSITION = LinearTransition.duration(DELETE_DURATION);
+// layout transition을 걸어둔다. 처음에는 사라지는 행 자체의 exiting 애니메이션(아래
+// ROW_EXITING)과 길이를 맞춰(DELETE_DURATION) 두 모션이 동시에 끝나도록 했으나,
+// "올라오는 속도가 너무 빠르다"는 피드백으로 이 값만 따로 늦췄다. 삭제되는 카드
+// 자체의 페이드/스케일(ROW_EXITING)은 반응성 유지를 위해 DELETE_DURATION 그대로 둔다.
+const ROW_LAYOUT_DURATION = 400;
+const ROW_LAYOUT_TRANSITION = LinearTransition.duration(ROW_LAYOUT_DURATION);
 // 예전에는 opacity/scale을 직접 애니메이션시킨 뒤 그 콜백이 끝나야 목록 배열에서
 // 실제로 항목을 제거했다. 그래서 "삭제 버튼을 누른 시점"과 "남은 행들이 올라오기
 // 시작하는 시점" 사이에 DELETE_DURATION만큼 그대로 지연이 생겼다(배열이 바뀌어야
