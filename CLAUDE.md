@@ -122,3 +122,29 @@ UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-ke
   설정해뒀다. 다만 VSCode는 파일에 이미 BOM이 있으면 이 설정과 무관하게 BOM을 우선
   인식하므로, 이 설정만으로 재발을 완전히 막지는 못한다 — 실질적인 방지책은 위의
   자동 복구 스크립트다.
+
+## 11. 배포 전 체크리스트
+
+지금 당장은 넘어가지만, 실제 배포(스토어 출시) 전에는 반드시 처리해야 한다고
+판단한 항목들이다. 새로 발견되는 항목이 있으면 이 목록에 계속 추가한다.
+
+- **닉네임 중복 방지의 고아(orphan) Auth 계정 가능성** — 회원가입 중 닉네임
+  등록(`claimNickname`) 실패 시 방금 만든 Auth 계정을 롤백하는데, 이 롤백
+  자체가 실패하면 고아 계정이 남을 수 있다 (`lib/auth.tsx` 참고). 클라이언트만
+  으로는 완전히 막을 수 없어 Cloud Functions로 서버 측 정리/보정 로직이 필요하다.
+- **Firestore 보안 규칙을 firebase-tools CLI로 관리 전환** — 현재
+  `firebase.json`/`.firebaserc`가 없어 `firestore.rules`가 콘솔 수동 배포로
+  운영되는 것으로 보인다. 규칙 변경 이력이 git으로 추적되지 않고 로컬 파일과
+  실제 배포본이 어긋날 위험이 있어, `firebase deploy --only firestore:rules`
+  기반 관리로 전환 검토가 필요하다.
+- **Leaflet 지도의 CDN(unpkg, cartocdn) 의존성 로컬 번들링** —
+  `components/map/leafletHtml.ts`가 leaflet.js/css와 타일을 외부 CDN에서
+  직접 로드한다. CDN 장애나 네트워크 차단 시 지도 기능 전체가 멈추므로, 배포
+  전에는 로컬 번들링 또는 자체 호스팅으로 전환해야 한다.
+- **Apple Developer Program / Google Play Console 계정 등록** — 스토어 심사·
+  등록에 시간이 걸리므로 배포 일정이 정해지기 전에 미리 계정을 준비해야 한다.
+  `eas.json` 등 실제 빌드/제출 파이프라인도 아직 없다.
+- **회원가입 중 Auth 프로필(displayName) 동기화 실패 시 복구 로직 없음** —
+  닉네임은 이미 Firestore에 등록됐는데 `updateProfile` 호출만 실패하면 그대로
+  넘어간다 (`lib/auth.tsx`). Firestore의 닉네임과 Firebase Auth의 displayName이
+  어긋난 채 남을 수 있어, 배포 전 재시도 로직이나 마이그레이션 스크립트가 필요하다.
