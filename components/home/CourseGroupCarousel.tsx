@@ -1,5 +1,11 @@
-import { memo, useEffect, useRef } from 'react';
-import { Animated, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { memo, useEffect } from 'react';
+import { ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { CourseGroupCarouselCard } from '@/components/home/CourseGroupCarouselCard';
 import { useAppData } from '@/lib/appData';
@@ -22,29 +28,22 @@ export const CourseGroupCarousel = memo(function CourseGroupCarousel({
   selectedCourseId,
   onSelectMember,
 }: CourseGroupCarouselProps) {
-  const progress = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const progress = useSharedValue(expanded ? 1 : 0);
   const { width } = useWindowDimensions();
   const cardWidth = (width - LIST_HORIZONTAL_PADDING - CARD_GAP * 2) / 3;
   const { savedCourseIds, toggleSaveCourse } = useAppData();
 
   useEffect(() => {
-    Animated.timing(progress, {
-      toValue: expanded ? 1 : 0,
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
+    progress.value = withTiming(expanded ? 1 : 0, { duration: 220 });
   }, [expanded, progress]);
 
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: interpolate(progress.value, [0, 1], [0, CONTAINER_HEIGHT]),
+    opacity: progress.value,
+  }));
+
   return (
-    <Animated.View
-      style={[
-        styles.wrapper,
-        {
-          height: progress.interpolate({ inputRange: [0, 1], outputRange: [0, CONTAINER_HEIGHT] }),
-          opacity: progress,
-        },
-      ]}
-    >
+    <Animated.View style={[styles.wrapper, animatedStyle]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
