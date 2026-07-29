@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 import { useAppData } from '@/lib/appData';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 
 const BENEFITS = [
   '함께 뛰자고 제안하기 무제한',
@@ -17,10 +18,13 @@ export default function SubscriptionScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isSubscribed, subscribe } = useAppData();
+  const requireAuth = useRequireAuth();
 
   const handleSubscribe = () => {
-    subscribe();
-    router.back();
+    requireAuth(() => {
+      subscribe();
+      router.back();
+    });
   };
 
   return (

@@ -13,8 +13,8 @@ import { SubscribeModal } from '@/components/ui/SubscribeModal';
 import { colors } from '@/constants/colors';
 import { mockMyRunningRoute, mockRunnerDots } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
-import { useAuth } from '@/lib/auth';
 import { buildFinishedRunLog } from '@/lib/runSummary';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 
 type ProposalStatus = 'pending' | 'accepted' | 'declined';
 type InfoModal = 'none' | 'proposed' | 'accepted';
@@ -43,13 +43,12 @@ export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { courses, addCourse, addRunLog, canPropose, recordProposal, proposalCount, isSubscribed } = useAppData();
-  const { user } = useAuth();
+  const requireAuth = useRequireAuth();
   const [proposalStatus, setProposalStatus] = useState<ProposalStatus>('pending');
   const [isRunning, setIsRunning] = useState(false);
   const [finishVisible, setFinishVisible] = useState(false);
   const [infoModal, setInfoModal] = useState<InfoModal>('none');
   const [limitVisible, setLimitVisible] = useState(false);
-  const [loginPromptVisible, setLoginPromptVisible] = useState(false);
   const lastInfoModalContentRef = useRef<InfoModalContent>(INFO_MODAL_CONTENT.proposed);
 
   const closeInfoModal = () => setInfoModal('none');
@@ -64,25 +63,29 @@ export default function CommunityScreen() {
   const infoModalContent = lastInfoModalContentRef.current;
 
   const handleAccept = () => {
-    setProposalStatus('accepted');
-    setInfoModal('accepted');
+    requireAuth(() => {
+      setProposalStatus('accepted');
+      setInfoModal('accepted');
+    }, '함께 뛰기 기능을 사용하려면 먼저 로그인해주세요');
   };
 
   const handlePropose = () => {
-    if (!canPropose) {
-      setLimitVisible(true);
-      return;
-    }
+    requireAuth(() => {
+      if (!canPropose) {
+        setLimitVisible(true);
+        return;
+      }
 
-    recordProposal();
-    // 이번 제안으로 무료 횟수를 전부 소진했다면(예: 5회째) 다음 시도(6회째)를 기다리지
-    // 않고 바로 구독 안내를 보여준다.
-    const justExhausted = !isSubscribed && proposalCount + 1 >= FREE_PROPOSAL_LIMIT;
-    if (justExhausted) {
-      setLimitVisible(true);
-    } else {
-      setInfoModal('proposed');
-    }
+      recordProposal();
+      // 이번 제안으로 무료 횟수를 전부 소진했다면(예: 5회째) 다음 시도(6회째)를 기다리지
+      // 않고 바로 구독 안내를 보여준다.
+      const justExhausted = !isSubscribed && proposalCount + 1 >= FREE_PROPOSAL_LIMIT;
+      if (justExhausted) {
+        setLimitVisible(true);
+      } else {
+        setInfoModal('proposed');
+      }
+    }, '함께 뛰기 기능을 사용하려면 먼저 로그인해주세요');
   };
 
   const handleDecline = () => {
@@ -90,11 +93,7 @@ export default function CommunityScreen() {
   };
 
   const handleStartRun = () => {
-    if (!user) {
-      setLoginPromptVisible(true);
-      return;
-    }
-    setIsRunning(true);
+    requireAuth(() => setIsRunning(true), '러닝 기록을 저장하려면 먼저 로그인해주세요');
   };
 
   const handleEndRun = () => {
@@ -179,22 +178,6 @@ export default function CommunityScreen() {
           closeLimitModal();
           router.push('/subscription');
         }}
-      />
-
-      <AlertModal
-        visible={loginPromptVisible}
-        icon="log-in-outline"
-        title="로그인이 필요해요"
-        message="러닝 기록을 저장하려면 먼저 로그인해주세요"
-        primaryAction={{
-          label: '로그인하기',
-          onPress: () => {
-            setLoginPromptVisible(false);
-            router.push('/auth');
-          },
-        }}
-        secondaryAction={{ label: '취소', onPress: () => setLoginPromptVisible(false) }}
-        onRequestClose={() => setLoginPromptVisible(false)}
       />
     </View>
   );

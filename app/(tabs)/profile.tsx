@@ -12,12 +12,14 @@ import { colors } from '@/constants/colors';
 import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
 import { useAuth } from '@/lib/auth';
+import { useRequireAuth } from '@/lib/useRequireAuth';
 import { calculateUserGrade } from '@/lib/userGrade';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { courses, isSubscribed, remainingProposals, subscribe } = useAppData();
   const { user, initializing, signOut } = useAuth();
+  const requireAuth = useRequireAuth();
   const grade = useMemo(() => calculateUserGrade(mockProfile.name, courses), [courses]);
   const [subscribeModalVisible, setSubscribeModalVisible] = useState(false);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
@@ -38,10 +40,10 @@ export default function ProfileScreen() {
   const handleMenuItemPress = (id: string) => {
     switch (id) {
       case 'menu-log':
-        router.push('/run-log');
+        requireAuth(() => router.push('/run-log'));
         break;
       case 'menu-saved':
-        router.push('/saved-courses');
+        requireAuth(() => router.push('/saved-courses'));
         break;
       case 'menu-notification':
         router.push('/notifications');
@@ -78,7 +80,8 @@ export default function ProfileScreen() {
         remaining={Math.min(remainingProposals, FREE_PROPOSAL_LIMIT)}
         limit={FREE_PROPOSAL_LIMIT}
         onPress={() => {
-          if (!isSubscribed) setSubscribeModalVisible(true);
+          if (isSubscribed) return;
+          requireAuth(() => setSubscribeModalVisible(true));
         }}
       />
       <MenuList items={mockMenuItems} onItemPress={handleMenuItemPress} />
