@@ -14,9 +14,17 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
   type User as FirebaseUser,
+  type UserCredential,
 } from 'firebase/auth';
 
 import { auth } from '@/lib/firebase';
+import {
+  claimNickname,
+  isNicknameAvailable,
+  validateNickname,
+  NicknameInvalidError,
+  NicknameTakenError,
+} from '@/lib/nickname';
 import type { AuthUser } from '@/types';
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -77,15 +85,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       signUp: async (email, password, displayName) => {
+        let trimmedName: string;
         try {
-          const credential = await createUserWithEmailAndPassword(auth, email, password);
-          if (displayName.trim()) {
-            await updateProfile(credential.user, { displayName: displayName.trim() });
-          }
-          await firebaseSignOut(auth);
+          trimmedName = validateNickname(displayName);
+        } catch (error) {
+          if (error instanceof NicknameInvalidError) throw error;
+          throw new Error(toAuthErrorMessage(error));
+        }
+
+        // 1) 사전 체크 — UX 개선용. 진짜 경쟁 상태 방지는 3)의 claimNickname/규칙이 담당.
+        try {
+          const available = await isNicknameAvailable(trimmedName);
+          if (!available) throw new NicknameTakenError();
+        } catch (error) {
+          if (error instanceof NicknameTakenError) throw error;
+          throw new Error(toAuthErrorMessage(error));
+        }
+
+        // 2) Auth 계정 생성
+        let credential: UserCredential;
+        try {
+          credential = await createUserWithEmailAndPassword(auth, email, password);
         } catch (error) {
           throw new Error(toAuthErrorMessage(error));
         }
+
+        // 3) 닉네임 원자적 등록. 실패(경쟁 상태로 이미 선점됨) 시 방금 만든 계정을 롤백한다.
+        try {
+          await claimNickname(credential.user.uid, trimmedName);
+        } catch (error) {
+          try {
+            await credential.user.delete();
+          } catch {
+            // 롤백(계정 삭제) 자체가 실패하면 고아 Auth 계정이 남을 수 있음.
+            // 원래 에러(닉네임 중복 등)를 그대로 사용자에게 보여주는 것을 우선한다.
+          }
+          if (error instanceof NicknameTakenError) throw error;
+          throw new Error(toAuthErrorMessage(error));
+        }
+
+        // 4) 닉네임 등록은 이미 성공했으므로, 프로필 동기화 실패는 계정을 롤백하지 않는다.
+        try {
+          await updateProfile(credential.user, { displayName: trimmedName });
+        } catch {
+          // Auth 프로필 displayName 동기화만 실패한 상태. usernames 문서는 정상 등록됨.
+        }
+
+        await firebaseSignOut(auth);
       },
       signOut: () => firebaseSignOut(auth),
     }),

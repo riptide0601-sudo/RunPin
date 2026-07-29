@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usernames/{usernameId} {
+      // 회원가입 사전 체크(미인증 상태)를 위한 단일 문서 조회만 공개 허용.
+      // list는 막아 닉네임 전수 스크래핑을 방지한다.
+      allow get: if true;
+      allow list: if false;
+
+      // 문서가 아직 없을 때만 Firestore가 이 쓰기를 'create'로 분류한다. 이미 존재하면
+      // 'update'로 취급되어 아래 update 규칙(false)에 막힌다 — 이 동작 자체가 동시 가입
+      // 경쟁 상태를 막는 서버 측 원자성 보장이다.
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'displayName', 'createdAt'])
+                    && request.resource.data.displayName is string
+                    && request.resource.data.displayName.size() > 0
+                    && request.resource.data.displayName.size() <= 20
+                    && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // 명시적으로 연 usernames 외에는 모두 차단 (향후 컬렉션 추가 시 실수로 열리는 것 방지)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

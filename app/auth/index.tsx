@@ -58,7 +58,11 @@ export default function AuthScreen() {
     }
   };
 
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !submitting;
+  const canSubmit =
+    email.trim().length > 0 &&
+    password.length > 0 &&
+    (mode === 'login' || displayName.trim().length > 0) &&
+    !submitting;
 
   return (
     <KeyboardAvoidingView
@@ -105,6 +109,7 @@ export default function AuthScreen() {
                 style={styles.input}
                 autoCapitalize="none"
                 returnKeyType="next"
+                maxLength={20}
               />
             ) : null}
             <TextInput
