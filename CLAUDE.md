@@ -103,3 +103,22 @@ WebView(지도, Leaflet), Modal 등은 React Native/Expo의 Fast Refresh로
 - 플랫폼별로 다르게 동작할 수 있는 변경(예: 웹 vs 네이티브, iOS vs Android)은 한쪽
   환경에서만 확인하고 "완료"로 보고하지 않고, 어느 환경에서 검증했는지와 검증 못 한
   환경이 있다면 명시한다.
+
+## 10. .env 파일 인코딩 규칙
+
+`.env` 파일은 반드시 **UTF-8(BOM 없음)**로 저장돼야 한다. Notepad "유니코드" 저장이나
+PowerShell `Out-File`/`>` 리다이렉션(인코딩 미지정 시 UTF-16LE로 저장될 수 있음) 등으로
+UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-key`처럼 원인이
+바로 드러나지 않는 에러로 이어진다 (2026-07-29 실제 발생).
+
+- **인코딩 문제가 의심되면(예: Firebase invalid-api-key, 환경변수가 갑자기 다 비어
+  보이는 증상) 가장 먼저 `.env` 파일의 바이트 인코딩을 확인한다.** 파일 앞부분 바이트를
+  확인해 `FF FE`(UTF-16LE) / `FE FF`(UTF-16BE) BOM이 있는지 본다. 이때도 실제 값은
+  절대 출력하지 않고 바이트/키 이름 존재 여부만 확인한다 (섹션 6 참조).
+- `scripts/check-env-encoding.js`가 `npm start`/`android`/`ios`/`web` 실행 전
+  (`pre*` 훅)에 자동으로 이 검사를 수행하고, UTF-16이면 값 손실 없이 UTF-8로
+  즉시 복구한다. 이 스크립트나 `package.json`의 `pre*` 훅을 지우지 않는다.
+- `.vscode/settings.json`에 `files.encoding: "utf8"`, `files.autoGuessEncoding: false`를
+  설정해뒀다. 다만 VSCode는 파일에 이미 BOM이 있으면 이 설정과 무관하게 BOM을 우선
+  인식하므로, 이 설정만으로 재발을 완전히 막지는 못한다 — 실질적인 방지책은 위의
+  자동 복구 스크립트다.

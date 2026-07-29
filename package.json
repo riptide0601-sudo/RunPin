@@ -35,9 +35,13 @@
     "typescript": "~5.9.2"
   },
   "scripts": {
+    "prestart": "node scripts/check-env-encoding.js",
     "start": "expo start",
+    "preandroid": "node scripts/check-env-encoding.js",
     "android": "expo start --android",
+    "preios": "node scripts/check-env-encoding.js",
     "ios": "expo start --ios",
+    "preweb": "node scripts/check-env-encoding.js",
     "web": "expo start --web",
     "lint": "expo lint",
     "format": "prettier --write .",
