@@ -71,7 +71,7 @@ export default function AuthScreen() {
     >
       <View
         style={[styles.container, { paddingTop: insets.top + 8 }]}
-        onStartShouldSetResponderCapture={() => {
+        onStartShouldSetResponder={() => {
           Keyboard.dismiss();
           return false;
         }}
