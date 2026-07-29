@@ -7,6 +7,7 @@ import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/R
 import Animated, {
   Extrapolation,
   interpolate,
+  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -104,6 +105,11 @@ const SWIPE_FRICTION = 1;
 // 원인이 된다(기존 4는 이 경쟁에서 지기 쉬운 값이었음). 임계값을 최소화해서 조금이라도
 // 수평 이동이 있으면 pan이 먼저 활성화되어 내부 Tap과의 경쟁에서 이기도록 한다.
 const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
+// 삭제로 한 행이 목록에서 빠지면 그 아래 행들의 y좌표가 즉시(애니메이션 없이) 바뀐다.
+// 남은 행들이 그 위치 변화를 부드럽게 따라가도록, 각 행 최상위 Animated.View에
+// layout transition을 걸어둔다. 사라지는 행 자체의 페이드/스케일(DELETE_DURATION)과
+// 길이를 맞춰, 삭제 모션이 끝남과 동시에 나머지 행들의 이동도 끝나 보이게 한다.
+const ROW_LAYOUT_TRANSITION = LinearTransition.duration(DELETE_DURATION);
 
 const DeleteAction = memo(function DeleteAction({
   progress,
@@ -193,7 +199,7 @@ const SavedCourseRow = memo(function SavedCourseRowImpl({
   };
 
   return (
-    <Animated.View style={deletingStyle}>
+    <Animated.View style={deletingStyle} layout={ROW_LAYOUT_TRANSITION}>
       <Swipeable
         ref={swipeableRef}
         friction={SWIPE_FRICTION}
