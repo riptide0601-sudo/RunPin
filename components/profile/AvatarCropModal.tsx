@@ -1,5 +1,5 @@
 import * as ImageManipulator from 'expo-image-manipulator';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
@@ -77,34 +77,49 @@ export function AvatarCropModal({
     }
   }, [visible, imageUri, translateX, translateY, scale]);
 
-  const panGesture = Gesture.Pan()
-    .onStart(() => {
-      startX.value = translateX.value;
-      startY.value = translateY.value;
-    })
-    .onUpdate((event) => {
-      const effectiveScale = baseScale * scale.value;
-      const boundX = maxOffset(imageWidth, effectiveScale);
-      const boundY = maxOffset(imageHeight, effectiveScale);
-      translateX.value = clampValue(startX.value + event.translationX, -boundX, boundX);
-      translateY.value = clampValue(startY.value + event.translationY, -boundY, boundY);
-    });
+  // 제스처 객체를 매 렌더마다 새로 만들면(useMemo 없이) react-native-gesture-handler가
+  // 진행 중인 제스처 인식 상태를 리셋시켜 "만져도 반응 없음" 증상으로 이어질 수 있다 —
+  // 부모(profile.tsx)가 Firestore 실시간 구독 등으로 리렌더될 때마다 이 컴포넌트도
+  // 같이 리렌더되므로 반드시 안정화한다.
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .onStart(() => {
+          startX.value = translateX.value;
+          startY.value = translateY.value;
+        })
+        .onUpdate((event) => {
+          const effectiveScale = baseScale * scale.value;
+          const boundX = maxOffset(imageWidth, effectiveScale);
+          const boundY = maxOffset(imageHeight, effectiveScale);
+          translateX.value = clampValue(startX.value + event.translationX, -boundX, boundX);
+          translateY.value = clampValue(startY.value + event.translationY, -boundY, boundY);
+        }),
+    [baseScale, imageWidth, imageHeight, translateX, translateY, scale, startX, startY],
+  );
 
-  const pinchGesture = Gesture.Pinch()
-    .onStart(() => {
-      startScale.value = scale.value;
-    })
-    .onUpdate((event) => {
-      const nextScale = clampValue(startScale.value * event.scale, MIN_ZOOM, MAX_ZOOM);
-      scale.value = nextScale;
-      const effectiveScale = baseScale * nextScale;
-      const boundX = maxOffset(imageWidth, effectiveScale);
-      const boundY = maxOffset(imageHeight, effectiveScale);
-      translateX.value = clampValue(translateX.value, -boundX, boundX);
-      translateY.value = clampValue(translateY.value, -boundY, boundY);
-    });
+  const pinchGesture = useMemo(
+    () =>
+      Gesture.Pinch()
+        .onStart(() => {
+          startScale.value = scale.value;
+        })
+        .onUpdate((event) => {
+          const nextScale = clampValue(startScale.value * event.scale, MIN_ZOOM, MAX_ZOOM);
+          scale.value = nextScale;
+          const effectiveScale = baseScale * nextScale;
+          const boundX = maxOffset(imageWidth, effectiveScale);
+          const boundY = maxOffset(imageHeight, effectiveScale);
+          translateX.value = clampValue(translateX.value, -boundX, boundX);
+          translateY.value = clampValue(translateY.value, -boundY, boundY);
+        }),
+    [baseScale, imageWidth, imageHeight, scale, startScale, translateX, translateY],
+  );
 
-  const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
+  const composedGesture = useMemo(
+    () => Gesture.Simultaneous(panGesture, pinchGesture),
+    [panGesture, pinchGesture],
+  );
 
   const animatedImageStyle = useAnimatedStyle(() => ({
     width: imageWidth * baseScale,
