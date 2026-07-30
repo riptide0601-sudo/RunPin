@@ -62,10 +62,13 @@ export default function RootLayout() {
                 <Stack.Screen
                   name="avatar-crop"
                   options={{
-                    // 탭 네비게이터 밖의 일반 라우트라 Modal 없이도 탭바를 자연스럽게 덮는다
-                    // (components/profile/AvatarCropScreen.tsx 참고). presentation은 순수
-                    // 전환 애니메이션 옵션일 뿐 RN Modal이 아니라 제스처 인식 문제와 무관하다.
-                    presentation: 'fullScreenModal',
+                    // 탭 네비게이터 밖의 일반 라우트라 기본 'card' presentation만으로도 탭바를
+                    // 자연스럽게 덮는다(활성 라우트가 바뀌어 탭 네비게이터 자체가 안 보임).
+                    // presentation을 'fullScreenModal'로 줬었는데, 이건 iOS에서
+                    // react-native-screens가 RN Modal과 똑같이 별도 프레젠트되는 뷰 컨트롤러로
+                    // 화면을 띄우는 옵션이라 — RNGH 제스처가 그 경계를 못 넘는 문제를 다시
+                    // 만들었을 가능성이 높다. /run-log, /saved-courses 등 이미 잘 되는 다른
+                    // 라우트들도 전부 기본 presentation('card')이라 그대로 맞춘다.
                     // 크롭 중 실수로 스와이프해서 나가면 진행 중이던 조정이 날아가므로 막는다.
                     gestureEnabled: false,
                   }}

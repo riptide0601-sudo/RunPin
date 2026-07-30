@@ -1,22 +1,20 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet } from 'react-native';
 
 import { MenuList } from '@/components/profile/MenuList';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { StatsRow } from '@/components/profile/StatsRow';
 import { SubscriptionBanner } from '@/components/profile/SubscriptionBanner';
 import { AlertModal } from '@/components/ui/AlertModal';
-import { Pill } from '@/components/ui/Pill';
 import { SubscribeModal } from '@/components/ui/SubscribeModal';
 import { colors } from '@/constants/colors';
-import { mockMenuItems, mockProfile } from '@/data/mock';
+import { mockMenuItems } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
 import { useAuth } from '@/lib/auth';
 import { formatPaceLabel } from '@/lib/format';
 import { calculateUserGrade } from '@/lib/userGrade';
-import { seedParkCloseAccountData } from '@/lib/seedMockAccountData';
 import type { ProfileStats } from '@/types';
 
 export default function ProfileScreen() {
@@ -43,27 +41,6 @@ export default function ProfileScreen() {
 
   const [subscribeModalVisible, setSubscribeModalVisible] = useState(false);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  // 개발용: 파클로즈 계정도 다른 계정과 동일하게 100% 실데이터로 계산하기로 하면서, 시연용
-  // 데이터가 필요해 실제 Firestore에 코스/러닝기록을 심어야 한다. 이 버튼은 파클로즈 계정으로
-  // 로그인했고 아직 코스를 하나도 안 올린 상태에서만 보이고, 한 번 심으면 다시 안 보인다.
-  const showSeedButton = __DEV__ && user?.displayName === mockProfile.name && stats.uploadedCourseCount === 0;
-
-  const handleSeedMockData = async () => {
-    if (!user) return;
-    setIsSeeding(true);
-    try {
-      await seedParkCloseAccountData(user.uid);
-    } catch (error) {
-      if (__DEV__) {
-        console.error('[profile] 샘플 데이터 시드 실패', error);
-      }
-      Alert.alert('시드하지 못했어요', '잠시 후 다시 시도해주세요');
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   const handleProfilePress = async () => {
     if (!user) {
@@ -138,17 +115,6 @@ export default function ProfileScreen() {
         onPress={handleProfilePress}
       />
       <StatsRow stats={stats} />
-      {showSeedButton ? (
-        <View style={styles.devSeedWrapper}>
-          <Pill
-            label={isSeeding ? '샘플 데이터 채우는 중...' : '[개발용] 파클로즈 샘플 데이터 채우기'}
-            variant="outline"
-            disabled={isSeeding}
-            onPress={handleSeedMockData}
-            style={styles.devSeedButton}
-          />
-        </View>
-      ) : null}
       <SubscriptionBanner
         isSubscribed={isSubscribed}
         remaining={Math.min(remainingProposals, FREE_PROPOSAL_LIMIT)}
@@ -184,12 +150,5 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: 24,
-  },
-  devSeedWrapper: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  devSeedButton: {
-    justifyContent: 'center',
   },
 });

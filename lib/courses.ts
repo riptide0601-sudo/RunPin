@@ -2,8 +2,12 @@ import { FirebaseError } from 'firebase/app';
 import {
   addDoc,
   collection,
+  getDocs,
+  limit,
   onSnapshot,
+  query,
   serverTimestamp,
+  where,
   type QueryDocumentSnapshot,
   type Unsubscribe,
 } from 'firebase/firestore';
@@ -41,6 +45,16 @@ export async function createCourse(uploaderId: string, uploaderName: string, dra
     }
     throw error;
   }
+}
+
+// 실시간 구독(subscribeToCourses)과 별개로, "이 유저가 코스를 하나라도 올린 적 있는지"만
+// 1회성으로 확인할 때 쓴다 — lib/appData.tsx가 파클로즈 계정 최초 로그인 시 샘플 데이터를
+// 자동으로 심을지 판단하는 데 쓴다(이미 있으면 다시 안 심음).
+export async function hasUploadedCourse(uploaderId: string): Promise<boolean> {
+  const snapshot = await getDocs(
+    query(collection(db, COURSES_COLLECTION), where('uploaderId', '==', uploaderId), limit(1)),
+  );
+  return !snapshot.empty;
 }
 
 function mapCourseDoc(doc: QueryDocumentSnapshot): Course {

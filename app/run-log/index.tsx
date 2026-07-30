@@ -85,7 +85,10 @@ export default function RunLogListScreen() {
           if (!target) return;
           try {
             await uploadRunLog(target.id, result.courseName);
-          } catch {
+          } catch (error) {
+            if (__DEV__) {
+              console.error('[run-log/index] 업로드 실패', error);
+            }
             Alert.alert('업로드하지 못했어요', '잠시 후 다시 시도해주세요');
           }
         }}

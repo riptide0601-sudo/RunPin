@@ -120,7 +120,10 @@ export default function CommunityScreen() {
       await addRunLog(
         buildFinishedRunLog(result.courseName, mockMyRunningRoute, result.difficulty, true, mateName ?? undefined),
       );
-    } catch {
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[community] 러닝 기록 저장 실패', error);
+      }
       Alert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요');
     }
   };
@@ -131,7 +134,10 @@ export default function CommunityScreen() {
     setRunMateName(null);
     try {
       await addRunLog(buildFinishedRunLog('이름 없는 러닝', mockMyRunningRoute, difficulty, false, mateName ?? undefined));
-    } catch {
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[community] 러닝 기록 저장 실패', error);
+      }
       Alert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요');
     }
   };

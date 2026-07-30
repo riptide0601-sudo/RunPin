@@ -11,9 +11,10 @@ import {
 
 import { mockCourses, mockProfile } from '@/data/mock';
 import { useAuth } from '@/lib/auth';
-import { createCourse, subscribeToCourses, type NewCourseDraft } from '@/lib/courses';
+import { createCourse, hasUploadedCourse, subscribeToCourses, type NewCourseDraft } from '@/lib/courses';
 import { findMatchingCourse } from '@/lib/matching';
 import { createRunLog, markRunLogUploaded, subscribeToRunLogs, type NewRunLogDraft } from '@/lib/runLogs';
+import { seedParkCloseAccountData } from '@/lib/seedMockAccountData';
 import { subscribeToUserPhoto } from '@/lib/userProfile';
 import type { Course, RunLog } from '@/types';
 
@@ -120,6 +121,27 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }
     return subscribeToRunLogs(user.uid, setRunLogs);
   }, [user?.uid]);
+
+  // 파클로즈 계정은 등급/통계를 다른 계정과 동일하게 100% 실데이터로 계산한다 —
+  // 그래서 시연용 데이터가 필요한데, 화면에 "샘플 데이터 채우기" 버튼을 노출하는 대신
+  // 이 계정으로 처음 로그인했을 때(=아직 올린 코스가 하나도 없을 때) 자동으로 한 번만
+  // 심는다. getDocs로 1회성 확인(hasUploadedCourse) 후 없을 때만 심어서, 이미 심어진
+  // 뒤에는 재로그인해도 다시 실행되지 않는다.
+  useEffect(() => {
+    if (!user || user.displayName !== mockProfile.name) return;
+    let cancelled = false;
+    (async () => {
+      const alreadySeeded = await hasUploadedCourse(user.uid);
+      if (!cancelled && !alreadySeeded) {
+        await seedParkCloseAccountData(user.uid);
+      }
+    })().catch((error) => {
+      console.error('[appData] 파클로즈 샘플 데이터 자동 시드 실패', error);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // 프로필 사진(base64)도 러닝 기록과 같은 이유로 로그인 상태일 때만 본인 것을 구독한다.
   const [profilePhotoBase64, setProfilePhotoBase64] = useState<string | null>(null);

@@ -35,6 +35,13 @@ export async function createRunLog(userId: string, draft: NewRunLogDraft): Promi
       userId,
     });
   } catch (error) {
+    if (__DEV__) {
+      console.error('[runLogs] 생성 실패', {
+        name: error instanceof Error ? error.name : typeof error,
+        message: error instanceof Error ? error.message : String(error),
+        code: error instanceof FirebaseError ? error.code : undefined,
+      });
+    }
     if (error instanceof FirebaseError) {
       throw new RunLogSaveError();
     }
@@ -51,6 +58,13 @@ export async function markRunLogUploaded(logId: string, courseName: string): Pro
       isUploaded: true,
     });
   } catch (error) {
+    if (__DEV__) {
+      console.error('[runLogs] 업로드 표시 실패', {
+        name: error instanceof Error ? error.name : typeof error,
+        message: error instanceof Error ? error.message : String(error),
+        code: error instanceof FirebaseError ? error.code : undefined,
+      });
+    }
     if (error instanceof FirebaseError) {
       throw new RunLogSaveError();
     }

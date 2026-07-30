@@ -77,14 +77,28 @@ export function AvatarCropScreen({ imageUri, imageWidth, imageHeight, onCancel, 
 
   // 제스처 객체를 매 렌더마다 새로 만들면(useMemo 없이) react-native-gesture-handler가
   // 진행 중인 제스처 인식 상태를 리셋시켜 "만져도 반응 없음" 증상으로 이어질 수 있다.
+  // onBegin/onUpdate에 __DEV__ 로그를 찍어 제스처 자체가 인식되는지(터치가 이미지에
+  // 닿는지) vs 인식은 되는데 화면 반영(translateX/Y 갱신)이 안 되는지 실측으로 구분한다.
+  // 확인 끝나면 이 로그는 지울 것.
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
+        .onBegin(() => {
+          if (__DEV__) {
+            console.log('[AvatarCropScreen] pan onBegin');
+          }
+        })
         .onStart(() => {
           startX.value = translateX.value;
           startY.value = translateY.value;
         })
         .onUpdate((event) => {
+          if (__DEV__) {
+            console.log('[AvatarCropScreen] pan onUpdate', {
+              translationX: event.translationX,
+              translationY: event.translationY,
+            });
+          }
           const effectiveScale = baseScale * scale.value;
           const boundX = maxOffset(imageWidth, effectiveScale);
           const boundY = maxOffset(imageHeight, effectiveScale);
@@ -97,10 +111,18 @@ export function AvatarCropScreen({ imageUri, imageWidth, imageHeight, onCancel, 
   const pinchGesture = useMemo(
     () =>
       Gesture.Pinch()
+        .onBegin(() => {
+          if (__DEV__) {
+            console.log('[AvatarCropScreen] pinch onBegin');
+          }
+        })
         .onStart(() => {
           startScale.value = scale.value;
         })
         .onUpdate((event) => {
+          if (__DEV__) {
+            console.log('[AvatarCropScreen] pinch onUpdate', { scale: event.scale });
+          }
           const nextScale = clampValue(startScale.value * event.scale, MIN_ZOOM, MAX_ZOOM);
           scale.value = nextScale;
           const effectiveScale = baseScale * nextScale;
