@@ -70,13 +70,15 @@ export function GradeInfoPopup({ visible, anchor, currentLevel, onClose }: Grade
           })}
         </View>
         <View style={styles.divider} />
-        <Text style={styles.explanation}>
-          업로드한 코스 1개당 <Text style={styles.explanationStrong}>10점</Text>
-          {'\n'}+ 좋아요 보너스 (아래 중 높은 구간 하나만){'\n'}
-          · 좋아요 500개 이상: +80점{'\n'}
-          · 좋아요 100개 이상: +30점{'\n'}
-          + 전체기간 랭킹 TOP10 진입: +50점 (좋아요 보너스와 별개로 항상 추가)
-        </Text>
+        <View style={styles.explanationBlock}>
+          <Text style={styles.explanation}>
+            업로드한 코스 1개당 <Text style={styles.explanationStrong}>10점</Text>
+          </Text>
+          <Text style={styles.explanation}>+ 좋아요 보너스</Text>
+          <Text style={[styles.explanation, styles.explanationIndent]}>· 100개 이상: +30점</Text>
+          <Text style={[styles.explanation, styles.explanationIndent]}>· 500개 이상: +80점</Text>
+          <Text style={styles.explanation}>+ 전체기간 랭킹 TOP10 진입: +50점</Text>
+        </View>
       </View>
     </Modal>
   );
@@ -157,11 +159,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginHorizontal: 4,
   },
+  explanationBlock: {
+    gap: 2,
+  },
   explanation: {
     fontSize: 12,
     lineHeight: 19,
     color: colors.textMuted,
     paddingHorizontal: 4,
+  },
+  explanationIndent: {
+    paddingLeft: 16,
   },
   explanationStrong: {
     color: colors.text,

@@ -24,15 +24,17 @@ function levelForPoints(points: number): GradeLevel {
   return GRADE_THRESHOLDS.find((threshold) => points >= threshold.min)!.level;
 }
 
-// 좋아요 보너스는 구간이 겹치므로(500+는 100+이기도 함) 가장 높은 구간 하나만 인정한다.
+// 좋아요 100개/500개 구간은 서로 배타적이지 않고 둘 다 만족하면 둘 다 더한다
+// (500개 이상이면 100개 이상 조건도 당연히 만족 -> 30+80=110점).
 function likeCountBonus(likeCount: number): number {
-  if (likeCount >= 500) return 80;
-  if (likeCount >= 100) return 30;
-  return 0;
+  let bonus = 0;
+  if (likeCount >= 100) bonus += 30;
+  if (likeCount >= 500) bonus += 80;
+  return bonus;
 }
 
-// 좋아요 보너스(택1)와 TOP10 보너스(+50)는 서로 다른 신호라 별도로 합산한다 —
-// 좋아요 500+이면서 TOP10이면 80+50=130점.
+// 좋아요 보너스와 TOP10 보너스(+50)도 서로 다른 신호라 별도로 합산한다 —
+// 좋아요 500+이면서 TOP10이면 30+80+50=160점.
 function rankingBonusForCourse(course: Course): number {
   const likeCount = course.likeCount ?? 0;
   const top10Bonus = topTenAllTimeCourseIds.has(course.id) ? 50 : 0;
