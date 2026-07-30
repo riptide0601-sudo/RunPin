@@ -15,14 +15,15 @@ import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
 import { useAuth } from '@/lib/auth';
 import { formatPaceLabel } from '@/lib/format';
-import { calculateUserGrade } from '@/lib/userGrade';
+import { calculateGradeFromCourses, calculateUserGrade } from '@/lib/userGrade';
 import { saveUserPhoto } from '@/lib/userProfile';
 import type { ProfileStats } from '@/types';
 
-// 파클로즈 계정은 "임의로 한동안 사용한 유저"라는 가정 하에 등급/통계를 목업 값으로
-// 고정해서 보여준다 (다른 기존 계정·신규 가입 계정은 모두 실데이터를 쓴다).
+// 파클로즈 계정은 "임의로 한동안 사용한 유저"라는 가정 하에 등급/업로드 코스 수는 mock
+// 코스 데이터로 실제 계산하고(계산식이 바뀌어도 자동으로 맞춰짐), 총거리/페이스/함께 뛴
+// 러너처럼 연결된 mock 러닝 기록이 없는 값만 mockProfileStats 고정값을 그대로 쓴다
+// (다른 기존 계정·신규 가입 계정은 모두 실데이터를 쓴다).
 const MOCK_STATS_DISPLAY_NAME = mockProfile.name;
-const MOCK_GRADE_LEVEL = 5;
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -30,13 +31,22 @@ export default function ProfileScreen() {
   const { user, initializing, signOut } = useAuth();
   const isMockAccount = user?.displayName === MOCK_STATS_DISPLAY_NAME;
 
+  // 파클로즈 계정은 uploaderId가 없는 mock 코스라서 이름으로 걸러야 한다 — 실유저는 항상
+  // uploaderId(uid) 기준(calculateUserGrade)이라 서로 이름이 겹칠 걱정은 없다.
+  const mockAccountCourses = useMemo(
+    () => (isMockAccount ? courses.filter((course) => course.uploaderName === MOCK_STATS_DISPLAY_NAME) : []),
+    [isMockAccount, courses],
+  );
+
   const gradeLevel = useMemo(() => {
-    if (isMockAccount) return MOCK_GRADE_LEVEL;
+    if (isMockAccount) return calculateGradeFromCourses(mockAccountCourses).level;
     return calculateUserGrade(user?.uid, courses).level;
-  }, [isMockAccount, user?.uid, courses]);
+  }, [isMockAccount, mockAccountCourses, user?.uid, courses]);
 
   const stats: ProfileStats = useMemo(() => {
-    if (isMockAccount) return mockProfileStats;
+    if (isMockAccount) {
+      return { ...mockProfileStats, uploadedCourseCount: mockAccountCourses.length };
+    }
 
     const totalDistanceKm = runLogs.reduce((sum, log) => sum + log.distanceKm, 0);
     const averagePaceSecPerKm =
@@ -50,7 +60,7 @@ export default function ProfileScreen() {
       // 커뮤니티 매칭이 아직 mock 시뮬레이션이라 실제 매칭 기록이 없음 -> "준비중" 표시.
       runMatesCount: null,
     };
-  }, [isMockAccount, runLogs, courses, user]);
+  }, [isMockAccount, mockAccountCourses, runLogs, courses, user]);
 
   const [subscribeModalVisible, setSubscribeModalVisible] = useState(false);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
