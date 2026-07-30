@@ -30,8 +30,14 @@ function rankingBonusForCourse(course: Course): number {
   return 0;
 }
 
-export function calculateUserGrade(uploaderName: string, allCourses: Course[]): UserGradeResult {
-  const uploadedCourses = allCourses.filter((course) => course.uploaderName === uploaderName);
+// uploaderId(Firebase Auth uid) 기준으로 계산한다 — 닉네임(uploaderName)은 중복 가능성이
+// 없다곤 해도(닉네임 유일성은 lib/nickname.ts가 보장) 실제 유저 식별자는 uid이고, mock
+// 코스처럼 uploaderId가 없는 데이터는 애초에 실제 유저의 업로드가 아니므로 집계에서
+// 자연히 제외된다. uploaderId가 없으면(로그인 안 됨) 업로드 이력 없음(0점 = 1단계)로 취급.
+export function calculateUserGrade(uploaderId: string | null | undefined, allCourses: Course[]): UserGradeResult {
+  const uploadedCourses = uploaderId
+    ? allCourses.filter((course) => course.uploaderId === uploaderId)
+    : [];
   const points = uploadedCourses.reduce((sum, course) => sum + 10 + rankingBonusForCourse(course), 0);
   const level = levelForPoints(points);
   return { points, level, color: gradeColors[level] };

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GradeBadge } from '@/components/ui/GradeBadge';
@@ -47,7 +47,14 @@ export function ProfileHeader({ user, initializing, gradeLevel, onPress }: Profi
       style={({ pressed }) => [styles.row, { paddingTop: insets.top + 8 }, pressed && styles.pressed]}
     >
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{initial}</Text>
+        {user.photoURL ? (
+          <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
+        ) : (
+          <Text style={styles.avatarText}>{initial}</Text>
+        )}
+        <View style={styles.cameraBadge}>
+          <Ionicons name="camera" size={11} color={colors.textInverse} />
+        </View>
       </View>
       <View style={styles.info}>
         <View style={styles.nameRow}>
@@ -79,10 +86,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
   avatarText: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
+  },
+  cameraBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.background,
   },
   info: {
     flex: 1,

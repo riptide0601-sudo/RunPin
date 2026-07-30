@@ -2707,6 +2707,7 @@ export const mockMenuItems: MenuItemData[] = [
   { id: 'menu-notification', label: '알림 설정', icon: 'notifications-outline' },
   { id: 'menu-privacy', label: '개인정보 설정', icon: 'lock-closed-outline' },
   { id: 'menu-support', label: '고객센터', icon: 'help-circle-outline' },
+  { id: 'menu-logout', label: '로그아웃', icon: 'log-out-outline' },
 ];
 
 function courseCoordinates(courseId: string): LatLng[] {

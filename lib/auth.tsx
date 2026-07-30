@@ -50,6 +50,7 @@ function toAuthUser(user: FirebaseUser): AuthUser {
     email: user.email,
     displayName: user.displayName,
     createdAt: user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : null,
+    photoURL: user.photoURL,
   };
 }
 
@@ -65,6 +66,7 @@ interface AuthContextValue {
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePhotoURL: (photoURL: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -157,6 +159,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           throw new Error(toAuthErrorMessage(error));
         }
+      },
+      // updateProfile 성공만으로는 onAuthStateChanged가 다시 불리지 않으므로,
+      // auth.currentUser(호출 성공 시 SDK가 이미 photoURL을 반영해둔 상태)를 다시 읽어
+      // 로컬 user state를 직접 갱신한다.
+      updatePhotoURL: async (photoURL) => {
+        if (!auth.currentUser) return;
+        try {
+          await updateProfile(auth.currentUser, { photoURL });
+        } catch (error) {
+          throw new Error(toAuthErrorMessage(error));
+        }
+        setUser(toAuthUser(auth.currentUser));
       },
     }),
     [user, initializing, isSigningUp],
