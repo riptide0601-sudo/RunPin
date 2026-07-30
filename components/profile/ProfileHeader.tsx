@@ -80,6 +80,7 @@ export function ProfileHeader({ user, initializing, gradeLevel, onPress }: Profi
       <GradeInfoPopup
         visible={gradePopupVisible}
         anchor={badgeAnchor}
+        currentLevel={gradeLevel}
         onClose={() => setGradePopupVisible(false)}
       />
     </View>

@@ -14,10 +14,11 @@ export interface GradeBadgeAnchor {
 interface GradeInfoPopupProps {
   visible: boolean;
   anchor: GradeBadgeAnchor | null;
+  currentLevel: GradeLevel;
   onClose: () => void;
 }
 
-const CARD_WIDTH = 232;
+const CARD_WIDTH = 252;
 const SCREEN_MARGIN = 12;
 const TAIL_SIZE = 10;
 
@@ -25,11 +26,11 @@ const gradeRows = [...GRADE_THRESHOLDS]
   .sort((a, b) => a.level - b.level)
   .map((entry, index, all) => {
     const next = all[index + 1];
-    const rangeLabel = next ? `${entry.min}~${next.min - 1}점` : `${entry.min}점 이상`;
+    const rangeLabel = next ? `${entry.min} ~ ${next.min - 1}점` : `${entry.min}점 이상`;
     return { level: entry.level as GradeLevel, rangeLabel };
   });
 
-export function GradeInfoPopup({ visible, anchor, onClose }: GradeInfoPopupProps) {
+export function GradeInfoPopup({ visible, anchor, currentLevel, onClose }: GradeInfoPopupProps) {
   const { width: screenWidth } = useWindowDimensions();
 
   if (!anchor) return null;
@@ -46,19 +47,35 @@ export function GradeInfoPopup({ visible, anchor, onClose }: GradeInfoPopupProps
       <View style={[styles.card, { left: cardLeft, top: cardTop }]}>
         <Text style={styles.title}>등급 산정 기준</Text>
         <View style={styles.rows}>
-          {gradeRows.map((row) => (
-            <View key={row.level} style={styles.row}>
-              <View style={[styles.dot, { backgroundColor: gradeColors[row.level] }]} />
-              <Text style={styles.rowLabel}>{row.level}단계</Text>
-              <Text style={styles.rowRange}>{row.rangeLabel}</Text>
-            </View>
-          ))}
+          {gradeRows.map((row) => {
+            const isCurrent = row.level === currentLevel;
+            return (
+              <View
+                key={row.level}
+                style={[styles.row, isCurrent && { backgroundColor: `${gradeColors[row.level]}1F` }]}
+              >
+                <View style={[styles.dot, { backgroundColor: gradeColors[row.level] }]} />
+                <Text style={[styles.rowLabel, isCurrent && styles.rowLabelActive]}>{row.level}단계</Text>
+                <Text
+                  style={[
+                    styles.rowRange,
+                    isCurrent && [styles.rowRangeActive, { color: gradeColors[row.level] }],
+                  ]}
+                >
+                  {row.rangeLabel}
+                </Text>
+                {isCurrent ? <Text style={[styles.currentTag, { color: gradeColors[row.level] }]}>내 등급</Text> : null}
+              </View>
+            );
+          })}
         </View>
         <View style={styles.divider} />
         <Text style={styles.explanation}>
-          업로드한 코스 1개당 10점 + 인기도 보너스{'\n'}
-          (좋아요 500개 이상 +80점 / 전체기간 랭킹 TOP10 +50점 /{'\n'}
-          좋아요 100개 이상 +30점, 셋 중 하나만 적용)
+          업로드한 코스 1개당 <Text style={styles.explanationStrong}>10점</Text>
+          {'\n'}+ 인기도 보너스 (아래 중 하나만 적용){'\n'}
+          · 좋아요 500개 이상: +80점{'\n'}
+          · 전체기간 랭킹 TOP10: +50점{'\n'}
+          · 좋아요 100개 이상: +30점
         </Text>
       </View>
     </Modal>
@@ -79,9 +96,10 @@ const styles = StyleSheet.create({
   card: {
     position: 'absolute',
     width: CARD_WIDTH,
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    gap: 12,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -92,40 +110,61 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   title: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '800',
     color: colors.text,
+    paddingHorizontal: 4,
   },
   rows: {
-    gap: 6,
+    gap: 3,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 9,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 9,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   rowLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.text,
-    width: 36,
+    width: 38,
+  },
+  rowLabelActive: {
+    fontWeight: '800',
   },
   rowRange: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
+    flex: 1,
+  },
+  rowRangeActive: {
+    fontWeight: '700',
+  },
+  currentTag: {
+    fontSize: 10,
+    fontWeight: '800',
   },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: colors.border,
+    marginHorizontal: 4,
   },
   explanation: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 12,
+    lineHeight: 19,
     color: colors.textMuted,
+    paddingHorizontal: 4,
+  },
+  explanationStrong: {
+    fontWeight: '800',
+    color: colors.text,
   },
 });

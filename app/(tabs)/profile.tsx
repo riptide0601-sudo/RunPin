@@ -97,7 +97,10 @@ export default function ProfileScreen() {
     try {
       const photoURL = await uploadAvatar(user.uid, croppedUri);
       await updatePhotoURL(photoURL);
-    } catch {
+    } catch (error) {
+      if (__DEV__) {
+        console.error('[profile] 프로필 사진 업로드 실패', error);
+      }
       Alert.alert('업로드하지 못했어요', '잠시 후 다시 시도해주세요');
     } finally {
       setIsUploadingAvatar(false);
