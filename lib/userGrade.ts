@@ -8,7 +8,9 @@ export interface UserGradeResult {
   color: string;
 }
 
-const GRADE_THRESHOLDS: { level: GradeLevel; min: number }[] = [
+// components/profile/GradeInfoPopup.tsx가 이 배열을 그대로 읽어 안내 팝업의 점수 구간을
+// 표시한다 — 팝업에 값을 따로 하드코딩하면 여기 기준이 바뀔 때 안내 문구가 어긋난다.
+export const GRADE_THRESHOLDS: { level: GradeLevel; min: number }[] = [
   { level: 5, min: 700 },
   { level: 4, min: 350 },
   { level: 3, min: 150 },

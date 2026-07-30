@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { GradeInfoPopup, type GradeBadgeAnchor } from '@/components/profile/GradeInfoPopup';
 import { GradeBadge } from '@/components/ui/GradeBadge';
 import { colors } from '@/constants/colors';
 import { formatDateLabel } from '@/lib/format';
@@ -16,6 +18,16 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ user, initializing, gradeLevel, onPress }: ProfileHeaderProps) {
   const insets = useSafeAreaInsets();
+  const badgeRef = useRef<View>(null);
+  const [gradePopupVisible, setGradePopupVisible] = useState(false);
+  const [badgeAnchor, setBadgeAnchor] = useState<GradeBadgeAnchor | null>(null);
+
+  const handleGradeBadgePress = () => {
+    badgeRef.current?.measureInWindow((x, y, width, height) => {
+      setBadgeAnchor({ x, y, width, height });
+      setGradePopupVisible(true);
+    });
+  };
 
   if (!user) {
     return (
@@ -42,11 +54,11 @@ export function ProfileHeader({ user, initializing, gradeLevel, onPress }: Profi
   const joinedLabel = user.createdAt ? `가입일 ${formatDateLabel(user.createdAt)}` : null;
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, { paddingTop: insets.top + 8 }, pressed && styles.pressed]}
-    >
-      <View style={styles.avatar}>
+    <View style={[styles.row, { paddingTop: insets.top + 8 }]}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
+      >
         {user.photoURL ? (
           <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
         ) : (
@@ -55,15 +67,22 @@ export function ProfileHeader({ user, initializing, gradeLevel, onPress }: Profi
         <View style={styles.cameraBadge}>
           <Ionicons name="camera" size={11} color={colors.textInverse} />
         </View>
-      </View>
+      </Pressable>
       <View style={styles.info}>
         <View style={styles.nameRow}>
           <Text style={styles.name}>{name}</Text>
-          <GradeBadge level={gradeLevel} size={25} />
+          <Pressable ref={badgeRef} hitSlop={8} onPress={handleGradeBadgePress}>
+            <GradeBadge level={gradeLevel} size={25} />
+          </Pressable>
         </View>
         {joinedLabel ? <Text style={styles.meta}>{joinedLabel}</Text> : null}
       </View>
-    </Pressable>
+      <GradeInfoPopup
+        visible={gradePopupVisible}
+        anchor={badgeAnchor}
+        onClose={() => setGradePopupVisible(false)}
+      />
+    </View>
   );
 }
 
