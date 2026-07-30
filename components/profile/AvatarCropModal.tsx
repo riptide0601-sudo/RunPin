@@ -1,7 +1,7 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import { useEffect, useMemo, useState } from 'react';
-import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
@@ -190,79 +190,89 @@ export function AvatarCropModal({
     }
   };
 
+  // RN의 <Modal>은 별도 네이티브 윈도우/루트를 새로 만드는데, 그 안에 GestureHandlerRootView를
+  // 중첩하면 일부 환경(특히 Android)에서 RNGH 네이티브 제스처 인식기가 그 루트에 제대로 붙지
+  // 않아 Pan/Pinch가 반응하지 않는 문제가 보고돼 있다 — Modal 대신 화면 전체를 덮는 일반 View로
+  // 구현해서(같은 네이티브 루트 안에 남김) 이 문제를 원천적으로 피한다. visible이 false면 아예
+  // 렌더링하지 않는다(훅 호출 규칙 때문에 이 분기는 모든 훅 호출 이후에 와야 한다).
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} animationType="fade" onRequestClose={onCancel}>
-      <GestureHandlerRootView style={styles.container}>
-        <GestureDetector gesture={composedGesture}>
-          <View style={StyleSheet.absoluteFillObject}>
-            {imageUri ? (
-              <Animated.Image
-                source={{ uri: imageUri }}
-                style={[
-                  styles.image,
-                  {
-                    left: circleCenterX - (imageWidth * baseScale) / 2,
-                    top: circleCenterY - (imageHeight * baseScale) / 2,
-                  },
-                  animatedImageStyle,
-                ]}
-              />
-            ) : null}
-          </View>
-        </GestureDetector>
-
-        <Svg style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          <Defs>
-            <Mask id="avatarCropMask">
-              <Rect x={0} y={0} width={screenWidth} height={screenHeight} fill="#FFFFFF" />
-              <Circle cx={circleCenterX} cy={circleCenterY} r={CIRCLE_SIZE / 2} fill="#000000" />
-            </Mask>
-          </Defs>
-          <Rect
-            x={0}
-            y={0}
-            width={screenWidth}
-            height={screenHeight}
-            fill="rgba(0,0,0,0.65)"
-            mask="url(#avatarCropMask)"
-          />
-          <Circle
-            cx={circleCenterX}
-            cy={circleCenterY}
-            r={CIRCLE_SIZE / 2}
-            stroke="rgba(255,255,255,0.9)"
-            strokeWidth={1.5}
-            fill="none"
-          />
-        </Svg>
-
-        <View style={[styles.topBar, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
-          <Pressable hitSlop={12} onPress={onCancel}>
-            <Text style={styles.cancelText}>취소</Text>
-          </Pressable>
-          <Text style={styles.titleText}>사진 위치 조정</Text>
-          <View style={styles.cancelPlaceholder} />
+    <View style={styles.container}>
+      <GestureDetector gesture={composedGesture}>
+        <View style={StyleSheet.absoluteFillObject}>
+          {imageUri ? (
+            <Animated.Image
+              source={{ uri: imageUri }}
+              style={[
+                styles.image,
+                {
+                  left: circleCenterX - (imageWidth * baseScale) / 2,
+                  top: circleCenterY - (imageHeight * baseScale) / 2,
+                },
+                animatedImageStyle,
+              ]}
+            />
+          ) : null}
         </View>
+      </GestureDetector>
 
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 20 }]} pointerEvents="box-none">
-          <Pill
-            label={isProcessing ? '처리 중...' : '적용'}
-            variant="filled"
-            size="lg"
-            disabled={isProcessing}
-            onPress={handleApply}
-            style={styles.applyButton}
-          />
-        </View>
-      </GestureHandlerRootView>
-    </Modal>
+      <Svg style={StyleSheet.absoluteFillObject} pointerEvents="none">
+        <Defs>
+          <Mask id="avatarCropMask">
+            <Rect x={0} y={0} width={screenWidth} height={screenHeight} fill="#FFFFFF" />
+            <Circle cx={circleCenterX} cy={circleCenterY} r={CIRCLE_SIZE / 2} fill="#000000" />
+          </Mask>
+        </Defs>
+        <Rect
+          x={0}
+          y={0}
+          width={screenWidth}
+          height={screenHeight}
+          fill="rgba(0,0,0,0.65)"
+          mask="url(#avatarCropMask)"
+        />
+        <Circle
+          cx={circleCenterX}
+          cy={circleCenterY}
+          r={CIRCLE_SIZE / 2}
+          stroke="rgba(255,255,255,0.9)"
+          strokeWidth={1.5}
+          fill="none"
+        />
+      </Svg>
+
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
+        <Pressable hitSlop={12} onPress={onCancel}>
+          <Text style={styles.cancelText}>취소</Text>
+        </Pressable>
+        <Text style={styles.titleText}>사진 위치 조정</Text>
+        <View style={styles.cancelPlaceholder} />
+      </View>
+
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 20 }]} pointerEvents="box-none">
+        <Pill
+          label={isProcessing ? '처리 중...' : '적용'}
+          variant="filled"
+          size="lg"
+          disabled={isProcessing}
+          onPress={handleApply}
+          style={styles.applyButton}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.ink,
+    // 이 컴포넌트는 이제 profile.tsx에서 ScrollView 형제로 렌더링된다(스크롤 콘텐츠 내부에
+    // 두면 absolute 기준이 스크롤 콘텐츠 크기가 되어 화면보다 커지거나 스크롤 위치에 따라
+    // 어긋날 수 있음). zIndex/elevation은 그 형제 순서와 무관하게 항상 위에 그려지도록 보강.
+    zIndex: 1000,
+    elevation: 1000,
   },
   image: {
     position: 'absolute',

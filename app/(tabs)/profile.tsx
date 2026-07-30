@@ -140,43 +140,47 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <ProfileHeader
-        user={user}
-        initializing={initializing}
-        gradeLevel={gradeLevel}
-        photoBase64={profilePhotoBase64}
-        onPress={handleProfilePress}
-      />
-      <StatsRow stats={stats} />
-      <SubscriptionBanner
-        isSubscribed={isSubscribed}
-        remaining={Math.min(remainingProposals, FREE_PROPOSAL_LIMIT)}
-        limit={FREE_PROPOSAL_LIMIT}
-        onPress={() => {
-          if (!isSubscribed) setSubscribeModalVisible(true);
-        }}
-      />
-      <MenuList items={mockMenuItems} onItemPress={handleMenuItemPress} />
-      <SubscribeModal
-        visible={subscribeModalVisible}
-        title="RunPin PRO 구독"
-        onSubscribe={handleSubscribe}
-        onClose={() => setSubscribeModalVisible(false)}
-      />
-      <AlertModal
-        visible={logoutConfirmVisible}
-        icon="log-out-outline"
-        title="로그아웃 하시겠어요?"
-        message={user?.email ?? undefined}
-        primaryAction={{ label: '로그아웃', onPress: handleLogout }}
-        secondaryAction={{ label: '취소', onPress: () => setLogoutConfirmVisible(false) }}
-        onRequestClose={() => setLogoutConfirmVisible(false)}
-      />
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <ProfileHeader
+          user={user}
+          initializing={initializing}
+          gradeLevel={gradeLevel}
+          photoBase64={profilePhotoBase64}
+          onPress={handleProfilePress}
+        />
+        <StatsRow stats={stats} />
+        <SubscriptionBanner
+          isSubscribed={isSubscribed}
+          remaining={Math.min(remainingProposals, FREE_PROPOSAL_LIMIT)}
+          limit={FREE_PROPOSAL_LIMIT}
+          onPress={() => {
+            if (!isSubscribed) setSubscribeModalVisible(true);
+          }}
+        />
+        <MenuList items={mockMenuItems} onItemPress={handleMenuItemPress} />
+        <SubscribeModal
+          visible={subscribeModalVisible}
+          title="RunPin PRO 구독"
+          onSubscribe={handleSubscribe}
+          onClose={() => setSubscribeModalVisible(false)}
+        />
+        <AlertModal
+          visible={logoutConfirmVisible}
+          icon="log-out-outline"
+          title="로그아웃 하시겠어요?"
+          message={user?.email ?? undefined}
+          primaryAction={{ label: '로그아웃', onPress: handleLogout }}
+          secondaryAction={{ label: '취소', onPress: () => setLogoutConfirmVisible(false) }}
+          onRequestClose={() => setLogoutConfirmVisible(false)}
+        />
+      </ScrollView>
+      {/* ScrollView 형제로 렌더링 — 스크롤 콘텐츠 내부에 두면 화면 전체를 덮는 절대 위치
+          기준이 스크롤 콘텐츠 크기/위치가 되어버려 어긋날 수 있다 (AvatarCropModal.tsx 참고). */}
       <AvatarCropModal
         visible={cropModalVisible}
         imageUri={pickedImage?.uri ?? null}
@@ -185,7 +189,7 @@ export default function ProfileScreen() {
         onCancel={handleCropCancel}
         onCropped={handleCropped}
       />
-    </ScrollView>
+    </>
   );
 }
 
