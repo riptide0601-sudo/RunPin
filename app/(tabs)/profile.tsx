@@ -13,10 +13,10 @@ import { SubscribeModal } from '@/components/ui/SubscribeModal';
 import { colors } from '@/constants/colors';
 import { mockMenuItems, mockProfile, mockProfileStats } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
-import { uploadAvatar } from '@/lib/avatarUpload';
 import { useAuth } from '@/lib/auth';
 import { formatPaceLabel } from '@/lib/format';
 import { calculateUserGrade } from '@/lib/userGrade';
+import { saveUserPhoto } from '@/lib/userProfile';
 import type { ProfileStats } from '@/types';
 
 // 파클로즈 계정은 "임의로 한동안 사용한 유저"라는 가정 하에 등급/통계를 목업 값으로
@@ -26,8 +26,8 @@ const MOCK_GRADE_LEVEL = 5;
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { courses, runLogs, isSubscribed, remainingProposals, subscribe } = useAppData();
-  const { user, initializing, signOut, updatePhotoURL } = useAuth();
+  const { courses, runLogs, profilePhotoBase64, isSubscribed, remainingProposals, subscribe } = useAppData();
+  const { user, initializing, signOut } = useAuth();
   const isMockAccount = user?.displayName === MOCK_STATS_DISPLAY_NAME;
 
   const gradeLevel = useMemo(() => {
@@ -88,20 +88,19 @@ export default function ProfileScreen() {
     setPickedImage(null);
   };
 
-  const handleCropped = async (croppedUri: string) => {
+  const handleCropped = async (photoBase64: string) => {
     setCropModalVisible(false);
     setPickedImage(null);
     if (!user) return;
 
     setIsUploadingAvatar(true);
     try {
-      const photoURL = await uploadAvatar(user.uid, croppedUri);
-      await updatePhotoURL(photoURL);
+      await saveUserPhoto(user.uid, photoBase64);
     } catch (error) {
       if (__DEV__) {
-        console.error('[profile] 프로필 사진 업로드 실패', error);
+        console.error('[profile] 프로필 사진 저장 실패', error);
       }
-      Alert.alert('업로드하지 못했어요', '잠시 후 다시 시도해주세요');
+      Alert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요');
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -150,6 +149,7 @@ export default function ProfileScreen() {
         user={user}
         initializing={initializing}
         gradeLevel={gradeLevel}
+        photoBase64={profilePhotoBase64}
         onPress={handleProfilePress}
       />
       <StatsRow stats={stats} />

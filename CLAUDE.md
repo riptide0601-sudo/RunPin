@@ -174,3 +174,19 @@ UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-ke
   않은 순수 메모리 상태라, 로그인 게이트를 걸어도 로그아웃/재로그인/기기 변경 시
   저장 목록이 유지되지 않고 다른 계정과도 구분되지 않는다. 배포 전 Firestore 기반
   유저별 저장 컬렉션으로 전환이 필요하다.
+- **좋아요/랭킹 기능이 실제로 생기면 등급 구간(`lib/userGrade.ts`의
+  `GRADE_THRESHOLDS`) 재검토 필요** — 등급 랭킹 보너스를 "최고 하나만 인정"에서
+  "좋아요 보너스(택1) + TOP10 보너스(+50, 별도 합산)"로 바꾸면서 코스 1개당 최대
+  점수가 90점 → 140점으로 올라갔다. 지금은 실제 업로드 코스의 좋아요/랭킹 기능
+  자체가 없어(`courses.ts`가 항상 `likeCount: 0`으로 생성, `firestore.rules`가
+  `courses` update를 전면 차단) 당장 실제 유저 등급에는 영향이 없지만, 좋아요/랭킹이
+  실제로 붙으면 현재 구간(0~49/50~149/150~349/350~699/700+)이 너무 낮게 잡혀있을
+  수 있어 그때 실제 데이터를 보고 재조정해야 한다.
+- **Firebase Storage는 Spark(무료) 플랜에서 못 써서 프로필 사진을 Firestore
+  base64로 저장 중 — Blaze 전환 시 재검토** — 프로필 사진을 원래 Firebase Storage에
+  올리도록 만들었다가(커밋 `5e7e8bc`, `c2cbec3`), Storage가 Blaze(유료) 플랜을
+  요구한다는 걸 확인하고 `users/{uid}` Firestore 문서에 `photoBase64` 필드로
+  직접 저장하는 방식으로 되돌렸다(2026-07-30). 나중에 Blaze로 전환하면 위 두 커밋의
+  `lib/avatarUpload.ts`/`storage.rules`/`lib/firebase.ts`의 `storage` export를
+  참고해 Storage 업로드 방식으로 다시 바꾸는 게 낫다 — base64는 Firestore 문서 크기
+  제한(1MiB)에 걸리기 쉽고 사진 화질도 낮게 유지해야 하는 임시방편이다.

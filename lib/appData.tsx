@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth';
 import { createCourse, subscribeToCourses, type NewCourseDraft } from '@/lib/courses';
 import { findMatchingCourse } from '@/lib/matching';
 import { createRunLog, markRunLogUploaded, subscribeToRunLogs, type NewRunLogDraft } from '@/lib/runLogs';
+import { subscribeToUserPhoto } from '@/lib/userProfile';
 import type { Course, RunLog } from '@/types';
 
 // "함께 뛰자고 제안" 액션에만 적용되는 무료 한도. 러닝 제안 수락/코스 추천/코스
@@ -81,6 +82,7 @@ class SavedCourseStore {
 interface AppDataContextValue {
   courses: Course[];
   runLogs: RunLog[];
+  profilePhotoBase64: string | null;
   addCourse: (draft: NewCourseDraft) => Promise<void>;
   addRunLog: (draft: NewRunLogDraft) => Promise<void>;
   uploadRunLog: (logId: string, courseName: string) => Promise<void>;
@@ -119,6 +121,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return subscribeToRunLogs(user.uid, setRunLogs);
   }, [user?.uid]);
 
+  // 프로필 사진(base64)도 러닝 기록과 같은 이유로 로그인 상태일 때만 본인 것을 구독한다.
+  const [profilePhotoBase64, setProfilePhotoBase64] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user?.uid) {
+      setProfilePhotoBase64(null);
+      return;
+    }
+    return subscribeToUserPhoto(user.uid, setProfilePhotoBase64);
+  }, [user?.uid]);
+
   const [proposalCount, setProposalCount] = useState(mockProfile.proposalCount);
   const [isSubscribed, setIsSubscribed] = useState(mockProfile.isSubscribed);
   const savedCourseStoreRef = useRef<SavedCourseStore | null>(null);
@@ -131,6 +143,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     () => ({
       courses,
       runLogs,
+      profilePhotoBase64,
       addCourse: async (draft) => {
         if (!user) return;
         await createCourse(user.uid, user.displayName ?? '러너', draft);
@@ -167,7 +180,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         await markRunLogUploaded(logId, courseName);
       },
     }),
-    [courses, runLogs, savedCourseStore, proposalCount, isSubscribed, user],
+    [courses, runLogs, profilePhotoBase64, savedCourseStore, proposalCount, isSubscribed, user],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

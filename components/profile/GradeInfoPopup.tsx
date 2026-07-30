@@ -72,10 +72,10 @@ export function GradeInfoPopup({ visible, anchor, currentLevel, onClose }: Grade
         <View style={styles.divider} />
         <Text style={styles.explanation}>
           업로드한 코스 1개당 <Text style={styles.explanationStrong}>10점</Text>
-          {'\n'}+ 인기도 보너스 (아래 중 하나만 적용){'\n'}
+          {'\n'}+ 좋아요 보너스 (아래 중 높은 구간 하나만){'\n'}
           · 좋아요 500개 이상: +80점{'\n'}
-          · 전체기간 랭킹 TOP10: +50점{'\n'}
-          · 좋아요 100개 이상: +30점
+          · 좋아요 100개 이상: +30점{'\n'}
+          + 전체기간 랭킹 TOP10 진입: +50점 (좋아요 보너스와 별개로 항상 추가)
         </Text>
       </View>
     </Modal>

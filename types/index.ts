@@ -20,7 +20,6 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
   createdAt: number | null;
-  photoURL: string | null;
 }
 
 export interface Course {

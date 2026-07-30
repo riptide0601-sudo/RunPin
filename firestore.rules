@@ -85,7 +85,32 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // 명시적으로 연 usernames/courses/runLogs 외에는 모두 차단 (향후 컬렉션 추가 시 실수로 열리는 것 방지)
+    match /users/{uid} {
+      // 프로필 사진(base64)은 Firebase Storage가 유료(Blaze) 플랜 전용이라 대신 여기 저장한다
+      // (CLAUDE.md 11번 체크리스트 참고). 다른 유저 사진을 보여주는 화면이 아직 없어 본인만
+      // 읽기/쓰기 허용 — 최소 권한 기본값.
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // photoBase64는 Firestore 문서 크기 제한(1MiB)에 여유를 두고 900,000바이트 미만으로만
+      // 허용 — lib/userProfile.ts, components/profile/AvatarCropModal.tsx의 값과 동일하게 유지할 것.
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['photoBase64', 'updatedAt'])
+                    && request.resource.data.photoBase64 is string
+                    && request.resource.data.photoBase64.size() < 900000
+                    && request.resource.data.updatedAt == request.time;
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['photoBase64', 'updatedAt'])
+                    && request.resource.data.photoBase64 is string
+                    && request.resource.data.photoBase64.size() < 900000
+                    && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    // 명시적으로 연 usernames/courses/runLogs/users 외에는 모두 차단 (향후 컬렉션 추가 시 실수로 열리는 것 방지)
     match /{document=**} {
       allow read, write: if false;
     }

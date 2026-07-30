@@ -13,10 +13,11 @@ interface ProfileHeaderProps {
   user: AuthUser | null;
   initializing: boolean;
   gradeLevel: GradeLevel;
+  photoBase64: string | null;
   onPress: () => void;
 }
 
-export function ProfileHeader({ user, initializing, gradeLevel, onPress }: ProfileHeaderProps) {
+export function ProfileHeader({ user, initializing, gradeLevel, photoBase64, onPress }: ProfileHeaderProps) {
   const insets = useSafeAreaInsets();
   const badgeRef = useRef<View>(null);
   const [gradePopupVisible, setGradePopupVisible] = useState(false);
@@ -59,8 +60,8 @@ export function ProfileHeader({ user, initializing, gradeLevel, onPress }: Profi
         onPress={onPress}
         style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
       >
-        {user.photoURL ? (
-          <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
+        {photoBase64 ? (
+          <Image source={{ uri: `data:image/jpeg;base64,${photoBase64}` }} style={styles.avatarImage} />
         ) : (
           <Text style={styles.avatarText}>{initial}</Text>
         )}

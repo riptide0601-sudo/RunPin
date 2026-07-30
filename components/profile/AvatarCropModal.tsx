@@ -15,7 +15,9 @@ interface AvatarCropModalProps {
   imageWidth: number;
   imageHeight: number;
   onCancel: () => void;
-  onCropped: (uri: string) => void;
+  // Firebase Storage 대신 Firestore 문서에 base64로 직접 저장하므로(Spark 무료 플랜은
+  // Storage를 못 씀 — CLAUDE.md 11번 체크리스트 참고) 파일 uri가 아니라 base64 문자열을 넘긴다.
+  onCropped: (base64: string) => void;
 }
 
 // 원형 미리보기 지름(화면 px). 크롭 계산과 화면 렌더링 모두 이 상수 하나만 기준으로 삼는다 —
@@ -23,7 +25,13 @@ interface AvatarCropModalProps {
 const CIRCLE_SIZE = 260;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
-const OUTPUT_SIZE = 512;
+// Firestore 문서 크기 제한(1MiB)에 여유를 두고 base64로 저장할 것이므로 출력 자체를 작게 유지한다.
+const OUTPUT_SIZE = 300;
+const INITIAL_COMPRESS = 0.6;
+const FALLBACK_COMPRESS = 0.35;
+// base64 문자열 1글자 = 1바이트(ASCII)이므로 이 값이 곧 대략적인 바이트 수 상한이다.
+// firestore.rules의 users/{uid}.photoBase64 크기 제한과 반드시 동일하게 유지할 것.
+const MAX_BASE64_LENGTH = 900_000;
 
 function clampValue(value: number, min: number, max: number) {
   'worklet';
@@ -119,6 +127,14 @@ export function AvatarCropModal({
       const cropSize = CIRCLE_SIZE / effectiveScale;
       const originX = Math.max(0, Math.min((circleLeft - imageLeft) / effectiveScale, imageWidth - cropSize));
       const originY = Math.max(0, Math.min((circleTop - imageTop) / effectiveScale, imageHeight - cropSize));
+      const cropAction = {
+        crop: {
+          originX: Math.round(originX),
+          originY: Math.round(originY),
+          width: Math.round(cropSize),
+          height: Math.round(cropSize),
+        },
+      };
 
       if (__DEV__) {
         console.log('[AvatarCropModal] crop rect', {
@@ -131,16 +147,29 @@ export function AvatarCropModal({
         });
       }
 
-      const result = await ImageManipulator.manipulateAsync(
-        imageUri,
-        [
-          { crop: { originX: Math.round(originX), originY: Math.round(originY), width: Math.round(cropSize), height: Math.round(cropSize) } },
-          { resize: { width: OUTPUT_SIZE, height: OUTPUT_SIZE } },
-        ],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG },
-      );
+      const encode = (compress: number) =>
+        ImageManipulator.manipulateAsync(
+          imageUri,
+          [cropAction, { resize: { width: OUTPUT_SIZE, height: OUTPUT_SIZE } }],
+          { compress, format: ImageManipulator.SaveFormat.JPEG, base64: true },
+        );
 
-      onCropped(result.uri);
+      let result = await encode(INITIAL_COMPRESS);
+      if ((result.base64?.length ?? 0) > MAX_BASE64_LENGTH) {
+        if (__DEV__) {
+          console.log('[AvatarCropModal] base64 too large, re-encoding with lower quality', result.base64?.length);
+        }
+        result = await encode(FALLBACK_COMPRESS);
+      }
+
+      if (!result.base64) {
+        throw new Error('이미지 인코딩에 실패했어요');
+      }
+      if (__DEV__) {
+        console.log('[AvatarCropModal] final base64 length', result.base64.length);
+      }
+
+      onCropped(result.base64);
     } finally {
       setIsProcessing(false);
     }
