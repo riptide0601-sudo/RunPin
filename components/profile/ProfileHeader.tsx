@@ -56,19 +56,14 @@ export function ProfileHeader({ user, initializing, gradeLevel, photoBase64, onP
 
   return (
     <View style={[styles.row, { paddingTop: insets.top + 8 }]}>
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
-      >
-        {photoBase64 ? (
-          <Image source={{ uri: `data:image/jpeg;base64,${photoBase64}` }} style={styles.avatarImage} />
-        ) : (
-          <Text style={styles.avatarText}>{initial}</Text>
-        )}
-        <View style={styles.cameraBadge}>
-          <Ionicons name="camera" size={11} color={colors.textInverse} />
-        </View>
-      </Pressable>
+      {/* 프로필 사진 변경 기능 임시 비활성화 — 크롭 화면 Pan/Pinch 제스처가 원인 불명으로
+          작동하지 않아, 원인 재조사 전까지 터치를 막고 이니셜 아바타만 보여준다
+          (CLAUDE.md 11번 체크리스트 참고). onPress/photoBase64와 AvatarCropScreen,
+          /avatar-crop 라우트, saveUserPhoto 등은 그대로 남겨뒀으니, 원인을 고친 뒤에는
+          이 View를 다시 Pressable로 되돌리고 사진/카메라 배지를 그대로 붙이면 된다. */}
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{initial}</Text>
+      </View>
       <View style={styles.info}>
         <View style={styles.nameRow}>
           <Text style={styles.name}>{name}</Text>

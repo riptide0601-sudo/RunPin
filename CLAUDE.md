@@ -190,3 +190,8 @@ UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-ke
   `lib/avatarUpload.ts`/`storage.rules`/`lib/firebase.ts`의 `storage` export를
   참고해 Storage 업로드 방식으로 다시 바꾸는 게 낫다 — base64는 Firestore 문서 크기
   제한(1MiB)에 걸리기 쉽고 사진 화질도 낮게 유지해야 하는 임시방편이다.
+- **프로필 사진 변경 기능 - 크롭 화면 제스처(Pan/Pinch)가 작동 안 하는 미해결 버그로
+  인해 비활성화됨. 재활성화 시 GestureDetector/GestureHandlerRootView 관련 원인부터
+  재조사 필요.** (2026-07-30) `components/profile/ProfileHeader.tsx`의 아바타
+  터치만 막아뒀고, `AvatarCropScreen.tsx`/`app/avatar-crop.tsx`/`lib/userProfile.ts`
+  (saveUserPhoto/subscribeToUserPhoto) 등 관련 코드는 전부 그대로 남아 있다.
