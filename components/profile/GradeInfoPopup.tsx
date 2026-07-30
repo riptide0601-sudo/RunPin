@@ -164,7 +164,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   explanationStrong: {
-    fontWeight: '800',
     color: colors.text,
   },
 });
