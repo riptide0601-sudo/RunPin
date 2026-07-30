@@ -45,6 +45,11 @@ export default function CommunityScreen() {
   const { courses, addCourse, addRunLog, canPropose, recordProposal, proposalCount, isSubscribed } = useAppData();
   const { user } = useAuth();
   const [proposalStatus, setProposalStatus] = useState<ProposalStatus>('pending');
+  // 매칭 시뮬레이션이 특정 러너 한 명(mockRunnerDots[0])의 제안이 항상 대기 중이라고 가정한다 —
+  // 실제 매칭 백엔드가 없어(CLAUDE.md 참고) 상대를 무작위로 고를 방법이 없다. 수락한 제안의
+  // 이름만 러닝 종료까지 들고 있다가 RunLog에 같이 저장한다.
+  const incomingProposalRunner = mockRunnerDots[0];
+  const [runMateName, setRunMateName] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [finishVisible, setFinishVisible] = useState(false);
   const [infoModal, setInfoModal] = useState<InfoModal>('none');
@@ -65,6 +70,7 @@ export default function CommunityScreen() {
 
   const handleAccept = () => {
     setProposalStatus('accepted');
+    setRunMateName(incomingProposalRunner.nickname);
     setInfoModal('accepted');
   };
 
@@ -105,11 +111,15 @@ export default function CommunityScreen() {
 
   const handleSaveCourse = async (result: SaveCourseResult) => {
     setFinishVisible(false);
+    const mateName = runMateName;
+    setRunMateName(null);
     try {
       if (result.newCourse) {
         await addCourse(result.newCourse);
       }
-      await addRunLog(buildFinishedRunLog(result.courseName, mockMyRunningRoute, result.difficulty, true));
+      await addRunLog(
+        buildFinishedRunLog(result.courseName, mockMyRunningRoute, result.difficulty, true, mateName ?? undefined),
+      );
     } catch {
       Alert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요');
     }
@@ -117,8 +127,10 @@ export default function CommunityScreen() {
 
   const handleSkipSaveCourse = async (difficulty: 1 | 2 | 3 | 4 | 5) => {
     setFinishVisible(false);
+    const mateName = runMateName;
+    setRunMateName(null);
     try {
-      await addRunLog(buildFinishedRunLog('이름 없는 러닝', mockMyRunningRoute, difficulty, false));
+      await addRunLog(buildFinishedRunLog('이름 없는 러닝', mockMyRunningRoute, difficulty, false, mateName ?? undefined));
     } catch {
       Alert.alert('저장하지 못했어요', '잠시 후 다시 시도해주세요');
     }
@@ -145,7 +157,11 @@ export default function CommunityScreen() {
               <Text style={styles.noticeText}>러닝 중에는 제안을 주고받을 수 없어요</Text>
             </View>
           ) : proposalStatus === 'pending' ? (
-            <MatchProposalCard onAccept={handleAccept} onDecline={handleDecline} />
+            <MatchProposalCard
+              runnerName={incomingProposalRunner.nickname}
+              onAccept={handleAccept}
+              onDecline={handleDecline}
+            />
           ) : proposalStatus === 'accepted' ? (
             <View style={styles.notice}>
               <Text style={styles.noticeText}>매칭 완료! 러닝 시작 버튼을 눌러 러닝을 시작하세요</Text>

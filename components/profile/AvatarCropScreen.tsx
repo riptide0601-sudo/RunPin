@@ -9,8 +9,7 @@ import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 
-interface AvatarCropModalProps {
-  visible: boolean;
+interface AvatarCropScreenProps {
   imageUri: string | null;
   imageWidth: number;
   imageHeight: number;
@@ -18,6 +17,9 @@ interface AvatarCropModalProps {
   // Firebase Storage 대신 Firestore 문서에 base64로 직접 저장하므로(Spark 무료 플랜은
   // Storage를 못 씀 — CLAUDE.md 11번 체크리스트 참고) 파일 uri가 아니라 base64 문자열을 넘긴다.
   onCropped: (base64: string) => void;
+  // 크롭 자체(이 컴포넌트 내부)가 끝난 뒤에도 호출부가 Firestore 저장을 계속 진행 중이면
+  // true로 넘겨서 "적용" 버튼을 계속 처리 중 상태로 묶어둔다 (app/avatar-crop.tsx 참고).
+  busy?: boolean;
 }
 
 // 원형 미리보기 지름(화면 px). 크롭 계산과 화면 렌더링 모두 이 상수 하나만 기준으로 삼는다 —
@@ -44,14 +46,11 @@ function maxOffset(naturalSizePx: number, effectiveScale: number) {
   return Math.max(0, (naturalSizePx * effectiveScale - CIRCLE_SIZE) / 2);
 }
 
-export function AvatarCropModal({
-  visible,
-  imageUri,
-  imageWidth,
-  imageHeight,
-  onCancel,
-  onCropped,
-}: AvatarCropModalProps) {
+// app/avatar-crop.tsx라는 별도 라우트의 콘텐츠로만 쓰인다 — RN <Modal>은 별도 네이티브
+// 윈도우/루트를 새로 만드는데, 그 안에서는 일부 환경(특히 Android)에서 RNGH 네이티브
+// 제스처 인식기가 제대로 붙지 않아 Pan/Pinch가 반응하지 않는 문제가 실기기에서 확인됐다.
+// 대신 탭 네비게이터 밖의 일반 라우트로 만들면 Modal 없이도 탭바를 자연스럽게 덮는다.
+export function AvatarCropScreen({ imageUri, imageWidth, imageHeight, onCancel, onCropped, busy }: AvatarCropScreenProps) {
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   const circleCenterX = screenWidth / 2;
@@ -70,17 +69,14 @@ export function AvatarCropModal({
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    if (visible) {
-      translateX.value = 0;
-      translateY.value = 0;
-      scale.value = 1;
-    }
-  }, [visible, imageUri, translateX, translateY, scale]);
+    translateX.value = 0;
+    translateY.value = 0;
+    scale.value = 1;
+    // imageUri가 바뀌는 경우는 사실상 없다(라우트당 한 장) — 그래도 방어적으로 리셋.
+  }, [imageUri, translateX, translateY, scale]);
 
   // 제스처 객체를 매 렌더마다 새로 만들면(useMemo 없이) react-native-gesture-handler가
-  // 진행 중인 제스처 인식 상태를 리셋시켜 "만져도 반응 없음" 증상으로 이어질 수 있다 —
-  // 부모(profile.tsx)가 Firestore 실시간 구독 등으로 리렌더될 때마다 이 컴포넌트도
-  // 같이 리렌더되므로 반드시 안정화한다.
+  // 진행 중인 제스처 인식 상태를 리셋시켜 "만져도 반응 없음" 증상으로 이어질 수 있다.
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
@@ -128,7 +124,7 @@ export function AvatarCropModal({
   }));
 
   const handleApply = async () => {
-    if (!imageUri || isProcessing) return;
+    if (!imageUri || isProcessing || busy) return;
     setIsProcessing(true);
     try {
       const effectiveScale = baseScale * scale.value;
@@ -152,7 +148,7 @@ export function AvatarCropModal({
       };
 
       if (__DEV__) {
-        console.log('[AvatarCropModal] crop rect', {
+        console.log('[AvatarCropScreen] crop rect', {
           originX,
           originY,
           cropSize,
@@ -172,7 +168,7 @@ export function AvatarCropModal({
       let result = await encode(INITIAL_COMPRESS);
       if ((result.base64?.length ?? 0) > MAX_BASE64_LENGTH) {
         if (__DEV__) {
-          console.log('[AvatarCropModal] base64 too large, re-encoding with lower quality', result.base64?.length);
+          console.log('[AvatarCropScreen] base64 too large, re-encoding with lower quality', result.base64?.length);
         }
         result = await encode(FALLBACK_COMPRESS);
       }
@@ -181,7 +177,7 @@ export function AvatarCropModal({
         throw new Error('이미지 인코딩에 실패했어요');
       }
       if (__DEV__) {
-        console.log('[AvatarCropModal] final base64 length', result.base64.length);
+        console.log('[AvatarCropScreen] final base64 length', result.base64.length);
       }
 
       onCropped(result.base64);
@@ -190,12 +186,7 @@ export function AvatarCropModal({
     }
   };
 
-  // RN의 <Modal>은 별도 네이티브 윈도우/루트를 새로 만드는데, 그 안에 GestureHandlerRootView를
-  // 중첩하면 일부 환경(특히 Android)에서 RNGH 네이티브 제스처 인식기가 그 루트에 제대로 붙지
-  // 않아 Pan/Pinch가 반응하지 않는 문제가 보고돼 있다 — Modal 대신 화면 전체를 덮는 일반 View로
-  // 구현해서(같은 네이티브 루트 안에 남김) 이 문제를 원천적으로 피한다. visible이 false면 아예
-  // 렌더링하지 않는다(훅 호출 규칙 때문에 이 분기는 모든 훅 호출 이후에 와야 한다).
-  if (!visible) return null;
+  const isBusy = isProcessing || Boolean(busy);
 
   return (
     <View style={styles.container}>
@@ -243,7 +234,7 @@ export function AvatarCropModal({
       </Svg>
 
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
-        <Pressable hitSlop={12} onPress={onCancel}>
+        <Pressable hitSlop={12} onPress={onCancel} disabled={isBusy}>
           <Text style={styles.cancelText}>취소</Text>
         </Pressable>
         <Text style={styles.titleText}>사진 위치 조정</Text>
@@ -252,10 +243,10 @@ export function AvatarCropModal({
 
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 20 }]} pointerEvents="box-none">
         <Pill
-          label={isProcessing ? '처리 중...' : '적용'}
+          label={isBusy ? '처리 중...' : '적용'}
           variant="filled"
           size="lg"
-          disabled={isProcessing}
+          disabled={isBusy}
           onPress={handleApply}
           style={styles.applyButton}
         />
@@ -266,13 +257,8 @@ export function AvatarCropModal({
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     backgroundColor: colors.ink,
-    // 이 컴포넌트는 이제 profile.tsx에서 ScrollView 형제로 렌더링된다(스크롤 콘텐츠 내부에
-    // 두면 absolute 기준이 스크롤 콘텐츠 크기가 되어 화면보다 커지거나 스크롤 위치에 따라
-    // 어긋날 수 있음). zIndex/elevation은 그 형제 순서와 무관하게 항상 위에 그려지도록 보강.
-    zIndex: 1000,
-    elevation: 1000,
   },
   image: {
     position: 'absolute',

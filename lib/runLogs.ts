@@ -76,6 +76,7 @@ function mapRunLogDoc(doc: QueryDocumentSnapshot): RunLog {
     heartRateSeries: data.heartRateSeries,
     difficulty: data.difficulty,
     isUploaded: data.isUploaded,
+    runMateName: data.runMateName,
   };
 }
 

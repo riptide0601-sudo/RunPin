@@ -5,16 +5,17 @@ import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 
 interface MatchProposalCardProps {
+  runnerName: string;
   onAccept: () => void;
   onDecline: () => void;
 }
 
-export function MatchProposalCard({ onAccept, onDecline }: MatchProposalCardProps) {
+export function MatchProposalCard({ runnerName, onAccept, onDecline }: MatchProposalCardProps) {
   return (
     <Card style={styles.card}>
       <View style={styles.info}>
         <View style={styles.legendDot} />
-        <Text style={styles.text}>매칭 러너가 함께 뛰자고 제안했어요</Text>
+        <Text style={styles.text}>{runnerName}님이 함께 뛰자고 제안했어요</Text>
       </View>
       <View style={styles.actions}>
         <Pill label="거절" variant="outline" onPress={onDecline} />

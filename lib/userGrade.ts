@@ -41,23 +41,18 @@ function rankingBonusForCourse(course: Course): number {
   return likeCountBonus(likeCount) + top10Bonus;
 }
 
-// 이미 "이 유저가 올린 코스" 목록으로 걸러진 배열을 받아 점수/등급을 계산한다.
-// app/(tabs)/profile.tsx가 실유저(uploaderId 기준)뿐 아니라 파클로즈 mock 계정
-// (uploaderName 기준으로 거른 mock 코스)에도 이 함수를 그대로 재사용한다 — 계산식이
-// 바뀌어도 두 경로가 항상 같은 로직으로 계산되어 서로 어긋나지 않게 하기 위함.
-export function calculateGradeFromCourses(uploadedCourses: Course[]): UserGradeResult {
-  const points = uploadedCourses.reduce((sum, course) => sum + 10 + rankingBonusForCourse(course), 0);
-  const level = levelForPoints(points);
-  return { points, level, color: gradeColors[level] };
-}
-
 // uploaderId(Firebase Auth uid) 기준으로 계산한다 — 닉네임(uploaderName)은 중복 가능성이
 // 없다곤 해도(닉네임 유일성은 lib/nickname.ts가 보장) 실제 유저 식별자는 uid이고, mock
 // 코스처럼 uploaderId가 없는 데이터는 애초에 실제 유저의 업로드가 아니므로 집계에서
 // 자연히 제외된다. uploaderId가 없으면(로그인 안 됨) 업로드 이력 없음(0점 = 1단계)로 취급.
+// 모든 계정(파클로즈 포함)이 이 함수 하나로만 계산된다 — 계정별 하드코딩 예외를 두면
+// 계산식이 바뀔 때마다 손으로 맞춰야 하는 문제가 반복돼서, 대신 lib/seedMockAccountData.ts로
+// 파클로즈 계정에 실제 Firestore 코스/러닝기록을 심어 이 경로를 그대로 타게 한다.
 export function calculateUserGrade(uploaderId: string | null | undefined, allCourses: Course[]): UserGradeResult {
   const uploadedCourses = uploaderId
     ? allCourses.filter((course) => course.uploaderId === uploaderId)
     : [];
-  return calculateGradeFromCourses(uploadedCourses);
+  const points = uploadedCourses.reduce((sum, course) => sum + 10 + rankingBonusForCourse(course), 0);
+  const level = levelForPoints(points);
+  return { points, level, color: gradeColors[level] };
 }

@@ -54,6 +54,8 @@ export interface RunLog {
   heartRateSeries: number[];
   difficulty: 1 | 2 | 3 | 4 | 5;
   isUploaded: boolean;
+  // 커뮤니티 매칭을 수락하고 함께 뛴 러닝일 때만 있다 — 없으면 솔로 러닝.
+  runMateName?: string;
 }
 
 export interface Match {

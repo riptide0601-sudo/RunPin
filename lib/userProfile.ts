@@ -13,7 +13,7 @@ export class UserPhotoSaveError extends Error {
 }
 
 // firestore.rules의 users/{uid} 규칙(허용 필드·photoBase64 크기 제한)과
-// components/profile/AvatarCropModal.tsx의 MAX_BASE64_LENGTH와 반드시 동일하게 유지할 것.
+// components/profile/AvatarCropScreen.tsx의 MAX_BASE64_LENGTH와 반드시 동일하게 유지할 것.
 export async function saveUserPhoto(uid: string, photoBase64: string): Promise<void> {
   try {
     await setDoc(doc(db, USERS_COLLECTION, uid), { photoBase64, updatedAt: serverTimestamp() }, { merge: true });

@@ -64,7 +64,8 @@ service cloud.firestore {
                     && request.resource.data.keys().hasOnly([
                          'userId', 'trajectory', 'startedAt', 'durationSec', 'paceSecPerKm',
                          'courseName', 'distanceKm', 'cadenceSpm', 'avgHeartRateBpm',
-                         'elevationSeries', 'paceSeries', 'heartRateSeries', 'difficulty', 'isUploaded'
+                         'elevationSeries', 'paceSeries', 'heartRateSeries', 'difficulty', 'isUploaded',
+                         'runMateName'
                        ])
                     && request.resource.data.trajectory is list
                     && request.resource.data.trajectory.size() > 0
@@ -73,7 +74,10 @@ service cloud.firestore {
                     && request.resource.data.difficulty is int
                     && request.resource.data.difficulty >= 1
                     && request.resource.data.difficulty <= 5
-                    && request.resource.data.isUploaded is bool;
+                    && request.resource.data.isUploaded is bool
+                    // 커뮤니티 매칭을 수락하고 함께 뛴 경우에만 있는 선택 필드 — 없으면 통과,
+                    // 있으면 문자열이어야 한다.
+                    && (!('runMateName' in request.resource.data) || request.resource.data.runMateName is string);
 
       // "나중에 업로드" 재시도 흐름(uploadRunLog) 전용 — 본인 문서에 한해 courseName/isUploaded
       // 두 필드만 바꾸는 것을 허용한다. 그 외 필드(trajectory, userId 등)는 수정 불가.
@@ -92,7 +96,7 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == uid;
 
       // photoBase64는 Firestore 문서 크기 제한(1MiB)에 여유를 두고 900,000바이트 미만으로만
-      // 허용 — lib/userProfile.ts, components/profile/AvatarCropModal.tsx의 값과 동일하게 유지할 것.
+      // 허용 — lib/userProfile.ts, components/profile/AvatarCropScreen.tsx의 값과 동일하게 유지할 것.
       allow create: if request.auth != null
                     && request.auth.uid == uid
                     && request.resource.data.keys().hasOnly(['photoBase64', 'updatedAt'])

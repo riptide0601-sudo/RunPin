@@ -59,6 +59,17 @@ export default function RootLayout() {
                     gestureEnabled: false,
                   }}
                 />
+                <Stack.Screen
+                  name="avatar-crop"
+                  options={{
+                    // 탭 네비게이터 밖의 일반 라우트라 Modal 없이도 탭바를 자연스럽게 덮는다
+                    // (components/profile/AvatarCropScreen.tsx 참고). presentation은 순수
+                    // 전환 애니메이션 옵션일 뿐 RN Modal이 아니라 제스처 인식 문제와 무관하다.
+                    presentation: 'fullScreenModal',
+                    // 크롭 중 실수로 스와이프해서 나가면 진행 중이던 조정이 날아가므로 막는다.
+                    gestureEnabled: false,
+                  }}
+                />
               </Stack>
             </AuthGate>
             <StatusBar style="auto" />

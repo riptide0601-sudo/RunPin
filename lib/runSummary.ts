@@ -28,11 +28,14 @@ function randomSeries(base: number, swing: number, min: number, max: number, poi
 }
 
 // id/userId는 Firestore 쓰기 시점에 채워지므로(lib/runLogs.ts의 createRunLog) 여기선 만들지 않는다.
+// runMateName은 커뮤니티 매칭을 수락하고 함께 뛴 경우에만 넘어온다 — Firestore는 undefined
+// 필드를 쓰면 에러가 나므로, 값이 있을 때만 키 자체를 넣는다(스프레드로 조건부 병합).
 export function buildFinishedRunLog(
   courseName: string,
   trajectory: LatLng[],
   difficulty: 1 | 2 | 3 | 4 | 5,
   isUploaded: boolean,
+  runMateName?: string,
 ): Omit<RunLog, 'id' | 'userId'> {
   return {
     trajectory,
@@ -48,5 +51,6 @@ export function buildFinishedRunLog(
     heartRateSeries: randomSeries(140, 8, 115, 166),
     difficulty,
     isUploaded,
+    ...(runMateName ? { runMateName } : {}),
   };
 }

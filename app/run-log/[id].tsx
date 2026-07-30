@@ -37,6 +37,13 @@ export default function RunLogDetailScreen() {
         <Text style={styles.emptyText}>기록을 찾을 수 없어요</Text>
       ) : (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {log.runMateName ? (
+            <View style={styles.runMateRow}>
+              <Ionicons name="people-outline" size={14} color={colors.textMuted} />
+              <Text style={styles.runMateText}>함께 뛴 러너: {log.runMateName}님</Text>
+            </View>
+          ) : null}
+
           <View style={styles.dateRow}>
             <Text style={styles.date}>{formatDateLabel(log.startedAt)}</Text>
             {log.isUploaded ? (
@@ -156,6 +163,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
     gap: 12,
+  },
+  runMateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  runMateText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textMuted,
   },
   dateRow: {
     flexDirection: 'row',
