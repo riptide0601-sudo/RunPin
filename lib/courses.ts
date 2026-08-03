@@ -3,7 +3,6 @@ import {
   addDoc,
   collection,
   getDocs,
-  limit,
   onSnapshot,
   query,
   serverTimestamp,
@@ -47,14 +46,12 @@ export async function createCourse(uploaderId: string, uploaderName: string, dra
   }
 }
 
-// 실시간 구독(subscribeToCourses)과 별개로, "이 유저가 코스를 하나라도 올린 적 있는지"만
-// 1회성으로 확인할 때 쓴다 — lib/appData.tsx가 파클로즈 계정 최초 로그인 시 샘플 데이터를
-// 자동으로 심을지 판단하는 데 쓴다(이미 있으면 다시 안 심음).
-export async function hasUploadedCourse(uploaderId: string): Promise<boolean> {
-  const snapshot = await getDocs(
-    query(collection(db, COURSES_COLLECTION), where('uploaderId', '==', uploaderId), limit(1)),
-  );
-  return !snapshot.empty;
+// 실시간 구독(subscribeToCourses)과 별개로, "이 유저가 이미 올린 코스 이름 목록"을 1회성으로
+// 확인할 때 쓴다 — lib/seedMockAccountData.ts가 파클로즈 계정 시드 중 이미 만들어진 코스는
+// 건너뛰고 빠진 코스만 이어서 채우는 데 쓴다.
+export async function getUploadedCourseNames(uploaderId: string): Promise<Set<string>> {
+  const snapshot = await getDocs(query(collection(db, COURSES_COLLECTION), where('uploaderId', '==', uploaderId)));
+  return new Set(snapshot.docs.map((doc) => doc.data().name as string));
 }
 
 function mapCourseDoc(doc: QueryDocumentSnapshot): Course {

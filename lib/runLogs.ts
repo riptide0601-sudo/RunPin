@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -70,6 +71,14 @@ export async function markRunLogUploaded(logId: string, courseName: string): Pro
     }
     throw error;
   }
+}
+
+// "이 유저가 이미 만든 러닝 기록의 코스 이름 목록"을 1회성으로 확인할 때 쓴다 —
+// lib/seedMockAccountData.ts가 파클로즈 계정 시드 중 이미 만들어진 러닝 기록은 건너뛰고
+// 빠진 것만 이어서 채우는 데 쓴다.
+export async function getUploadedRunLogCourseNames(userId: string): Promise<Set<string>> {
+  const snapshot = await getDocs(query(collection(db, RUN_LOGS_COLLECTION), where('userId', '==', userId)));
+  return new Set(snapshot.docs.map((doc) => doc.data().courseName as string));
 }
 
 function mapRunLogDoc(doc: QueryDocumentSnapshot): RunLog {
