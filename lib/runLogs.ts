@@ -35,10 +35,15 @@ export async function createRunLog(userId: string, draft: NewRunLogDraft): Promi
       ...draft,
       userId,
     });
+    if (__DEV__) {
+      console.log('[runLogs] 생성 성공', { userId, courseName: draft.courseName });
+    }
   } catch (error) {
     if (__DEV__) {
       console.error('[runLogs] 생성 실패', {
-        name: error instanceof Error ? error.name : typeof error,
+        userId,
+        courseName: draft.courseName,
+        errorName: error instanceof Error ? error.name : typeof error,
         message: error instanceof Error ? error.message : String(error),
         code: error instanceof FirebaseError ? error.code : undefined,
       });

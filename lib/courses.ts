@@ -38,7 +38,19 @@ export async function createCourse(uploaderId: string, uploaderName: string, dra
       likeCount: 0,
       createdAt: serverTimestamp(),
     });
+    if (__DEV__) {
+      console.log('[courses] 생성 성공', { uploaderId, name: draft.name });
+    }
   } catch (error) {
+    if (__DEV__) {
+      console.error('[courses] 생성 실패', {
+        uploaderId,
+        name: draft.name,
+        errorName: error instanceof Error ? error.name : typeof error,
+        message: error instanceof Error ? error.message : String(error),
+        code: error instanceof FirebaseError ? error.code : undefined,
+      });
+    }
     if (error instanceof FirebaseError) {
       throw new CourseSaveError();
     }

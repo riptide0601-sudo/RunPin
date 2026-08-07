@@ -16,23 +16,63 @@ const SEED_DISPLAY_NAME = '파클로즈';
 export async function seedParkCloseAccountData(uid: string): Promise<void> {
   const sourceCourses = mockCourses.filter((course) => course.uploaderName === SEED_DISPLAY_NAME);
 
+  if (__DEV__) {
+    console.log('[seed] 시작', {
+      uid,
+      sourceCourseCount: sourceCourses.length,
+      sourceCourseNames: sourceCourses.map((course) => course.name),
+    });
+  }
+
   const [existingCourseNames, existingRunLogCourseNames] = await Promise.all([
     getUploadedCourseNames(uid),
     getUploadedRunLogCourseNames(uid),
   ]);
 
+  if (__DEV__) {
+    console.log('[seed] 기존 데이터', {
+      existingCourseNames: [...existingCourseNames],
+      existingRunLogCourseNames: [...existingRunLogCourseNames],
+    });
+  }
+
   for (const course of sourceCourses) {
-    if (!existingCourseNames.has(course.name)) {
-      await createCourse(uid, SEED_DISPLAY_NAME, {
-        name: course.name,
-        coordinates: course.coordinates,
-        category: course.category,
-        difficulty: course.difficulty,
-        distanceKm: course.distanceKm,
-      });
+    const courseExists = existingCourseNames.has(course.name);
+    const runLogExists = existingRunLogCourseNames.has(course.name);
+    if (__DEV__) {
+      console.log('[seed] 코스 판단', { name: course.name, courseExists, runLogExists });
     }
-    if (!existingRunLogCourseNames.has(course.name)) {
-      await createRunLog(uid, buildFinishedRunLog(course.name, course.coordinates, course.difficulty, true));
+
+    if (!courseExists) {
+      try {
+        await createCourse(uid, SEED_DISPLAY_NAME, {
+          name: course.name,
+          coordinates: course.coordinates,
+          category: course.category,
+          difficulty: course.difficulty,
+          distanceKm: course.distanceKm,
+        });
+      } catch (error) {
+        // 여기서 잡아서 계속 진행하지 않으면 이 시점 이후 코스는 시도조차 안 되고
+        // 다음 로그인 때도 이름 기준 Set에는 안 잡혀 있어 재시도 여부를 알 수 없다.
+        if (__DEV__) {
+          console.error('[seed] 코스 생성 실패', { name: course.name, error });
+        }
+      }
     }
+
+    if (!runLogExists) {
+      try {
+        await createRunLog(uid, buildFinishedRunLog(course.name, course.coordinates, course.difficulty, true));
+      } catch (error) {
+        if (__DEV__) {
+          console.error('[seed] 러닝기록 생성 실패', { name: course.name, error });
+        }
+      }
+    }
+  }
+
+  if (__DEV__) {
+    console.log('[seed] 완료', { uid });
   }
 }

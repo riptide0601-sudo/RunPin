@@ -130,6 +130,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // 자동으로 이어서 채워지고, 이미 다 채워진 뒤에는 아무것도 새로 만들지 않는다.
   useEffect(() => {
     if (!user || user.displayName !== mockProfile.name) return;
+    if (__DEV__) {
+      console.log('[appData] 파클로즈 시드 트리거', { uid: user.uid, displayName: user.displayName });
+    }
     seedParkCloseAccountData(user.uid).catch((error) => {
       console.error('[appData] 파클로즈 샘플 데이터 자동 시드 실패', error);
     });
