@@ -78,12 +78,18 @@ export async function markRunLogUploaded(logId: string, courseName: string): Pro
   }
 }
 
-// "이 유저가 이미 만든 러닝 기록의 코스 이름 목록"을 1회성으로 확인할 때 쓴다 —
-// lib/seedMockAccountData.ts가 파클로즈 계정 시드 중 이미 만들어진 러닝 기록은 건너뛰고
-// 빠진 것만 이어서 채우는 데 쓴다.
-export async function getUploadedRunLogCourseNames(userId: string): Promise<Set<string>> {
+// "이 유저가 이미 만든 러닝 기록이 코스 이름별로 몇 개씩 있는지"를 1회성으로 확인할 때
+// 쓴다 — lib/seedMockAccountData.ts가 파클로즈 계정 시드 중 이름이 같은 코스가 여러 개
+// 필요할 때 부족한 개수만 이어서 채우는 데 쓴다. getUploadedCourseNameCounts와 동일한
+// 이유로 Set이 아닌 Map(이름 → 개수)으로 반환한다.
+export async function getUploadedRunLogCourseNameCounts(userId: string): Promise<Map<string, number>> {
   const snapshot = await getDocs(query(collection(db, RUN_LOGS_COLLECTION), where('userId', '==', userId)));
-  return new Set(snapshot.docs.map((doc) => doc.data().courseName as string));
+  const counts = new Map<string, number>();
+  for (const doc of snapshot.docs) {
+    const courseName = doc.data().courseName as string;
+    counts.set(courseName, (counts.get(courseName) ?? 0) + 1);
+  }
+  return counts;
 }
 
 function mapRunLogDoc(doc: QueryDocumentSnapshot): RunLog {

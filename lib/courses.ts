@@ -58,12 +58,19 @@ export async function createCourse(uploaderId: string, uploaderName: string, dra
   }
 }
 
-// 실시간 구독(subscribeToCourses)과 별개로, "이 유저가 이미 올린 코스 이름 목록"을 1회성으로
-// 확인할 때 쓴다 — lib/seedMockAccountData.ts가 파클로즈 계정 시드 중 이미 만들어진 코스는
-// 건너뛰고 빠진 코스만 이어서 채우는 데 쓴다.
-export async function getUploadedCourseNames(uploaderId: string): Promise<Set<string>> {
+// 실시간 구독(subscribeToCourses)과 별개로, "이 유저가 이미 올린 코스가 이름별로 몇 개씩
+// 있는지"를 1회성으로 확인할 때 쓴다 — lib/seedMockAccountData.ts가 파클로즈 계정 시드 중
+// 이름이 같은 코스가 여러 개(예: '한강 반포지구' 5개) 필요할 때 부족한 개수만 이어서
+// 채우는 데 쓴다. 이름만으로 존재 여부(Set)를 판단하면 1개만 있어도 5개 다 있는 것으로
+// 오판하기 때문에 개수(Map)로 반환한다.
+export async function getUploadedCourseNameCounts(uploaderId: string): Promise<Map<string, number>> {
   const snapshot = await getDocs(query(collection(db, COURSES_COLLECTION), where('uploaderId', '==', uploaderId)));
-  return new Set(snapshot.docs.map((doc) => doc.data().name as string));
+  const counts = new Map<string, number>();
+  for (const doc of snapshot.docs) {
+    const name = doc.data().name as string;
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return counts;
 }
 
 function mapCourseDoc(doc: QueryDocumentSnapshot): Course {
