@@ -28,16 +28,15 @@ export default function ProfileScreen() {
     const totalDistanceKm = runLogs.reduce((sum, log) => sum + log.distanceKm, 0);
     const averagePaceSecPerKm =
       runLogs.length > 0 ? runLogs.reduce((sum, log) => sum + log.paceSecPerKm, 0) / runLogs.length : 0;
-    const uploadedCourseCount = user ? courses.filter((course) => course.uploaderId === user.uid).length : 0;
 
     return {
       totalDistanceKm: Math.round(totalDistanceKm * 10) / 10,
       myPaceLabel: averagePaceSecPerKm > 0 ? formatPaceLabel(averagePaceSecPerKm) : '-',
-      uploadedCourseCount,
+      ranCourseCount: runLogs.length,
       // 커뮤니티 매칭이 아직 mock 시뮬레이션이라 실제 매칭 기록이 없음 -> "준비중" 표시.
       runMatesCount: null,
     };
-  }, [runLogs, courses, user]);
+  }, [runLogs]);
 
   const [subscribeModalVisible, setSubscribeModalVisible] = useState(false);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);

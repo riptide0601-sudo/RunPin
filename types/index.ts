@@ -92,7 +92,7 @@ export interface RunnerMapDot {
 
 export interface ProfileStats {
   totalDistanceKm: number;
-  uploadedCourseCount: number;
+  ranCourseCount: number;
   // 커뮤니티 매칭이 아직 mock 시뮬레이션이라 실제 유저는 이 값을 집계할 수 없다 —
   // null이면 "준비중"으로 표시한다 (components/profile/StatsRow.tsx 참고).
   runMatesCount: number | null;

@@ -12,7 +12,7 @@ export function StatsRow({ stats }: StatsRowProps) {
   const items = [
     { label: '총거리', value: `${stats.totalDistanceKm}km` },
     { label: '내 페이스', value: stats.myPaceLabel },
-    { label: '업로드 코스', value: String(stats.uploadedCourseCount) },
+    { label: '뛴 코스', value: String(stats.ranCourseCount) },
     { label: '함께 뛴 러너', value: stats.runMatesCount === null ? '준비중' : String(stats.runMatesCount) },
   ];
 

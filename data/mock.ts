@@ -1,9 +1,7 @@
-import { MY_PACE_LABEL } from '@/constants/pace';
 import type {
   Course,
   LatLng,
   MenuItemData,
-  ProfileStats,
   RankingEntry,
   RankingPeriod,
   RunLog,
@@ -2685,13 +2683,6 @@ export const mockMyRunningRoute: LatLng[] = [
   { latitude: 37.560162, longitude: 126.936623 },
   { latitude: 37.560172, longitude: 126.936496 },
 ];
-
-export const mockProfileStats: ProfileStats = {
-  totalDistanceKm: 142,
-  uploadedCourseCount: 6,
-  runMatesCount: 23,
-  myPaceLabel: MY_PACE_LABEL,
-};
 
 export const mockProfile = {
   name: '파클로즈',
