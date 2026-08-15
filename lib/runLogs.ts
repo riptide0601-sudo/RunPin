@@ -5,7 +5,6 @@ import {
   doc,
   getDocs,
   onSnapshot,
-  orderBy,
   query,
   updateDoc,
   where,
@@ -116,11 +115,17 @@ function mapRunLogDoc(doc: QueryDocumentSnapshot): RunLog {
 
 // 로그인한 유저 본인의 러닝 기록만 실시간 구독한다(최신순). uid가 바뀌면(로그인/로그아웃)
 // 호출한 쪽에서 새 uid로 다시 구독해야 한다 — lib/appData.tsx가 이를 처리한다.
+//
+// 정렬은 쿼리의 orderBy가 아니라 클라이언트에서 한다: where + orderBy를 함께 쓰면 Firestore
+// 복합 인덱스(userId+startedAt)가 필요한데, 이 저장소는 firestore.indexes.json으로 인덱스를
+// 관리하지 않아(콘솔 수동 생성 의존) 인덱스가 없거나 다른 프로젝트로 바뀌면 onSnapshot이
+// 에러 콜백만 타고 onChange가 아예 호출되지 않아 화면이 조용히 빈 상태로 남는 문제가 실제로
+// 두 차례 발생했다. where 단일 조건 쿼리는 인덱스가 필요 없어 이 문제 자체가 생기지 않는다.
 export function subscribeToRunLogs(userId: string, onChange: (runLogs: RunLog[]) => void): Unsubscribe {
-  const q = query(collection(db, RUN_LOGS_COLLECTION), where('userId', '==', userId), orderBy('startedAt', 'desc'));
+  const q = query(collection(db, RUN_LOGS_COLLECTION), where('userId', '==', userId));
   return onSnapshot(
     q,
-    (snapshot) => onChange(snapshot.docs.map(mapRunLogDoc)),
+    (snapshot) => onChange(snapshot.docs.map(mapRunLogDoc).sort((a, b) => b.startedAt - a.startedAt)),
     (error) => console.error('[runLogs] 구독 실패', error),
   );
 }
