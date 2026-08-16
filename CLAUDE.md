@@ -192,3 +192,16 @@ UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-ke
   재조사 필요.** (2026-07-30) `components/profile/ProfileHeader.tsx`의 아바타
   터치만 막아뒀고, `AvatarCropScreen.tsx`/`app/avatar-crop.tsx`/`lib/userProfile.ts`
   (saveUserPhoto/subscribeToUserPhoto) 등 관련 코드는 전부 그대로 남아 있다.
+
+## 12. mock vs 실제 데이터 판단 기준
+
+새 기능을 만들거나 기존 기능을 Firestore로 전환할 때, mock 데이터를 써도 되는지
+헷갈리면 아래 기준을 따른다.
+
+1. **개인 소유 데이터**(러닝 기록, 저장한 코스, 프로필 등 — "이 유저의 것"이라고
+   말할 수 있는 데이터)는 100% 실제 데이터만 사용한다. mock과 섞지 않는다.
+2. **공유 카탈로그 데이터**(코스 목록 등 여러 유저가 공통으로 보는 목록)는
+   시연용 볼륨 확보를 위해 mock과 실제 데이터를 섞어서 보여줄 수 있다.
+3. mock 데이터를 쓰더라도 **계산 로직(등급, 통계 등)은 실제 코드가 계산**하게
+   만든다 — 결과값을 하드코딩하지 않는다.
+4. 위 기준으로도 애매하면 임의로 정하지 않고 먼저 사용자에게 확인한다.
