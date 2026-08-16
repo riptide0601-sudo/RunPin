@@ -16,9 +16,16 @@ interface CourseRouteModalProps {
   course: Course | null;
   onClose: () => void;
   showSaveButton?: boolean;
+  showLikeButton?: boolean;
 }
 
-export function CourseRouteModal({ visible, course, onClose, showSaveButton = true }: CourseRouteModalProps) {
+export function CourseRouteModal({
+  visible,
+  course,
+  onClose,
+  showSaveButton = true,
+  showLikeButton = true,
+}: CourseRouteModalProps) {
   const { toggleSaveCourse } = useAppData();
   // 호출부(app/saved-courses/index.tsx 등)는 onClose에서 course를 곧바로 null로
   // 만들면서 visible도 함께 false가 되므로, course를 그대로 렌더 조건에 쓰면
@@ -52,12 +59,14 @@ export function CourseRouteModal({ visible, course, onClose, showSaveButton = tr
             <CourseMetaRow distanceKm={renderedCourse.distanceKm} difficulty={renderedCourse.difficulty} />
           </View>
           <View style={styles.headerActions}>
-            <Pressable onPress={toggleLike} hitSlop={12} style={({ pressed }) => pressed && styles.closePressed}>
-              <View style={styles.likeButton}>
-                <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={20} color={isLiked ? colors.like : colors.text} />
-                <Text style={styles.likeCount}>{likeCount}</Text>
-              </View>
-            </Pressable>
+            {showLikeButton ? (
+              <Pressable onPress={toggleLike} hitSlop={12} style={({ pressed }) => pressed && styles.closePressed}>
+                <View style={styles.likeButton}>
+                  <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={20} color={isLiked ? colors.like : colors.text} />
+                  <Text style={styles.likeCount}>{likeCount}</Text>
+                </View>
+              </Pressable>
+            ) : null}
             {showSaveButton ? (
               <Pressable
                 onPress={() => toggleSaveCourse(renderedCourse.id)}

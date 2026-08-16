@@ -364,6 +364,7 @@ export default function SavedCoursesScreen() {
         course={selectedCourse}
         onClose={() => setSelectedCourse(null)}
         showSaveButton={false}
+        showLikeButton={false}
       />
     </Pressable>
   );
