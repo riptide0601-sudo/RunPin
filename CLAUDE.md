@@ -24,6 +24,7 @@ WebView(지도, Leaflet), Modal 등은 React Native/Expo의 Fast Refresh로
   WebView 자체를 언마운트/리마운트하거나 앱을 완전히 재시작하지 않으면 이전 버전이
   계속 표시될 수 있음을 잊지 않는다.
 - 실기기/시뮬레이터에서 확인이 불가능한 환경이라면, 확인이 안 됐다는 사실을 그대로
+
   보고하고 "확인했습니다"라고 단정하지 않는다.
 
 ## 3. 코스/지도 좌표 작업 규칙
@@ -54,6 +55,12 @@ WebView(지도, Leaflet), Modal 등은 React Native/Expo의 Fast Refresh로
 - 커밋 메시지는 한국어로 작성한다.
 - 의미 있는 작업 단위마다 커밋하고, 커밋 후 push까지 완료한다.
 - 검증(섹션 1) 없이 커밋하지 않는다.
+- **`firestore.rules` 또는 `firestore.indexes.json`을 수정했다면, 커밋 전에 반드시
+  `npx firebase-tools deploy --only firestore:rules,firestore:indexes`로 실제
+  Firebase 프로젝트(`runpin-f47c0`)에 배포까지 마친다.** 로컬 파일만 고치고 배포를
+  깜빡하면 콘솔의 실제 규칙은 그대로라 코드는 맞는데도 `permission-denied`가 나는
+  상황이 반복됐다(2026-08-16 하루에 세 번 발생). 로그인은 `firebase login`으로
+  1회만 하면 이후에는 별도 콘솔 작업 없이 CLI 배포만으로 충분하다.
 
 ## 6. 절대 하지 말 것
 
@@ -132,11 +139,6 @@ UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-ke
   등록(`claimNickname`) 실패 시 방금 만든 Auth 계정을 롤백하는데, 이 롤백
   자체가 실패하면 고아 계정이 남을 수 있다 (`lib/auth.tsx` 참고). 클라이언트만
   으로는 완전히 막을 수 없어 Cloud Functions로 서버 측 정리/보정 로직이 필요하다.
-- **Firestore 보안 규칙을 firebase-tools CLI로 관리 전환** — 현재
-  `firebase.json`/`.firebaserc`가 없어 `firestore.rules`가 콘솔 수동 배포로
-  운영되는 것으로 보인다. 규칙 변경 이력이 git으로 추적되지 않고 로컬 파일과
-  실제 배포본이 어긋날 위험이 있어, `firebase deploy --only firestore:rules`
-  기반 관리로 전환 검토가 필요하다.
 - **Leaflet 지도의 CDN(unpkg, cartocdn) 의존성 로컬 번들링** —
   `components/map/leafletHtml.ts`가 leaflet.js/css와 타일을 외부 CDN에서
   직접 로드한다. CDN 장애나 네트워크 차단 시 지도 기능 전체가 멈추므로, 배포
@@ -158,11 +160,6 @@ UTF-16이 되면 Metro/dotenv가 값을 파싱하지 못해 `auth/invalid-api-ke
   2026-07-29 발견. 인덱스 미생성 등으로 쿼리가 실패해도 사용자 화면에는 아무 안내가
   없어, 데이터가 없는 정상 상태인지 에러 상황인지 사용자가 구분할 수 없다. 배포 전
   쿼리 실패 시 UI에 에러 상태를 노출하는 처리가 필요하다.
-- **Firestore 복합 인덱스를 코드로 관리할 방법이 없음** — `runLogs`의
-  `userId + startedAt` 복합 인덱스처럼 콘솔에서 수동 생성한 인덱스가 git으로 추적되지
-  않는다. 위 "Firestore 보안 규칙 CLI 관리 전환" 항목과 같은 원인으로,
-  `firestore.indexes.json`을 만들어 `firebase deploy --only firestore:indexes`로
-  관리하는 전환이 함께 필요하다.
 - **커뮤니티 매칭/제안 기능이 실제 백엔드 없이 클라이언트 mock으로만 동작함** —
   2026-07-29 로그인 게이트 작업 중 확인. `app/(tabs)/community.tsx`의 러너 지도는
   `mockRunnerDots`(정적 mock), 제안 보내기/수락/거절 상태도 로컬 `useState`일 뿐 실제
