@@ -68,7 +68,12 @@ export default function RankingScreen() {
           <Text style={styles.emptyText}>오늘 업로드된 코스가 없어요</Text>
         ) : (
           rankings.map((entry) => (
-            <RankingListItem key={entry.id} entry={entry} onPress={() => setSelectedEntry(entry)} />
+            <RankingListItem
+              key={entry.id}
+              entry={entry}
+              course={courses.find((course) => course.id === entry.courseId) ?? null}
+              onPress={() => setSelectedEntry(entry)}
+            />
           ))
         )}
       </ScrollView>

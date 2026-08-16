@@ -8,6 +8,7 @@ import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { SlideUpModal } from '@/components/ui/SlideUpModal';
 import { colors } from '@/constants/colors';
 import { useAppData, useIsCourseSaved } from '@/lib/appData';
+import { useCourseLike } from '@/lib/useCourseLike';
 import type { Course } from '@/types';
 
 interface CourseRouteModalProps {
@@ -27,6 +28,7 @@ export function CourseRouteModal({ visible, course, onClose, showSaveButton = tr
   // renderedCourse가 null인 동안에도 훅 호출 순서를 유지해야 하므로, 아래 early
   // return보다 먼저 호출한다.
   const isSaved = useIsCourseSaved(renderedCourse?.id ?? '');
+  const { isLiked, likeCount, toggle: toggleLike } = useCourseLike(renderedCourse);
 
   useEffect(() => {
     if (course) {
@@ -50,6 +52,12 @@ export function CourseRouteModal({ visible, course, onClose, showSaveButton = tr
             <CourseMetaRow distanceKm={renderedCourse.distanceKm} difficulty={renderedCourse.difficulty} />
           </View>
           <View style={styles.headerActions}>
+            <Pressable onPress={toggleLike} hitSlop={12} style={({ pressed }) => pressed && styles.closePressed}>
+              <View style={styles.likeButton}>
+                <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={20} color={isLiked ? colors.like : colors.text} />
+                <Text style={styles.likeCount}>{likeCount}</Text>
+              </View>
+            </Pressable>
             {showSaveButton ? (
               <Pressable
                 onPress={() => toggleSaveCourse(renderedCourse.id)}
@@ -107,6 +115,16 @@ const styles = StyleSheet.create({
   },
   closePressed: {
     opacity: 0.7,
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  likeCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
   },
   title: {
     fontSize: 18,

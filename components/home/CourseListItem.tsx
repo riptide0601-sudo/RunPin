@@ -8,6 +8,7 @@ import { CourseMetaRow } from '@/components/ui/CourseMetaRow';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
 import { useAppData, useIsCourseSaved } from '@/lib/appData';
+import { useCourseLike } from '@/lib/useCourseLike';
 import type { Course } from '@/types';
 
 interface CourseListItemProps {
@@ -26,6 +27,7 @@ export const CourseListItem = memo(function CourseListItem({ course, isSelected,
   const { toggleSaveCourse } = useAppData();
   const isCourseSaved = useIsCourseSaved(course.id);
   const isSaved = showSaveButton && isCourseSaved;
+  const { isLiked, likeCount, toggle: toggleLike } = useCourseLike(course);
 
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} disabled={disabled} style={({ pressed }) => pressed && styles.pressed}>
@@ -43,6 +45,13 @@ export const CourseListItem = memo(function CourseListItem({ course, isSelected,
           </View>
           <View style={styles.rightRow}>
             {course.isPopular ? <Pill label="인기" variant="filled" /> : null}
+            <Pill
+              label={String(likeCount)}
+              size="sm"
+              variant="outline"
+              icon={<Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={12} color={isLiked ? colors.like : colors.textMuted} />}
+              onPress={toggleLike}
+            />
             {showSaveButton ? (
               <Pressable hitSlop={8} onPress={() => toggleSaveCourse(course.id)}>
                 <Ionicons

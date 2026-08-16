@@ -12,6 +12,7 @@ import {
 import { mockCourses, mockProfile } from '@/data/mock';
 import { useAuth } from '@/lib/auth';
 import { createCourse, subscribeToCourses, type NewCourseDraft } from '@/lib/courses';
+import { subscribeToMyLikedCourseIds, toggleLike } from '@/lib/likes';
 import { findMatchingCourse } from '@/lib/matching';
 import {
   createRunLog,
@@ -86,6 +87,82 @@ class SavedCourseStore {
   };
 }
 
+// SavedCourseStore와 같은 이유로 좋아요 상태도 별도 외부 스토어로 관리한다 — Context value의
+// 평범한 state로 두면 하트 하나를 누를 때마다 화면에 마운트된 코스 카드 전부가 리렌더된다
+// (위 SavedCourseStore 주석 참고). 저장 여부와 다른 점은 Firestore가 진실의 원천이라는
+// 것뿐 — hydrate()가 구독 스냅샷으로 전체 집합을 갈아끼우고, toggle()은 로컬을 먼저 바꿔
+// 즉각 반응하게 한 뒤 Firestore에 반영하다가 실패하면 원래대로 되돌린다.
+class LikeStore {
+  private ids = new Set<string>();
+  private idListeners = new Map<string, Set<() => void>>();
+  private allListeners = new Set<() => void>();
+
+  isLiked = (courseId: string): boolean => this.ids.has(courseId);
+
+  getSnapshot = (): Set<string> => this.ids;
+
+  subscribeToId = (courseId: string, listener: () => void): (() => void) => {
+    let listeners = this.idListeners.get(courseId);
+    if (!listeners) {
+      listeners = new Set();
+      this.idListeners.set(courseId, listeners);
+    }
+    listeners.add(listener);
+    return () => {
+      listeners!.delete(listener);
+      if (listeners!.size === 0) {
+        this.idListeners.delete(courseId);
+      }
+    };
+  };
+
+  subscribeToAll = (listener: () => void): (() => void) => {
+    this.allListeners.add(listener);
+    return () => this.allListeners.delete(listener);
+  };
+
+  private notify = (changedIds: Set<string>): void => {
+    changedIds.forEach((id) => this.idListeners.get(id)?.forEach((listener) => listener()));
+    this.allListeners.forEach((listener) => listener());
+  };
+
+  private setLocal = (courseId: string, liked: boolean): void => {
+    const next = new Set(this.ids);
+    if (liked) {
+      next.add(courseId);
+    } else {
+      next.delete(courseId);
+    }
+    this.ids = next;
+    this.notify(new Set([courseId]));
+  };
+
+  // Firestore 구독(subscribeToMyLikedCourseIds) 스냅샷이 올 때마다 전체 집합을 서버 기준으로
+  // 갈아끼운다. 로그아웃 시에는 빈 Set으로 호출된다.
+  hydrate = (nextIds: Set<string>): void => {
+    const changed = new Set<string>();
+    nextIds.forEach((id) => {
+      if (!this.ids.has(id)) changed.add(id);
+    });
+    this.ids.forEach((id) => {
+      if (!nextIds.has(id)) changed.add(id);
+    });
+    this.ids = nextIds;
+    if (changed.size > 0) this.notify(changed);
+  };
+
+  toggle = async (uid: string, courseId: string): Promise<void> => {
+    const wasLiked = this.isLiked(courseId);
+    this.setLocal(courseId, !wasLiked);
+    try {
+      await toggleLike(uid, courseId, wasLiked);
+    } catch (error) {
+      this.setLocal(courseId, wasLiked);
+      throw error;
+    }
+  };
+}
+
 interface AppDataContextValue {
   courses: Course[];
   runLogs: RunLog[];
@@ -96,6 +173,8 @@ interface AppDataContextValue {
   deleteRunLog: (logId: string) => Promise<void>;
   savedCourseStore: SavedCourseStore;
   toggleSaveCourse: (courseId: string) => void;
+  likeStore: LikeStore;
+  toggleLikeCourse: (courseId: string) => void;
   proposalCount: number;
   isSubscribed: boolean;
   remainingProposals: number;
@@ -163,6 +242,22 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }
   const savedCourseStore = savedCourseStoreRef.current;
 
+  const likeStoreRef = useRef<LikeStore | null>(null);
+  if (!likeStoreRef.current) {
+    likeStoreRef.current = new LikeStore();
+  }
+  const likeStore = likeStoreRef.current;
+
+  // 좋아요는 러닝 기록/프로필 사진과 같은 이유로 로그인 상태일 때만 본인 것을 구독한다.
+  // 로그아웃 시에는 빈 집합으로 hydrate해 화면에 남아있던 하트 상태를 지운다.
+  useEffect(() => {
+    if (!user?.uid) {
+      likeStore.hydrate(new Set());
+      return;
+    }
+    return subscribeToMyLikedCourseIds(user.uid, likeStore.hydrate);
+  }, [user?.uid, likeStore]);
+
   const value = useMemo<AppDataContextValue>(
     () => ({
       courses,
@@ -178,6 +273,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       },
       savedCourseStore,
       toggleSaveCourse: savedCourseStore.toggle,
+      likeStore,
+      toggleLikeCourse: (courseId) => {
+        if (!user) return;
+        likeStore.toggle(user.uid, courseId).catch((error) => {
+          console.error('[appData] 좋아요 토글 실패', error);
+        });
+      },
       proposalCount,
       isSubscribed,
       remainingProposals: isSubscribed ? Infinity : Math.max(0, FREE_PROPOSAL_LIMIT - proposalCount),
@@ -207,7 +309,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         await deleteRunLogDoc(logId);
       },
     }),
-    [courses, runLogs, profilePhotoBase64, savedCourseStore, proposalCount, isSubscribed, user],
+    [courses, runLogs, profilePhotoBase64, savedCourseStore, likeStore, proposalCount, isSubscribed, user],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
@@ -237,4 +339,16 @@ export function useIsCourseSaved(courseId: string): boolean {
 export function useSavedCourseIds(): Set<string> {
   const { savedCourseStore } = useAppData();
   return useSyncExternalStore(savedCourseStore.subscribeToAll, savedCourseStore.getSnapshot);
+}
+
+// 코스 하나의 좋아요 여부만 필요한 컴포넌트(카드/랭킹 아이템/코스 상세 모달의 하트
+// 아이콘)는 이 훅을 쓴다 — useIsCourseSaved와 동일한 이유로 다른 코스의 좋아요 상태가
+// 바뀌어도 리렌더되지 않는다. mock 코스(uploaderId 없음)는 likeStore에 애초에 등록될
+// 일이 없어 항상 false를 반환한다 — 호출부가 그 경우 로컬 토글로 대체해서 쓴다.
+export function useIsCourseLiked(courseId: string): boolean {
+  const { likeStore } = useAppData();
+  return useSyncExternalStore(
+    (listener) => likeStore.subscribeToId(courseId, listener),
+    () => likeStore.isLiked(courseId),
+  );
 }
