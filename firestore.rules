@@ -86,7 +86,8 @@ service cloud.firestore {
                     && request.auth.uid == request.resource.data.userId
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['courseName', 'isUploaded']);
 
-      allow delete: if false;
+      // "내 러닝 기록" 화면의 스와이프 삭제 전용 — 본인 소유 문서만 삭제 가능.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
     match /users/{uid} {

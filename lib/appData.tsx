@@ -13,7 +13,13 @@ import { mockCourses, mockProfile } from '@/data/mock';
 import { useAuth } from '@/lib/auth';
 import { createCourse, subscribeToCourses, type NewCourseDraft } from '@/lib/courses';
 import { findMatchingCourse } from '@/lib/matching';
-import { createRunLog, markRunLogUploaded, subscribeToRunLogs, type NewRunLogDraft } from '@/lib/runLogs';
+import {
+  createRunLog,
+  deleteRunLog as deleteRunLogDoc,
+  markRunLogUploaded,
+  subscribeToRunLogs,
+  type NewRunLogDraft,
+} from '@/lib/runLogs';
 import { seedParkCloseAccountData } from '@/lib/seedMockAccountData';
 import { subscribeToUserPhoto } from '@/lib/userProfile';
 import type { Course, RunLog } from '@/types';
@@ -87,6 +93,7 @@ interface AppDataContextValue {
   addCourse: (draft: NewCourseDraft) => Promise<void>;
   addRunLog: (draft: NewRunLogDraft) => Promise<void>;
   uploadRunLog: (logId: string, courseName: string) => Promise<void>;
+  deleteRunLog: (logId: string) => Promise<void>;
   savedCourseStore: SavedCourseStore;
   toggleSaveCourse: (courseId: string) => void;
   proposalCount: number;
@@ -195,6 +202,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         }
 
         await markRunLogUploaded(logId, courseName);
+      },
+      deleteRunLog: async (logId) => {
+        await deleteRunLogDoc(logId);
       },
     }),
     [courses, runLogs, profilePhotoBase64, savedCourseStore, proposalCount, isSubscribed, user],

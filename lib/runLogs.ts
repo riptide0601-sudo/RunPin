@@ -2,6 +2,7 @@ import { FirebaseError } from 'firebase/app';
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   onSnapshot,
@@ -21,6 +22,13 @@ export class RunLogSaveError extends Error {
   constructor() {
     super('러닝 기록을 저장하지 못했어요. 잠시 후 다시 시도해주세요');
     this.name = 'RunLogSaveError';
+  }
+}
+
+export class RunLogDeleteError extends Error {
+  constructor() {
+    super('러닝 기록을 삭제하지 못했어요. 잠시 후 다시 시도해주세요');
+    this.name = 'RunLogDeleteError';
   }
 }
 
@@ -72,6 +80,30 @@ export async function markRunLogUploaded(logId: string, courseName: string): Pro
     }
     if (error instanceof FirebaseError) {
       throw new RunLogSaveError();
+    }
+    throw error;
+  }
+}
+
+// "내 러닝 기록" 화면의 스와이프 삭제에서 쓴다. firestore.rules의 runLogs.delete가 본인
+// 문서(userId 일치)에 한해서만 허용하므로, 다른 유저 문서 id를 넘기면 규칙에서 거부된다.
+export async function deleteRunLog(logId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, RUN_LOGS_COLLECTION, logId));
+    if (__DEV__) {
+      console.log('[runLogs] 삭제 성공', { logId });
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.error('[runLogs] 삭제 실패', {
+        logId,
+        errorName: error instanceof Error ? error.name : typeof error,
+        message: error instanceof Error ? error.message : String(error),
+        code: error instanceof FirebaseError ? error.code : undefined,
+      });
+    }
+    if (error instanceof FirebaseError) {
+      throw new RunLogDeleteError();
     }
     throw error;
   }
