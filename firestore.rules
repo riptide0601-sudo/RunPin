@@ -50,9 +50,43 @@ service cloud.firestore {
                     && request.resource.data.likeCount == 0
                     && request.resource.data.createdAt == request.time;
 
-      // 좋아요/수정/삭제 기능이 아직 없어 전부 차단 — 필요해지면 그때 별도 규칙 추가.
-      allow update: if false;
+      // 좋아요 토글 전용: likeCount 하나만, 정확히 ±1만 바뀌는 쓰기만 허용한다. 그리고 그
+      // ±1이 "이 요청을 보낸 유저 본인의 likes/{uid_courseId} 문서가 같은 batch 안에서
+      // 새로 생기거나(+1) 없어지는(-1) 경우"에만 성립하도록 exists()/existsAfter()로 묶는다
+      // — 그래야 클라이언트가 likeCount만 단독으로 반복 증가시키는 걸 막을 수 있다
+      // (아래 likes 컬렉션 규칙 참고). 그 외 필드 수정/삭제는 여전히 차단.
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+                    && request.resource.data.likeCount is int
+                    && (
+                         (request.resource.data.likeCount == resource.data.likeCount + 1
+                           && !exists(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId))
+                           && existsAfter(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId)))
+                         ||
+                         (request.resource.data.likeCount == resource.data.likeCount - 1
+                           && resource.data.likeCount > 0
+                           && exists(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId))
+                           && !existsAfter(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId)))
+                       );
       allow delete: if false;
+    }
+
+    match /likes/{likeId} {
+      // "내가 좋아요한 코스" 구독(where('uid','==', uid))이 runLogs.read와 동일한 패턴으로
+      // get/list 둘 다 통과하도록 resource.data.uid로 검사한다.
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      // 문서 ID를 uid_courseId로 고정해 같은 유저가 같은 코스에 좋아요 문서를 두 개 만들 수
+      // 없게 한다 — usernames 컬렉션의 create 원자성 트릭과 동일한 이유(10~12번째 줄 주석 참고).
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.uid
+                    && likeId == request.auth.uid + '_' + request.resource.data.courseId
+                    && request.resource.data.keys().hasOnly(['uid', 'courseId', 'createdAt'])
+                    && request.resource.data.courseId is string
+                    && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
     }
 
     match /runLogs/{logId} {
