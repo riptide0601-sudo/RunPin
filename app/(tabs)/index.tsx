@@ -12,6 +12,7 @@ import { useAppData } from '@/lib/appData';
 import { groupCoursesByName } from '@/lib/courseGroups';
 import { haversineDistanceMeters } from '@/lib/geo';
 import { matchesChosung } from '@/lib/hangul';
+import { topCoursesByLikes } from '@/lib/ranking';
 
 // A course can only be "popular" if it's actually near me — a far-away course
 // with a high like count shouldn't outrank nearby ones just because it's
@@ -48,11 +49,10 @@ export default function HomeScreen() {
       haversineDistanceMeters(mockMeLocation, getRouteCenter(course.coordinates));
 
     const popularIds = new Set(
-      representativeCourses
-        .filter((course) => distanceOf(course) <= POPULAR_CANDIDATE_RADIUS_METERS)
-        .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
-        .slice(0, POPULAR_COURSE_COUNT)
-        .map((course) => course.id),
+      topCoursesByLikes(
+        representativeCourses.filter((course) => distanceOf(course) <= POPULAR_CANDIDATE_RADIUS_METERS),
+        POPULAR_COURSE_COUNT,
+      ).map((course) => course.id),
     );
 
     return representativeCourses

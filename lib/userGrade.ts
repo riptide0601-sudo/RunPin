@@ -1,4 +1,5 @@
 import { gradeColors } from '@/constants/colors';
+import { topCoursesByLikes } from '@/lib/ranking';
 import type { Course, GradeLevel } from '@/types';
 
 export interface UserGradeResult {
@@ -17,16 +18,14 @@ export const GRADE_THRESHOLDS: { level: GradeLevel; min: number }[] = [
   { level: 1, min: 0 },
 ];
 
-// 랭킹 화면과 동일한 기준(course.likeCount 내림차순)으로 전체 코스 중 상위 10개를
-// 뽑는다 — 과거처럼 별도의 mock 랭킹 데이터에서 고정된 10개를 가져오면, 실제
-// likeCount가 바뀌어도 TOP10 보너스 대상이 갱신되지 않는 문제가 있었다.
-function computeTop10CourseIds(allCourses: Course[]): Set<string> {
-  return new Set(
-    [...allCourses]
-      .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
-      .slice(0, 10)
-      .map((course) => course.id),
-  );
+const TOP_BONUS_COURSE_COUNT = 10;
+
+// 랭킹 화면의 "전체" 탭과 똑같은 lib/ranking.ts의 선정 로직을 그대로 쓴다 — 개수만
+// 다르다. 과거처럼 별도의 mock 랭킹 데이터에서 고정된 10개를 가져오면 실제 likeCount가
+// 바뀌어도 TOP10 보너스 대상이 갱신되지 않았고, 여기서 정렬을 다시 손으로 구현하면
+// 랭킹 화면이 보여주는 상위권과 등급이 인정하는 상위권이 조용히 어긋난다.
+function computeTopCourseIds(allCourses: Course[]): Set<string> {
+  return new Set(topCoursesByLikes(allCourses, TOP_BONUS_COURSE_COUNT).map((course) => course.id));
 }
 
 function levelForPoints(points: number): GradeLevel {
@@ -61,7 +60,7 @@ export function calculateUserGrade(uploaderId: string | null | undefined, allCou
   const uploadedCourses = uploaderId
     ? allCourses.filter((course) => course.uploaderId === uploaderId)
     : [];
-  const top10CourseIds = computeTop10CourseIds(allCourses);
+  const top10CourseIds = computeTopCourseIds(allCourses);
   const points = uploadedCourses.reduce(
     (sum, course) => sum + 10 + rankingBonusForCourse(course, top10CourseIds),
     0,

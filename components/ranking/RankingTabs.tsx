@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Pill } from '@/components/ui/Pill';
+import { PERIOD_META, RANKING_PERIODS } from '@/lib/ranking';
 import type { RankingPeriod } from '@/types';
 
 export type { RankingPeriod };
@@ -10,22 +11,15 @@ interface RankingTabsProps {
   onChange: (value: RankingPeriod) => void;
 }
 
-const OPTIONS: { value: RankingPeriod; label: string }[] = [
-  { value: 'daily', label: '일간' },
-  { value: 'monthly', label: '월간' },
-  { value: 'yearly', label: '연간' },
-  { value: 'all', label: '전체' },
-];
-
 export function RankingTabs({ value, onChange }: RankingTabsProps) {
   return (
     <View style={styles.row}>
-      {OPTIONS.map((option) => (
+      {RANKING_PERIODS.map((period) => (
         <Pill
-          key={option.value}
-          label={option.label}
-          variant={value === option.value ? 'filled' : 'outline'}
-          onPress={() => onChange(option.value)}
+          key={period}
+          label={PERIOD_META[period].label}
+          variant={value === period ? 'filled' : 'outline'}
+          onPress={() => onChange(period)}
           style={styles.pill}
         />
       ))}
