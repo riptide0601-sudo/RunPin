@@ -103,6 +103,15 @@ const SWIPE_FRICTION = 1;
 // 원인이 된다(기존 4는 이 경쟁에서 지기 쉬운 값이었음). 임계값을 최소화해서 조금이라도
 // 수평 이동이 있으면 pan이 먼저 활성화되어 내부 Tap과의 경쟁에서 이기도록 한다.
 const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
+// dragOffsetFromLeftEdge를 2px로 낮춘 부작용으로, 카드 위 아무 곳에서나 오른쪽으로
+// 살짝만 드래그해도 이 pan 제스처가 즉시 터치를 선점해버려서, iOS 엣지 스와이프
+// 뒤로가기(왼쪽 가장자리에서 오른쪽으로 드래그하는 시스템 제스처)와 항상 충돌해
+// 뒤로가기가 씹히는 문제가 있었다. hitSlop에 음수를 주면 해당 방향의 히트 영역을
+// 줄일 수 있는 RNGH 공식 지원 기능이라, 카드의 물리적 왼쪽 가장자리 24px에서
+// "시작"하는 터치만 이 pan 제스처의 인식 대상에서 제외한다. 삭제 스와이프를 열거나
+// 열린 카드를 닫는 드래그는 보통 그 좁은 가장자리에서 시작하지 않으므로 기존 동작에는
+// 영향이 없고, 그 가장자리에서 시작한 터치만 경합 없이 시스템 뒤로가기로 넘어간다.
+const EDGE_BACK_GESTURE_HITSLOP = -24;
 // 삭제로 한 행이 목록에서 빠지면 그 아래 행들의 y좌표가 즉시(애니메이션 없이) 바뀐다.
 // 남은 행들이 그 위치 변화를 부드럽게 따라가도록, 각 행 최상위 Animated.View에
 // layout transition을 걸어둔다. 처음에는 사라지는 행 자체의 exiting 애니메이션(아래
@@ -213,6 +222,7 @@ const SavedCourseRow = memo(function SavedCourseRowImpl({
         overshootFriction={SWIPE_OVERSHOOT_FRICTION}
         dragOffsetFromLeftEdge={SWIPE_DRAG_ACTIVATION_OFFSET}
         dragOffsetFromRightEdge={SWIPE_DRAG_ACTIVATION_OFFSET}
+        hitSlop={{ left: EDGE_BACK_GESTURE_HITSLOP }}
         rightThreshold={SWIPE_OPEN_THRESHOLD}
         animationOptions={SWIPE_ANIMATION_OPTIONS}
         containerStyle={styles.swipeContainer}

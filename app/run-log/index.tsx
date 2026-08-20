@@ -37,6 +37,10 @@ const SWIPE_OPEN_THRESHOLD = 8;
 const SWIPE_OVERSHOOT_FRICTION = 8;
 const SWIPE_FRICTION = 1;
 const SWIPE_DRAG_ACTIVATION_OFFSET = 2;
+// app/saved-courses/index.tsx와 동일한 이유(iOS 엣지 스와이프 뒤로가기와의 충돌)로
+// 카드의 물리적 왼쪽 가장자리 24px에서 시작하는 터치는 이 pan 제스처의 인식 대상에서
+// 제외한다.
+const EDGE_BACK_GESTURE_HITSLOP = -24;
 const ROW_LAYOUT_DURATION = 400;
 const ROW_LAYOUT_TRANSITION = LinearTransition.duration(ROW_LAYOUT_DURATION);
 const ROW_EXITING = (): { initialValues: Record<string, unknown>; animations: Record<string, unknown> } => {
@@ -121,6 +125,7 @@ const RunLogRow = memo(function RunLogRowImpl({
         overshootFriction={SWIPE_OVERSHOOT_FRICTION}
         dragOffsetFromLeftEdge={SWIPE_DRAG_ACTIVATION_OFFSET}
         dragOffsetFromRightEdge={SWIPE_DRAG_ACTIVATION_OFFSET}
+        hitSlop={{ left: EDGE_BACK_GESTURE_HITSLOP }}
         rightThreshold={SWIPE_OPEN_THRESHOLD}
         animationOptions={SWIPE_ANIMATION_OPTIONS}
         containerStyle={styles.swipeContainer}
