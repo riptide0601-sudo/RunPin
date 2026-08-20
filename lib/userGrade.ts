@@ -1,5 +1,4 @@
 import { gradeColors } from '@/constants/colors';
-import { mockRankingsByPeriod } from '@/data/mock';
 import type { Course, GradeLevel } from '@/types';
 
 export interface UserGradeResult {
@@ -18,7 +17,17 @@ export const GRADE_THRESHOLDS: { level: GradeLevel; min: number }[] = [
   { level: 1, min: 0 },
 ];
 
-const topTenAllTimeCourseIds = new Set(mockRankingsByPeriod.all.map((entry) => entry.courseId));
+// 랭킹 화면과 동일한 기준(course.likeCount 내림차순)으로 전체 코스 중 상위 10개를
+// 뽑는다 — 과거처럼 별도의 mock 랭킹 데이터에서 고정된 10개를 가져오면, 실제
+// likeCount가 바뀌어도 TOP10 보너스 대상이 갱신되지 않는 문제가 있었다.
+function computeTop10CourseIds(allCourses: Course[]): Set<string> {
+  return new Set(
+    [...allCourses]
+      .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
+      .slice(0, 10)
+      .map((course) => course.id),
+  );
+}
 
 function levelForPoints(points: number): GradeLevel {
   return GRADE_THRESHOLDS.find((threshold) => points >= threshold.min)!.level;
@@ -35,9 +44,9 @@ function likeCountBonus(likeCount: number): number {
 
 // 좋아요 보너스와 TOP10 보너스(+50)도 서로 다른 신호라 별도로 합산한다 —
 // 좋아요 500+이면서 TOP10이면 30+80+50=160점.
-function rankingBonusForCourse(course: Course): number {
+function rankingBonusForCourse(course: Course, top10CourseIds: Set<string>): number {
   const likeCount = course.likeCount ?? 0;
-  const top10Bonus = topTenAllTimeCourseIds.has(course.id) ? 50 : 0;
+  const top10Bonus = top10CourseIds.has(course.id) ? 50 : 0;
   return likeCountBonus(likeCount) + top10Bonus;
 }
 
@@ -52,7 +61,11 @@ export function calculateUserGrade(uploaderId: string | null | undefined, allCou
   const uploadedCourses = uploaderId
     ? allCourses.filter((course) => course.uploaderId === uploaderId)
     : [];
-  const points = uploadedCourses.reduce((sum, course) => sum + 10 + rankingBonusForCourse(course), 0);
+  const top10CourseIds = computeTop10CourseIds(allCourses);
+  const points = uploadedCourses.reduce(
+    (sum, course) => sum + 10 + rankingBonusForCourse(course, top10CourseIds),
+    0,
+  );
   const level = levelForPoints(points);
   return { points, level, color: gradeColors[level] };
 }

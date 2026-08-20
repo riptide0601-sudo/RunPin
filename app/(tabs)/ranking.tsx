@@ -6,33 +6,46 @@ import { CourseRouteModal } from '@/components/ranking/CourseRouteModal';
 import { RankingListItem } from '@/components/ranking/RankingListItem';
 import { RankingTabs, type RankingPeriod } from '@/components/ranking/RankingTabs';
 import { colors } from '@/constants/colors';
-import { mockRankingsByPeriod } from '@/data/mock';
 import { useAppData } from '@/lib/appData';
-import type { Course, RankingEntry } from '@/types';
+import type { Course } from '@/types';
 
-function getRankingsForPeriod(period: RankingPeriod, courses: Course[]): RankingEntry[] {
-  if (period === 'daily') {
-    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    return [...courses]
-      .filter((course) => course.createdAt >= dayAgo)
-      .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
-      .map((course, index) => ({
-        id: `daily-${course.id}`,
-        rank: index + 1,
-        courseId: course.id,
-        courseName: course.name,
-        uploaderName: course.uploaderName,
-        likeCount: course.likeCount ?? 0,
-      }));
-  }
-  return mockRankingsByPeriod[period];
+// 랭킹은 이제 course.likeCount 하나만 진실의 원천으로 삼는다 — 기간별로 별도의 mock
+// 수치를 두면(과거 mockRankingsByPeriod처럼) 목록에 보이는 숫자와 상세보기 숫자가
+// 서로 다른 값을 가리키게 되는 문제가 반복해서 생겼다. 대신 각 탭은 courses 전체를
+// createdAt 기준으로 다른 폭의 "최근 N일" 구간으로 필터링만 하고, 정렬/표시는 항상
+// 같은 course.likeCount를 쓴다. 구간은 서로 배타적이지 않고 포함 관계다(예: 최근
+// 5일 안에 만든 코스는 일간/월간/연간/전체 탭에 전부 나타날 수 있음) — 실제 좋아요
+// 수를 그대로 보여주는 이상 "탭마다 겹치지 않는 숫자 범위"를 인위적으로 만들 이유가 없다.
+const PERIOD_WINDOW_MS: Record<RankingPeriod, number | null> = {
+  daily: 24 * 60 * 60 * 1000,
+  monthly: 30 * 24 * 60 * 60 * 1000,
+  yearly: 365 * 24 * 60 * 60 * 1000,
+  all: null,
+};
+
+const RANKING_LIMIT = 20;
+
+const PERIOD_EMPTY_TEXT: Record<RankingPeriod, string> = {
+  daily: '오늘 업로드된 코스가 없어요',
+  monthly: '최근 한 달 안에 업로드된 코스가 없어요',
+  yearly: '최근 1년 안에 업로드된 코스가 없어요',
+  all: '아직 업로드된 코스가 없어요',
+};
+
+function getRankingsForPeriod(period: RankingPeriod, courses: Course[]): Course[] {
+  const windowMs = PERIOD_WINDOW_MS[period];
+  const cutoff = windowMs === null ? null : Date.now() - windowMs;
+  return [...courses]
+    .filter((course) => cutoff === null || course.createdAt >= cutoff)
+    .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
+    .slice(0, RANKING_LIMIT);
 }
 
 export default function RankingScreen() {
   const insets = useSafeAreaInsets();
   const { courses } = useAppData();
   const [period, setPeriod] = useState<RankingPeriod>('daily');
-  const [selectedEntry, setSelectedEntry] = useState<RankingEntry | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   // Only periods the user has actually opened get their data loaded — never
   // all four at once. A real backend would plug into this by making
@@ -43,7 +56,7 @@ export default function RankingScreen() {
   }, [period]);
 
   const rankingsCache = useMemo(() => {
-    const cache: Partial<Record<RankingPeriod, RankingEntry[]>> = {};
+    const cache: Partial<Record<RankingPeriod, Course[]>> = {};
     visitedPeriods.forEach((p) => {
       cache[p] = getRankingsForPeriod(p, courses);
     });
@@ -52,11 +65,6 @@ export default function RankingScreen() {
 
   const rankings = rankingsCache[period];
 
-  const selectedCourse = useMemo(
-    () => (selectedEntry ? courses.find((course) => course.id === selectedEntry.courseId) ?? null : null),
-    [courses, selectedEntry],
-  );
-
   return (
     <View style={styles.container}>
       <Text style={[styles.title, { paddingTop: insets.top + 8 }]}>랭킹</Text>
@@ -64,23 +72,23 @@ export default function RankingScreen() {
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {rankings === undefined ? (
           <ActivityIndicator style={styles.loading} color={colors.textMuted} />
-        ) : period === 'daily' && rankings.length === 0 ? (
-          <Text style={styles.emptyText}>오늘 업로드된 코스가 없어요</Text>
+        ) : rankings.length === 0 ? (
+          <Text style={styles.emptyText}>{PERIOD_EMPTY_TEXT[period]}</Text>
         ) : (
-          rankings.map((entry) => (
+          rankings.map((course, index) => (
             <RankingListItem
-              key={entry.id}
-              entry={entry}
-              course={courses.find((course) => course.id === entry.courseId) ?? null}
-              onPress={() => setSelectedEntry(entry)}
+              key={course.id}
+              rank={index + 1}
+              course={course}
+              onPress={() => setSelectedCourse(course)}
             />
           ))
         )}
       </ScrollView>
       <CourseRouteModal
-        visible={selectedEntry !== null}
+        visible={selectedCourse !== null}
         course={selectedCourse}
-        onClose={() => setSelectedEntry(null)}
+        onClose={() => setSelectedCourse(null)}
       />
     </View>
   );

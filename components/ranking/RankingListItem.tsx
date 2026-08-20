@@ -1,57 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { colors } from '@/constants/colors';
-import { useAppData, useIsCourseLiked } from '@/lib/appData';
-import { useRequireAuth } from '@/lib/useRequireAuth';
-import type { Course, RankingEntry } from '@/types';
+import { useCourseLike } from '@/lib/useCourseLike';
+import type { Course } from '@/types';
 
 interface RankingListItemProps {
-  entry: RankingEntry;
-  // 실제 Firestore 코스면(uploaderId 있음) 실 좋아요 연동, mock 코스거나 못 찾았으면
-  // 기존처럼 이 화면 안에서만 토글되는 로컬 상태를 쓴다.
-  course: Course | null;
+  rank: number;
+  course: Course;
   onPress?: () => void;
 }
 
-export function RankingListItem({ entry, course, onPress }: RankingListItemProps) {
-  const { toggleLikeCourse } = useAppData();
-  const { requireAuth } = useRequireAuth();
-  const isRealCourse = Boolean(course?.uploaderId);
-
-  // 실제 코스는 다른 화면(홈 카드 등)에서 좋아요를 눌러도 이 화면에 그대로 반영되도록
-  // 전역 좋아요 상태를 구독한다.
-  const isRealLiked = useIsCourseLiked(course?.id ?? '');
-
-  // mock/기간별 코스는 실제 유저별 좋아요 기록이 없다. entry.likeCount는 기간별 랭킹
-  // 수치이고 getRankingsForPeriod의 정렬도 이 값을 기준으로 하므로, 화면에 표시되는
-  // 숫자도 course.likeCount가 아니라 반드시 entry.likeCount를 기준으로 삼아야
-  // 정렬 순서와 표시 숫자가 항상 일치한다.
-  const [mockLiked, setMockLiked] = useState(false);
-  const [mockLikeCount, setMockLikeCount] = useState(entry.likeCount);
-
-  const liked = isRealCourse ? isRealLiked : mockLiked;
-  const likeCount = isRealCourse ? (course!.likeCount ?? 0) : mockLikeCount;
-
-  const toggleLike = () => {
-    if (isRealCourse && course) {
-      requireAuth(() => toggleLikeCourse(course.id), '좋아요를 누르려면 먼저 로그인해주세요');
-      return;
-    }
-    setMockLiked((prev) => !prev);
-    setMockLikeCount((prev) => (mockLiked ? prev - 1 : prev + 1));
-  };
+export function RankingListItem({ rank, course, onPress }: RankingListItemProps) {
+  // course.likeCount가 랭킹 정렬/표시의 유일한 기준이다 — 코스 상세 모달과 완전히
+  // 동일한 훅을 써서 목록과 상세보기가 항상 같은 숫자를 보여준다.
+  const { isLiked: liked, likeCount, toggle: toggleLike } = useCourseLike(course);
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
       <Card style={styles.card}>
-        <Text style={styles.rank}>{entry.rank}</Text>
+        <Text style={styles.rank}>{rank}</Text>
         <View style={styles.info}>
-          <Text style={styles.name}>{entry.courseName}</Text>
-          <Text style={styles.uploader}>업로드: {entry.uploaderName}</Text>
+          <Text style={styles.name}>{course.name}</Text>
+          <Text style={styles.uploader}>업로드: {course.uploaderName}</Text>
         </View>
         <Pill
           label={String(likeCount)}

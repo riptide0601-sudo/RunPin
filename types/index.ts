@@ -67,15 +67,6 @@ export interface Match {
 
 export type RankingPeriod = 'daily' | 'monthly' | 'yearly' | 'all';
 
-export interface RankingEntry {
-  id: string;
-  rank: number;
-  courseId: string;
-  courseName: string;
-  uploaderName: string;
-  likeCount: number;
-}
-
 export type PaceComparison = 'faster' | 'similar' | 'slower';
 
 export type GradeLevel = 1 | 2 | 3 | 4 | 5;
