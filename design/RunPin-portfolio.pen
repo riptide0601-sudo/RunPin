@@ -6,12 +6,38 @@
       "id": "bi8Au",
       "x": 0,
       "y": 0,
-      "name": "Frame",
+      "name": "01 Cover",
       "clip": true,
-      "width": 800,
-      "height": 600,
+      "width": 1920,
+      "height": 1080,
       "fill": "#FFFFFF",
-      "layout": "none"
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 120,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "jnyx4",
+          "name": "Title",
+          "fill": "#111111",
+          "content": "RunPin",
+          "fontFamily": "Noto Sans KR",
+          "fontSize": 64,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "text",
+          "id": "ZVr1s",
+          "name": "Subtitle",
+          "fill": "#4B5563",
+          "content": "러닝 코스 추천 및 러너 매칭 서비스 제안",
+          "fontFamily": "Noto Sans KR",
+          "fontSize": 28,
+          "fontWeight": "normal"
+        }
+      ]
     }
   ],
   "fileToken": "b5e8da24-0df6-4956-9b8d-585217fca5e1"
