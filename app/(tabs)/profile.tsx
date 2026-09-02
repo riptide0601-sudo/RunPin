@@ -28,13 +28,14 @@ export default function ProfileScreen() {
     const totalDistanceKm = runLogs.reduce((sum, log) => sum + log.distanceKm, 0);
     const averagePaceSecPerKm =
       runLogs.length > 0 ? runLogs.reduce((sum, log) => sum + log.paceSecPerKm, 0) / runLogs.length : 0;
+    // "함께 뛴 러너"는 같이 뛴 횟수가 아니라 몇 명과 뛰었는지를 세는 지표라 distinct.
+    const runMateNames = new Set(runLogs.map((log) => log.runMateName).filter((name): name is string => Boolean(name)));
 
     return {
       totalDistanceKm: Math.round(totalDistanceKm * 10) / 10,
       myPaceLabel: averagePaceSecPerKm > 0 ? formatPaceLabel(averagePaceSecPerKm) : '-',
       ranCourseCount: runLogs.length,
-      // 커뮤니티 매칭이 아직 mock 시뮬레이션이라 실제 매칭 기록이 없음 -> "준비중" 표시.
-      runMatesCount: null,
+      runMatesCount: runMateNames.size,
     };
   }, [runLogs]);
 
