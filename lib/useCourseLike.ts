@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useAppData, useIsCourseLiked } from '@/lib/appData';
 import { useRequireAuth } from '@/lib/useRequireAuth';
@@ -25,6 +25,26 @@ export function useCourseLike(course: Course | null): CourseLikeResult {
   const isLikedReal = useIsCourseLiked(course?.id ?? '');
   const [mockLiked, setMockLiked] = useState(false);
   const [mockLikeCount, setMockLikeCount] = useState(course?.likeCount ?? 0);
+
+  // useState 초기값은 이 훅을 호출하는 컴포넌트가 "처음 마운트될 때" 딱 한 번만 적용된다.
+  // 코스 상세 모달(CourseRouteModal)처럼 컴포넌트 자체는 계속 살아있고 course prop만
+  // 바뀌는 재사용 구조에서는 이 초기값이 다시 평가되지 않아, 최초 마운트 시점의 course로
+  // 고정된 좋아요 수/여부가 다른 코스를 봐도 그대로 남는다(특히 최초 마운트가 course=null인
+  // 경우 좋아요 수가 0에 영구 고정됨 — 랭킹 상세보기 하트 0개 버그의 원인). course.id가
+  // 바뀔 때마다 그 코스의 실제 값으로 다시 맞춰서 해결한다.
+  useEffect(() => {
+    if (!course || isRealCourse) return;
+    setMockLiked(false);
+    setMockLikeCount(course.likeCount ?? 0);
+    if (__DEV__) {
+      console.log('[useCourseLike] mock 코스 좋아요 상태 재동기화', {
+        courseId: course.id,
+        courseName: course.name,
+        likeCount: course.likeCount ?? 0,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [course?.id]);
 
   if (!course) {
     return { isLiked: false, likeCount: 0, toggle: () => {} };
