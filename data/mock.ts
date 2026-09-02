@@ -1665,7 +1665,9 @@ mockCourses.push(
   },
   {
     id: 'course-57',
-    createdAt: 1774204513156,
+    // 연간(365일) 필터와 전체 필터가 구분되어 보이도록 의도적으로 365일보다 오래된 값으로
+    // 고정. daysAgo를 써서 시간이 지나도 항상 "1년보다 더 오래된" 상태를 유지한다.
+    createdAt: daysAgo(400),
     name: '망원한강공원 러닝코스',
     coordinates: [
       { latitude: 37.55301, longitude: 126.936494 },
@@ -1832,7 +1834,8 @@ mockCourses.push(
   },
   {
     id: 'course-29',
-    createdAt: 1773124513156,
+    // course-57과 동일한 이유(연간/전체 필터 구분용)로 365일보다 오래된 값 고정.
+    createdAt: daysAgo(450),
     name: '월드컵공원 둘레길',
     coordinates: [
       { latitude: 37.547294, longitude: 126.940374 },
@@ -2175,7 +2178,8 @@ mockCourses.push(
   },
   {
     id: 'course-65',
-    createdAt: 1770748513156,
+    // course-57과 동일한 이유(연간/전체 필터 구분용)로 365일보다 오래된 값 고정.
+    createdAt: daysAgo(520),
     name: '가좌역 코스',
     coordinates: [
       { latitude: 37.556482, longitude: 126.90641 },
