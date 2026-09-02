@@ -188,6 +188,12 @@ const RunLogRow = memo(function RunLogRowImpl({
             <Text style={styles.meta}>
               {log.distanceKm}km · {formatPaceLabel(log.paceSecPerKm)}
             </Text>
+            {log.runMateName ? (
+              <View style={styles.runMateRow}>
+                <Ionicons name="people-outline" size={12} color={colors.textMuted} />
+                <Text style={styles.runMateText}>함께 뛴 러너: {log.runMateName}님</Text>
+              </View>
+            ) : null}
             <View style={styles.statusRow}>
               <Pressable
                 hitSlop={4}
@@ -358,6 +364,16 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: 13,
+    color: colors.textMuted,
+  },
+  runMateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  runMateText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: colors.textMuted,
   },
   statusRow: {
