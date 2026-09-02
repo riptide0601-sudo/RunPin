@@ -15,7 +15,7 @@ import type { RunnerMapDot } from '@/types';
 interface CommunityMapProps {
   runners: RunnerMapDot[];
   isRunning: boolean;
-  onPropose: () => void;
+  onPropose: (runner: RunnerMapDot) => void;
 }
 
 const DEFAULT_ZOOM = 16;
@@ -92,8 +92,8 @@ export function CommunityMap({ runners, isRunning, onPropose }: CommunityMapProp
       {!isRunning && selectedRunner && selection && containerSize.width > 0 ? (
         <RunnerDetailCard
           runner={selectedRunner}
-          onPropose={() => {
-            onPropose();
+          onPropose={(runner) => {
+            onPropose(runner);
             setSelection(null);
           }}
           position={getAnchoredPopupPosition(selection.point, containerSize, CARD_SIZE)}

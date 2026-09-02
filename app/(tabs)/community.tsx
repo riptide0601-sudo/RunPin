@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CommunityMap } from '@/components/community/CommunityMap';
 import { MatchProposalCard } from '@/components/community/MatchProposalCard';
+import { ProposalPopupStack, type ProposalPopup } from '@/components/community/ProposalPopupStack';
 import { RunFinishModal, type SaveCourseResult } from '@/components/community/RunFinishModal';
 import { RunningStatusBar } from '@/components/community/RunningStatusBar';
 import { AlertModal } from '@/components/ui/AlertModal';
@@ -15,25 +16,13 @@ import { mockMyRunningRoute, mockRunnerDots } from '@/data/mock';
 import { FREE_PROPOSAL_LIMIT, useAppData } from '@/lib/appData';
 import { useAuth } from '@/lib/auth';
 import { buildFinishedRunLog } from '@/lib/runSummary';
+import type { RunnerMapDot } from '@/types';
 
 type ProposalStatus = 'pending' | 'accepted' | 'declined';
-type InfoModal = 'none' | 'proposed' | 'accepted';
 
-interface InfoModalContent {
-  title: string;
-  message: string;
-}
-
-const INFO_MODAL_CONTENT: Record<Exclude<InfoModal, 'none'>, InfoModalContent> = {
-  proposed: {
-    title: '제안을 보냈어요',
-    message: '상대방이 수락하면 매칭이 완료돼요',
-  },
-  accepted: {
-    title: '매칭이 수락되었습니다',
-    message: '러닝 시작 버튼을 눌러 러닝을 시작하세요',
-  },
-};
+// 제안 응답(수락/거절) 결과가 실제로는 상대 없이 클라이언트에서 시뮬레이션되므로
+// (CLAUDE.md 11번, 실제 매칭 백엔드 없음), 몇 초 뒤 랜덤으로 판정한다.
+const PROPOSAL_RESPONSE_DELAY_MS = 2000;
 
 const LIMIT_MODAL_CONTENT = {
   title: '무료 제안 횟수를 모두 사용했어요',
@@ -52,29 +41,40 @@ export default function CommunityScreen() {
   const [runMateName, setRunMateName] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [finishVisible, setFinishVisible] = useState(false);
-  const [infoModal, setInfoModal] = useState<InfoModal>('none');
+  const [popups, setPopups] = useState<ProposalPopup[]>([]);
   const [limitVisible, setLimitVisible] = useState(false);
   const [loginPromptVisible, setLoginPromptVisible] = useState(false);
-  const lastInfoModalContentRef = useRef<InfoModalContent>(INFO_MODAL_CONTENT.proposed);
+  // 화면을 벗어나도(탭 이동 등) 대기 중인 응답 타이머가 언마운트된 컴포넌트에 setState하지
+  // 않도록 전부 모아뒀다가 정리한다.
+  const pendingTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const closeInfoModal = () => setInfoModal('none');
+  useEffect(() => {
+    // .current를 언마운트 시점(cleanup 실행 시점)에 그대로 읽어야 그동안 쌓인 타이머를
+    // 전부 정리할 수 있다 — effect 시작 시점에 변수로 복사해두면 그때는 아직 아무 타이머도
+    // 없어 빈 배열을 정리하는 꼴이 된다. 그래서 lint의 exhaustive-deps 제안을 따르지 않는다.
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      pendingTimeoutsRef.current.forEach(clearTimeout);
+    };
+  }, []);
+
   const closeLimitModal = () => setLimitVisible(false);
 
-  // Modal은 visible=false가 되어도 fade-out 애니메이션 동안 계속 리렌더되므로,
-  // infoModal이 'none'으로 바뀐 뒤에도 닫히는 애니메이션 중에는 마지막으로 보여준
-  // 내용을 유지해야 다른 문구로 잘못 바뀌어 보이지 않는다.
-  if (infoModal !== 'none') {
-    lastInfoModalContentRef.current = INFO_MODAL_CONTENT[infoModal];
-  }
-  const infoModalContent = lastInfoModalContentRef.current;
+  const pushPopup = (kind: ProposalPopup['kind'], runnerNickname: string) => {
+    setPopups((prev) => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, kind, runnerNickname }]);
+  };
+
+  const dismissPopup = (id: string) => {
+    setPopups((prev) => prev.filter((popup) => popup.id !== id));
+  };
 
   const handleAccept = () => {
     setProposalStatus('accepted');
     setRunMateName(incomingProposalRunner.nickname);
-    setInfoModal('accepted');
+    pushPopup('accepted', incomingProposalRunner.nickname);
   };
 
-  const handlePropose = () => {
+  const handlePropose = (runner: RunnerMapDot) => {
     if (!canPropose) {
       setLimitVisible(true);
       return;
@@ -86,9 +86,17 @@ export default function CommunityScreen() {
     const justExhausted = !isSubscribed && proposalCount + 1 >= FREE_PROPOSAL_LIMIT;
     if (justExhausted) {
       setLimitVisible(true);
-    } else {
-      setInfoModal('proposed');
+      return;
     }
+
+    pushPopup('sent', runner.nickname);
+    // 실제 매칭 백엔드가 없어 상대 응답을 시뮬레이션한다 — 알림용일 뿐, proposalStatus나
+    // runMateName(러닝 시작 버튼/러닝 기록)에는 연결하지 않는다(기존 inbound 매칭 흐름과
+    // 별개로 둔다는 결정에 따름).
+    const timeoutId = setTimeout(() => {
+      pushPopup(Math.random() < 0.5 ? 'accepted' : 'declined', runner.nickname);
+    }, PROPOSAL_RESPONSE_DELAY_MS);
+    pendingTimeoutsRef.current.push(timeoutId);
   };
 
   const handleDecline = () => {
@@ -174,6 +182,8 @@ export default function CommunityScreen() {
             </View>
           ) : null}
         </View>
+
+        <ProposalPopupStack popups={popups} onDismiss={dismissPopup} />
       </View>
 
       <RunFinishModal
@@ -182,15 +192,6 @@ export default function CommunityScreen() {
         courses={courses}
         onSave={handleSaveCourse}
         onSkip={handleSkipSaveCourse}
-      />
-
-      <AlertModal
-        visible={infoModal !== 'none'}
-        icon="checkmark-circle"
-        title={infoModalContent.title}
-        message={infoModalContent.message}
-        primaryAction={{ label: '확인', onPress: closeInfoModal }}
-        onRequestClose={closeInfoModal}
       />
 
       <SubscribeModal

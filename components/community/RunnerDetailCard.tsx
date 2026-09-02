@@ -11,7 +11,7 @@ import type { RunnerMapDot } from '@/types';
 
 interface RunnerDetailCardProps {
   runner: RunnerMapDot;
-  onPropose: () => void;
+  onPropose: (runner: RunnerMapDot) => void;
   position: Point;
 }
 
@@ -57,7 +57,7 @@ export function RunnerDetailCard({ runner, onPropose, position }: RunnerDetailCa
           {runner.paceLabel} · {runner.distanceLabel}
         </Text>
         <Text style={styles.comparison}>{COMPARISON_LABEL[runner.paceComparison]}</Text>
-        <Pill label="함께 뛰자고 제안" variant="filled" onPress={onPropose} style={styles.button} />
+        <Pill label="함께 뛰자고 제안" variant="filled" onPress={() => onPropose(runner)} style={styles.button} />
       </Card>
     </Animated.View>
   );
