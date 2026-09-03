@@ -40,6 +40,11 @@ export default function CommunityScreen() {
   const incomingProposalRunner = mockRunnerDots[0];
   const [runMateName, setRunMateName] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  // "함께 뛴 러너"는 러닝을 시작하기 직전에 마지막으로 매칭에 성공한 상대다. 러닝이
+  // 시작된 뒤에 뒤늦게 도착하는 응답 타이머까지 이름을 덮어쓰면 안 되므로, 타이머
+  // 콜백에서 최신 러닝 상태를 읽을 수 있도록 ref로도 들고 있는다(콜백은 등록 시점의
+  // isRunning을 클로저에 가둬서 state만으로는 판단할 수 없다).
+  const isRunningRef = useRef(false);
   const [finishVisible, setFinishVisible] = useState(false);
   const [popups, setPopups] = useState<ProposalPopup[]>([]);
   const [limitVisible, setLimitVisible] = useState(false);
@@ -60,17 +65,27 @@ export default function CommunityScreen() {
 
   const closeLimitModal = () => setLimitVisible(false);
 
+  // 새 알림을 배열 앞에 넣는다 — ProposalPopupStack이 배열 순서대로 위에서 아래로
+  // 렌더하므로, 앞에 넣어야 최신 알림이 스택의 맨 위에 놓인다.
   const pushPopup = (kind: ProposalPopup['kind'], runnerNickname: string) => {
-    setPopups((prev) => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, kind, runnerNickname }]);
+    setPopups((prev) => [{ id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, kind, runnerNickname }, ...prev]);
   };
 
   const dismissPopup = (id: string) => {
     setPopups((prev) => prev.filter((popup) => popup.id !== id));
   };
 
+  // 매칭이 성공할 때마다 호출한다. 여러 명과 매칭에 성공하면 가장 마지막(러닝 직전)
+  // 상대가 "함께 뛴 러너"가 되도록 그냥 덮어쓴다. 다만 이미 러닝이 시작된 뒤라면
+  // "러닝 직전"이 아니므로 무시한다.
+  const registerRunMate = (nickname: string) => {
+    if (isRunningRef.current) return;
+    setRunMateName(nickname);
+  };
+
   const handleAccept = () => {
     setProposalStatus('accepted');
-    setRunMateName(incomingProposalRunner.nickname);
+    registerRunMate(incomingProposalRunner.nickname);
     pushPopup('accepted', incomingProposalRunner.nickname);
   };
 
@@ -90,11 +105,16 @@ export default function CommunityScreen() {
     }
 
     pushPopup('sent', runner.nickname);
-    // 실제 매칭 백엔드가 없어 상대 응답을 시뮬레이션한다 — 알림용일 뿐, proposalStatus나
-    // runMateName(러닝 시작 버튼/러닝 기록)에는 연결하지 않는다(기존 inbound 매칭 흐름과
-    // 별개로 둔다는 결정에 따름).
+    // 실제 매칭 백엔드가 없어 상대 응답을 시뮬레이션한다. 수락된 경우는 실제로 매칭에
+    // 성공한 것이므로 "함께 뛴 러너"로 기록한다 — 여러 명이 수락하면 가장 마지막 수락이
+    // 이긴다. 하단 배너/러닝 시작 버튼을 지배하는 proposalStatus는 들어온 제안 전용이라
+    // 여기서 건드리지 않는다.
     const timeoutId = setTimeout(() => {
-      pushPopup(Math.random() < 0.5 ? 'accepted' : 'declined', runner.nickname);
+      const accepted = Math.random() < 0.5;
+      if (accepted) {
+        registerRunMate(runner.nickname);
+      }
+      pushPopup(accepted ? 'accepted' : 'declined', runner.nickname);
     }, PROPOSAL_RESPONSE_DELAY_MS);
     pendingTimeoutsRef.current.push(timeoutId);
   };
@@ -108,10 +128,12 @@ export default function CommunityScreen() {
       setLoginPromptVisible(true);
       return;
     }
+    isRunningRef.current = true;
     setIsRunning(true);
   };
 
   const handleEndRun = () => {
+    isRunningRef.current = false;
     setIsRunning(false);
     setProposalStatus('pending');
     setFinishVisible(true);
