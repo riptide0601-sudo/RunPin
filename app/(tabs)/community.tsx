@@ -166,6 +166,8 @@ export default function CommunityScreen() {
         )}
 
         <View style={styles.bottomOverlay} pointerEvents="box-none">
+          <ProposalPopupStack popups={popups} onDismiss={dismissPopup} />
+
           {isRunning ? (
             <View style={styles.notice}>
               <Text style={styles.noticeText}>러닝 중에는 제안을 주고받을 수 없어요</Text>
@@ -182,8 +184,6 @@ export default function CommunityScreen() {
             </View>
           ) : null}
         </View>
-
-        <ProposalPopupStack popups={popups} onDismiss={dismissPopup} />
       </View>
 
       <RunFinishModal
