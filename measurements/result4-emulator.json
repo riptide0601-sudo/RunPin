@@ -1,0 +1,323 @@
+{
+ "v1-7a3f09c": {
+  "A1": {
+   "pass": true,
+   "label": "차단",
+   "title": "A1 likeCount를 단독으로 +100"
+  },
+  "A2": {
+   "pass": true,
+   "label": "차단",
+   "title": "A2 likeCount를 +1 (likes 문서 없이 단독)"
+  },
+  "A3": {
+   "pass": true,
+   "label": "차단",
+   "title": "A3 타인 runLog 읽기"
+  },
+  "A4": {
+   "pass": true,
+   "label": "차단",
+   "title": "A4 타인 runLog 삭제"
+  },
+  "A5": {
+   "pass": true,
+   "label": "차단",
+   "title": "A5 타인 코스 이름 수정"
+  },
+  "A6": {
+   "pass": true,
+   "label": "차단",
+   "title": "A6 코스 생성 시 허용 외 필드 추가"
+  },
+  "A7": {
+   "pass": true,
+   "label": "차단",
+   "title": "A7 코스 생성 시 likeCount를 999로 시작"
+  },
+  "A8": {
+   "pass": true,
+   "label": "차단",
+   "title": "A8 usernames 전체 목록 조회"
+  },
+  "A9": {
+   "pass": true,
+   "label": "차단",
+   "title": "A9 타인 프로필 사진 읽기"
+  },
+  "A10": {
+   "pass": true,
+   "label": "차단",
+   "title": "A10 규칙에 없는 컬렉션(badges) 쓰기"
+  },
+  "A11": {
+   "pass": true,
+   "label": "차단",
+   "title": "A11 타인 uid로 likes 문서 생성"
+  },
+  "A12": {
+   "pass": true,
+   "label": "차단",
+   "title": "A12 본인 runLog의 trajectory 수정"
+  },
+  "L1": {
+   "pass": true,
+   "label": "통과",
+   "title": "L1 비로그인 상태로 코스 읽기"
+  },
+  "L2": {
+   "pass": true,
+   "label": "통과",
+   "title": "L2 본인 코스 업로드"
+  },
+  "L3": {
+   "pass": false,
+   "label": "차단됨",
+   "title": "L3 본인 좋아요 추가 (batch: likes create + likeCount +1)"
+  },
+  "L4": {
+   "pass": false,
+   "label": "차단됨",
+   "title": "L4 본인 좋아요 취소 (batch: likes delete + likeCount -1)"
+  },
+  "L5": {
+   "pass": true,
+   "label": "통과",
+   "title": "L5 본인 runLog 생성"
+  },
+  "L6": {
+   "pass": true,
+   "label": "통과",
+   "title": "L6 본인 runLog 조회"
+  },
+  "L7": {
+   "pass": false,
+   "label": "차단됨",
+   "title": "L7 본인 runLog 삭제"
+  },
+  "L8": {
+   "pass": false,
+   "label": "차단됨",
+   "title": "L8 본인 프로필 사진 저장"
+  },
+  "L9": {
+   "pass": true,
+   "label": "통과",
+   "title": "L9 닉네임 단건 조회 (미인증)"
+  }
+ },
+ "v2-naive-open": {
+  "A1": {
+   "pass": false,
+   "label": "뚫림",
+   "title": "A1 likeCount를 단독으로 +100"
+  },
+  "A2": {
+   "pass": false,
+   "label": "뚫림",
+   "title": "A2 likeCount를 +1 (likes 문서 없이 단독)"
+  },
+  "A3": {
+   "pass": true,
+   "label": "차단",
+   "title": "A3 타인 runLog 읽기"
+  },
+  "A4": {
+   "pass": true,
+   "label": "차단",
+   "title": "A4 타인 runLog 삭제"
+  },
+  "A5": {
+   "pass": false,
+   "label": "뚫림",
+   "title": "A5 타인 코스 이름 수정"
+  },
+  "A6": {
+   "pass": true,
+   "label": "차단",
+   "title": "A6 코스 생성 시 허용 외 필드 추가"
+  },
+  "A7": {
+   "pass": true,
+   "label": "차단",
+   "title": "A7 코스 생성 시 likeCount를 999로 시작"
+  },
+  "A8": {
+   "pass": true,
+   "label": "차단",
+   "title": "A8 usernames 전체 목록 조회"
+  },
+  "A9": {
+   "pass": true,
+   "label": "차단",
+   "title": "A9 타인 프로필 사진 읽기"
+  },
+  "A10": {
+   "pass": true,
+   "label": "차단",
+   "title": "A10 규칙에 없는 컬렉션(badges) 쓰기"
+  },
+  "A11": {
+   "pass": true,
+   "label": "차단",
+   "title": "A11 타인 uid로 likes 문서 생성"
+  },
+  "A12": {
+   "pass": true,
+   "label": "차단",
+   "title": "A12 본인 runLog의 trajectory 수정"
+  },
+  "L1": {
+   "pass": true,
+   "label": "통과",
+   "title": "L1 비로그인 상태로 코스 읽기"
+  },
+  "L2": {
+   "pass": true,
+   "label": "통과",
+   "title": "L2 본인 코스 업로드"
+  },
+  "L3": {
+   "pass": true,
+   "label": "통과",
+   "title": "L3 본인 좋아요 추가 (batch: likes create + likeCount +1)"
+  },
+  "L4": {
+   "pass": true,
+   "label": "통과",
+   "title": "L4 본인 좋아요 취소 (batch: likes delete + likeCount -1)"
+  },
+  "L5": {
+   "pass": true,
+   "label": "통과",
+   "title": "L5 본인 runLog 생성"
+  },
+  "L6": {
+   "pass": true,
+   "label": "통과",
+   "title": "L6 본인 runLog 조회"
+  },
+  "L7": {
+   "pass": true,
+   "label": "통과",
+   "title": "L7 본인 runLog 삭제"
+  },
+  "L8": {
+   "pass": true,
+   "label": "통과",
+   "title": "L8 본인 프로필 사진 저장"
+  },
+  "L9": {
+   "pass": true,
+   "label": "통과",
+   "title": "L9 닉네임 단건 조회 (미인증)"
+  }
+ },
+ "v3-final": {
+  "A1": {
+   "pass": true,
+   "label": "차단",
+   "title": "A1 likeCount를 단독으로 +100"
+  },
+  "A2": {
+   "pass": true,
+   "label": "차단",
+   "title": "A2 likeCount를 +1 (likes 문서 없이 단독)"
+  },
+  "A3": {
+   "pass": true,
+   "label": "차단",
+   "title": "A3 타인 runLog 읽기"
+  },
+  "A4": {
+   "pass": true,
+   "label": "차단",
+   "title": "A4 타인 runLog 삭제"
+  },
+  "A5": {
+   "pass": true,
+   "label": "차단",
+   "title": "A5 타인 코스 이름 수정"
+  },
+  "A6": {
+   "pass": true,
+   "label": "차단",
+   "title": "A6 코스 생성 시 허용 외 필드 추가"
+  },
+  "A7": {
+   "pass": true,
+   "label": "차단",
+   "title": "A7 코스 생성 시 likeCount를 999로 시작"
+  },
+  "A8": {
+   "pass": true,
+   "label": "차단",
+   "title": "A8 usernames 전체 목록 조회"
+  },
+  "A9": {
+   "pass": true,
+   "label": "차단",
+   "title": "A9 타인 프로필 사진 읽기"
+  },
+  "A10": {
+   "pass": true,
+   "label": "차단",
+   "title": "A10 규칙에 없는 컬렉션(badges) 쓰기"
+  },
+  "A11": {
+   "pass": true,
+   "label": "차단",
+   "title": "A11 타인 uid로 likes 문서 생성"
+  },
+  "A12": {
+   "pass": true,
+   "label": "차단",
+   "title": "A12 본인 runLog의 trajectory 수정"
+  },
+  "L1": {
+   "pass": true,
+   "label": "통과",
+   "title": "L1 비로그인 상태로 코스 읽기"
+  },
+  "L2": {
+   "pass": true,
+   "label": "통과",
+   "title": "L2 본인 코스 업로드"
+  },
+  "L3": {
+   "pass": true,
+   "label": "통과",
+   "title": "L3 본인 좋아요 추가 (batch: likes create + likeCount +1)"
+  },
+  "L4": {
+   "pass": true,
+   "label": "통과",
+   "title": "L4 본인 좋아요 취소 (batch: likes delete + likeCount -1)"
+  },
+  "L5": {
+   "pass": true,
+   "label": "통과",
+   "title": "L5 본인 runLog 생성"
+  },
+  "L6": {
+   "pass": true,
+   "label": "통과",
+   "title": "L6 본인 runLog 조회"
+  },
+  "L7": {
+   "pass": true,
+   "label": "통과",
+   "title": "L7 본인 runLog 삭제"
+  },
+  "L8": {
+   "pass": true,
+   "label": "통과",
+   "title": "L8 본인 프로필 사진 저장"
+  },
+  "L9": {
+   "pass": true,
+   "label": "통과",
+   "title": "L9 닉네임 단건 조회 (미인증)"
+  }
+ }
+}

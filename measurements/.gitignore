@@ -1,3 +1,6 @@
 node_modules/
 pipeline.js
 result-emulator-*.json
+firestore-debug.log
+ui-debug.log
+firebase-debug.log

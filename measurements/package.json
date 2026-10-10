@@ -19,5 +19,9 @@
     "react": "19.1.0",
     "react-test-renderer": "19.1.0",
     "vitest": "^3.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "protobufjs@7.6.6": true
   }
 }

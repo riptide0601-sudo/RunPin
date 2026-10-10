@@ -37,6 +37,7 @@ npm run m6           # 6. permission-denied 기록 집계
 | 2-a | 토글 1회 재렌더 컴포넌트 수 | 37개 | 1개 | −97.3% |
 | 2-b | 토글 커밋 시간 (중앙값, 50회) | 0.588 ms | 0.027 ms | −95.4% |
 | 3 | 검색 10글자 입력 시 WebView 재주입 | 10회 | 0회 | −100% |
+| 4 | 규칙 공격 차단율 / 정상 통과율 | v1 100% / 55.6%<br>v2 75% / 100% | v3 **100% / 100%** | 에뮬레이터 실측 |
 | 5-a | 인증 게이트 코드 줄 수 | 89줄 | 22줄 | −75.3% |
 | 5-b | 인증 게이트 관련 파일 수 | 9개 | 1개 | −88.9% |
 | 6 | 규칙 미배포로 인한 permission-denied | 3건(2026-08-16) | 0건(기록 범위 내) | — |
@@ -75,12 +76,37 @@ npm run m6           # 6. permission-denied 기록 집계
   변경 횟수를 센다. payload 참조 변경 → `sendData` → `useEffect` → `injectJavaScript` 1회.
 - before는 `center`/`fitBoundsPadding`/`markers` 3개가 매 렌더 새 참조, after는 3개 모두 안정.
 
-### 4. 규칙 차단율 — `rules/`, `eval4.js`
+### 4. 규칙 차단율 — `rules/`, `eval4.js` (에뮬레이터 실측 완료)
 
-- `rules/rules.test.mjs`: 공격 12 + 정상 9 = **21개 시나리오** (에뮬레이터 실행용).
-- 비교 대상 3버전: `v1-7a3f09c`(courses.update 전면 차단) / `v2-naive-open`(반사실: `auth != null`만
+- `rules/rules.test.mjs`: 공격 12 + 정상 9 = **21개 시나리오**.
+- 비교 3버전: `v1-7a3f09c`(courses.update 전면 차단) / `v2-naive-open`(반사실: `auth != null`만
   확인하도록 단순 개방했다고 가정) / `v3-final`(`623cc77` 최종).
-- `eval4.js`는 에뮬레이터 없이 조건식을 추적한 수동 평가표이며, 판정 근거 줄 번호를 함께 기록한다.
+- 실행 환경: OpenJDK 27(Homebrew) + firebase-tools Firestore 에뮬레이터(포트 8181,
+  project `demo-runpin-rules`) + vitest 3.2.7 + @firebase/rules-unit-testing 5.0.2.
+- vitest 통과/실패가 곧 차단/허용에 대응한다: 공격 테스트는 `assertFails`이므로 **통과 = 차단됨**,
+  정상 테스트는 `assertSucceeds`이므로 **통과 = 허용됨**.
+
+| 버전 | 공격 차단 | 정상 통과 | 성격 |
+|---|---|---|---|
+| v1 = `7a3f09c` | **12/12 (100%)** | **5/9 (55.6%)** | 안전하지만 기능 불가 |
+| v2 = 반사실 단순 개방 | **9/12 (75%)** | **9/9 (100%)** | 기능은 되지만 조작 가능 |
+| v3 = `623cc77` 최종 | **12/12 (100%)** | **9/9 (100%)** | 둘 다 충족 |
+
+- v2에서 뚫린 3건: **A1**(likeCount 단독 +100) / **A2**(likeCount 단독 +1, likes 문서 없이) /
+  **A5**(타인 코스 이름 수정)
+- v1에서 막힌 정상 기능 4건: **L3·L4**(좋아요 추가·취소) / **L7**(본인 러닝기록 삭제) /
+  **L8**(본인 프로필 사진 저장)
+- 시나리오별 전체 결과: `result4-emulator.json`. 원본 vitest 출력은 `result-emulator-<버전>.json`
+  (gitignore 대상, `npm run m4:emulator`로 재생성).
+- `eval4.js`의 조건식 수동 평가표와 **에뮬레이터 실측 결과가 21/21 전부 일치**했다
+  (차이 0건). 수동 평가는 판정 근거 줄 번호를 함께 담고 있어 해설용으로 남겨둔다.
+
+실행:
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk && export PATH="$JAVA_HOME/bin:$PATH"
+RULES=rules/v3-final.rules npx firebase-tools emulators:exec --only firestore \
+  --project demo-runpin-rules "npx vitest run --reporter=basic"
+```
 
 ### 5. 인증 게이트 통합 (`fa48a28` → `29709ed`)
 

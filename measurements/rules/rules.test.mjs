@@ -13,7 +13,7 @@ const ME = 'uid-me', OTHER = 'uid-other';
 let env;
 beforeAll(async () => {
   env = await initializeTestEnvironment({
-    projectId: 'runpin-rules-test',
+    projectId: 'demo-runpin-rules',
     firestore: { rules: readFileSync(process.env.RULES || 'rules/v3-final.rules', 'utf8') },
   });
   // 시드: 타인 소유 문서들을 규칙 우회로 미리 심는다
