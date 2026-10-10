@@ -1,0 +1,156 @@
+[
+  {
+    "id": "course-1",
+    "rawCount": 149,
+    "sampledCount": 30,
+    "rawBytes": 8006,
+    "sampledBytes": 1613,
+    "rawKm": 4.9442,
+    "sampledKm": 4.9278,
+    "osrmDistKm": 4.9449,
+    "distErrPct": -0.332
+  },
+  {
+    "id": "course-2",
+    "rawCount": 148,
+    "sampledCount": 33,
+    "rawBytes": 7961,
+    "sampledBytes": 1782,
+    "rawKm": 3.2864,
+    "sampledKm": 3.2855,
+    "osrmDistKm": 3.2864,
+    "distErrPct": -0.028
+  },
+  {
+    "id": "course-5",
+    "rawCount": 173,
+    "sampledCount": 30,
+    "rawBytes": 9314,
+    "sampledBytes": 1615,
+    "rawKm": 6.7962,
+    "sampledKm": 6.7802,
+    "osrmDistKm": 6.8002,
+    "distErrPct": -0.236
+  },
+  {
+    "id": "course-6",
+    "rawCount": 113,
+    "sampledCount": 40,
+    "rawBytes": 6086,
+    "sampledBytes": 2154,
+    "rawKm": 2.5119,
+    "sampledKm": 2.5109,
+    "osrmDistKm": 2.5127,
+    "distErrPct": -0.039
+  },
+  {
+    "id": "course-7",
+    "rawCount": 215,
+    "sampledCount": 32,
+    "rawBytes": 11525,
+    "sampledBytes": 1721,
+    "rawKm": 4.8571,
+    "sampledKm": 4.8147,
+    "osrmDistKm": 4.8575,
+    "distErrPct": -0.874
+  },
+  {
+    "id": "course-9",
+    "rawCount": 214,
+    "sampledCount": 33,
+    "rawBytes": 11461,
+    "sampledBytes": 1769,
+    "rawKm": 5.8968,
+    "sampledKm": 5.8851,
+    "osrmDistKm": 5.9008,
+    "distErrPct": -0.198
+  },
+  {
+    "id": "course-11",
+    "rawCount": 154,
+    "sampledCount": 37,
+    "rawBytes": 8275,
+    "sampledBytes": 1991,
+    "rawKm": 4.8981,
+    "sampledKm": 4.8959,
+    "osrmDistKm": 4.9018,
+    "distErrPct": -0.045
+  },
+  {
+    "id": "course-12",
+    "rawCount": 129,
+    "sampledCount": 30,
+    "rawBytes": 6936,
+    "sampledBytes": 1619,
+    "rawKm": 4.3952,
+    "sampledKm": 4.3944,
+    "osrmDistKm": 4.3968,
+    "distErrPct": -0.018
+  },
+  {
+    "id": "course-14",
+    "rawCount": 101,
+    "sampledCount": 36,
+    "rawBytes": 5440,
+    "sampledBytes": 1946,
+    "rawKm": 2.0355,
+    "sampledKm": 2.0339,
+    "osrmDistKm": 2.0353,
+    "distErrPct": -0.08
+  },
+  {
+    "id": "course-16",
+    "rawCount": 27,
+    "sampledCount": 27,
+    "rawBytes": 1457,
+    "sampledBytes": 1457,
+    "rawKm": 1.0724,
+    "sampledKm": 1.0724,
+    "osrmDistKm": 1.0739,
+    "distErrPct": 0
+  },
+  {
+    "id": "course-18",
+    "rawCount": 59,
+    "sampledCount": 41,
+    "rawBytes": 3177,
+    "sampledBytes": 2211,
+    "rawKm": 1.6867,
+    "sampledKm": 1.6867,
+    "osrmDistKm": 1.6866,
+    "distErrPct": 0
+  },
+  {
+    "id": "course-19",
+    "rawCount": 32,
+    "sampledCount": 32,
+    "rawBytes": 1726,
+    "sampledBytes": 1726,
+    "rawKm": 0.9123,
+    "sampledKm": 0.9123,
+    "osrmDistKm": 0.9127,
+    "distErrPct": 0
+  },
+  {
+    "id": "course-20",
+    "rawCount": 53,
+    "sampledCount": 32,
+    "rawBytes": 2857,
+    "sampledBytes": 1726,
+    "rawKm": 1.3449,
+    "sampledKm": 1.3448,
+    "osrmDistKm": 1.3459,
+    "distErrPct": -0.002
+  },
+  {
+    "id": "my-running-route",
+    "rawCount": 28,
+    "sampledCount": 28,
+    "rawBytes": 1515,
+    "sampledBytes": 1515,
+    "rawKm": 0.4785,
+    "sampledKm": 0.4785,
+    "osrmDistKm": 0.4786,
+    "distErrPct": 0
+  }
+]

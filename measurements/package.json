@@ -1,0 +1,23 @@
+{
+  "name": "runpin-measurements",
+  "private": true,
+  "description": "자기소개서용 개선 전후 측정 스크립트. 앱 빌드와 무관하며 measurements 브랜치에만 존재한다.",
+  "scripts": {
+    "pipeline": "node make-pipeline.js",
+    "m1": "node make-pipeline.js && node measure1.js && node agg1.js",
+    "m1:verify": "node verify1.js",
+    "m2": "node measure2.js",
+    "m2b": "node measure2b.js",
+    "m3": "node measure3.js",
+    "m4": "node eval4.js",
+    "m4:emulator": "npx firebase-tools emulators:exec --only firestore \"npx vitest run rules/rules.test.mjs\"",
+    "m6": "node measure6.js"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.0.0",
+    "react": "19.1.0",
+    "react-test-renderer": "19.1.0",
+    "vitest": "^3.0.0"
+  }
+}
