@@ -1,0 +1,277 @@
+{
+ "totalEntries": 30,
+ "mismatched": 30,
+ "invPairs": 15,
+ "totalPairs": 27,
+ "maxGap": {
+  "gap": 989,
+  "p": "all",
+  "rank": 1,
+  "courseId": "course-1",
+  "name": "몽마르뜨공원",
+  "entryLike": 1000,
+  "shown": 11
+ },
+ "periods": {
+  "monthly": [
+   {
+    "rank": 1,
+    "courseId": "course-1",
+    "name": "몽마르뜨공원",
+    "entryLike": 200
+   },
+   {
+    "rank": 2,
+    "courseId": "course-3",
+    "name": "한강 반포지구",
+    "entryLike": 180
+   },
+   {
+    "rank": 3,
+    "courseId": "course-2",
+    "name": "경의선숲길",
+    "entryLike": 160
+   },
+   {
+    "rank": 4,
+    "courseId": "course-7",
+    "name": "망원한강공원 러닝코스",
+    "entryLike": 145
+   },
+   {
+    "rank": 5,
+    "courseId": "course-4",
+    "name": "안양천 러닝코스",
+    "entryLike": 130
+   },
+   {
+    "rank": 6,
+    "courseId": "course-9",
+    "name": "월드컵공원 둘레길",
+    "entryLike": 115
+   },
+   {
+    "rank": 7,
+    "courseId": "course-5",
+    "name": "보라매공원",
+    "entryLike": 100
+   },
+   {
+    "rank": 8,
+    "courseId": "course-6",
+    "name": "연남동 경의선 확장코스",
+    "entryLike": 85
+   },
+   {
+    "rank": 9,
+    "courseId": "course-11",
+    "name": "연희동 둘레길",
+    "entryLike": 70
+   },
+   {
+    "rank": 10,
+    "courseId": "course-13",
+    "name": "서강대교 남단 코스",
+    "entryLike": 50
+   }
+  ],
+  "yearly": [
+   {
+    "rank": 1,
+    "courseId": "course-3",
+    "name": "한강 반포지구",
+    "entryLike": 500
+   },
+   {
+    "rank": 2,
+    "courseId": "course-1",
+    "name": "몽마르뜨공원",
+    "entryLike": 460
+   },
+   {
+    "rank": 3,
+    "courseId": "course-9",
+    "name": "월드컵공원 둘레길",
+    "entryLike": 425
+   },
+   {
+    "rank": 4,
+    "courseId": "course-4",
+    "name": "안양천 러닝코스",
+    "entryLike": 395
+   },
+   {
+    "rank": 5,
+    "courseId": "course-7",
+    "name": "망원한강공원 러닝코스",
+    "entryLike": 365
+   },
+   {
+    "rank": 6,
+    "courseId": "course-2",
+    "name": "경의선숲길",
+    "entryLike": 335
+   },
+   {
+    "rank": 7,
+    "courseId": "course-11",
+    "name": "연희동 둘레길",
+    "entryLike": 305
+   },
+   {
+    "rank": 8,
+    "courseId": "course-5",
+    "name": "보라매공원",
+    "entryLike": 280
+   },
+   {
+    "rank": 9,
+    "courseId": "course-8",
+    "name": "성산동 골목길 코스",
+    "entryLike": 260
+   },
+   {
+    "rank": 10,
+    "courseId": "course-13",
+    "name": "서강대교 남단 코스",
+    "entryLike": 250
+   }
+  ],
+  "all": [
+   {
+    "rank": 1,
+    "courseId": "course-1",
+    "name": "몽마르뜨공원",
+    "entryLike": 1000
+   },
+   {
+    "rank": 2,
+    "courseId": "course-3",
+    "name": "한강 반포지구",
+    "entryLike": 920
+   },
+   {
+    "rank": 3,
+    "courseId": "course-5",
+    "name": "보라매공원",
+    "entryLike": 860
+   },
+   {
+    "rank": 4,
+    "courseId": "course-9",
+    "name": "월드컵공원 둘레길",
+    "entryLike": 800
+   },
+   {
+    "rank": 5,
+    "courseId": "course-2",
+    "name": "경의선숲길",
+    "entryLike": 745
+   },
+   {
+    "rank": 6,
+    "courseId": "course-4",
+    "name": "안양천 러닝코스",
+    "entryLike": 695
+   },
+   {
+    "rank": 7,
+    "courseId": "course-7",
+    "name": "망원한강공원 러닝코스",
+    "entryLike": 650
+   },
+   {
+    "rank": 8,
+    "courseId": "course-11",
+    "name": "연희동 둘레길",
+    "entryLike": 610
+   },
+   {
+    "rank": 9,
+    "courseId": "course-10",
+    "name": "홍제천 산책로",
+    "entryLike": 575
+   },
+   {
+    "rank": 10,
+    "courseId": "course-13",
+    "name": "서강대교 남단 코스",
+    "entryLike": 550
+   }
+  ]
+ },
+ "courseLike": {
+  "course-1": 11,
+  "course-2": 11,
+  "course-3": 26,
+  "course-4": 16,
+  "course-5": 30,
+  "course-6": 14,
+  "course-7": 47,
+  "course-8": 13,
+  "course-9": 19,
+  "course-10": 32,
+  "course-11": 46,
+  "course-12": 62,
+  "course-13": 79,
+  "course-14": 25,
+  "course-15": 22,
+  "course-16": 40,
+  "course-17": 18,
+  "course-18": 60,
+  "course-19": 32,
+  "course-20": 10,
+  "course-24": 85,
+  "course-25": 88,
+  "course-47": 76,
+  "course-48": 79,
+  "course-26": 68,
+  "course-49": 59,
+  "course-21": 117,
+  "course-22": 122,
+  "course-23": 126,
+  "course-31": 114,
+  "course-50": 142,
+  "course-51": 146,
+  "course-32": 62,
+  "course-33": 63,
+  "course-52": 79,
+  "course-53": 81,
+  "course-34": 113,
+  "course-35": 117,
+  "course-54": 144,
+  "course-55": 147,
+  "course-36": 87,
+  "course-56": 108,
+  "course-30": 145,
+  "course-57": 192,
+  "course-37": 40,
+  "course-58": 50,
+  "course-27": 152,
+  "course-28": 156,
+  "course-29": 160,
+  "course-59": 118,
+  "course-60": 152,
+  "course-61": 156,
+  "course-38": 91,
+  "course-39": 93,
+  "course-62": 98,
+  "course-63": 100,
+  "course-40": 105,
+  "course-64": 138,
+  "course-41": 136,
+  "course-65": 179,
+  "course-42": 42,
+  "course-66": 55,
+  "course-67": 57,
+  "course-68": 58,
+  "course-43": 45,
+  "course-69": 60,
+  "course-44": 92,
+  "course-70": 101,
+  "course-45": 111,
+  "course-71": 121,
+  "course-46": 49,
+  "course-72": 54
+ }
+}

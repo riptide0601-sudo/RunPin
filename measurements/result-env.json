@@ -1,0 +1,34 @@
+[
+ {
+  "label": "UTF-16LE + BOM (Notepad \"유니코드\" 저장)",
+  "before": 0,
+  "afterCount": 6,
+  "lost": 0,
+  "crashed": false,
+  "log": ""
+ },
+ {
+  "label": "UTF-16BE + BOM",
+  "before": 0,
+  "afterCount": 0,
+  "lost": 6,
+  "crashed": true,
+  "log": "TypeError [ERR_UNKNOWN_ENCODING]: Unknown encoding: utf16be"
+ },
+ {
+  "label": "UTF-8 + BOM",
+  "before": 5,
+  "afterCount": 6,
+  "lost": 0,
+  "crashed": false,
+  "log": ""
+ },
+ {
+  "label": "UTF-8 (정상)",
+  "before": 6,
+  "afterCount": 6,
+  "lost": 0,
+  "crashed": false,
+  "log": ""
+ }
+]
