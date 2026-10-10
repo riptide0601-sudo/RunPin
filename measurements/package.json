@@ -11,7 +11,9 @@
     "m3": "node measure3.js",
     "m4": "node eval4.js",
     "m4:emulator": "npx firebase-tools emulators:exec --only firestore \"npx vitest run rules/rules.test.mjs\"",
-    "m6": "node measure6.js"
+    "m6": "node measure6.js",
+    "m4b": "for v in v1-7a3f09c v2-naive-open v3-final v4-proposed; do SUITE=rules/likes.test.mjs RULES=rules/$v.rules npx firebase-tools emulators:exec --only firestore --project demo-runpin-likes \"npx vitest run --reporter=json --outputFile=result-emulator-likes-$v.json\"; done && node agg-likes.js",
+    "m4b:gap": "SUITE=rules/likes-gap.test.mjs RULES=rules/v3-final.rules npx firebase-tools emulators:exec --only firestore --project demo-runpin-gap \"npx vitest run --reporter=basic\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",

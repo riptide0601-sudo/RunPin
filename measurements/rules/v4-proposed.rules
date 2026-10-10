@@ -1,0 +1,168 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usernames/{usernameId} {
+      // 회원가입 사전 체크(미인증 상태)를 위한 단일 문서 조회만 공개 허용.
+      // list는 막아 닉네임 전수 스크래핑을 방지한다.
+      allow get: if true;
+      allow list: if false;
+
+      // 문서가 아직 없을 때만 Firestore가 이 쓰기를 'create'로 분류한다. 이미 존재하면
+      // 'update'로 취급되어 아래 update 규칙(false)에 막힌다 — 이 동작 자체가 동시 가입
+      // 경쟁 상태를 막는 서버 측 원자성 보장이다.
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'displayName', 'createdAt'])
+                    && request.resource.data.displayName is string
+                    && request.resource.data.displayName.size() > 0
+                    && request.resource.data.displayName.size() <= 20
+                    && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /courses/{courseId} {
+      // 코스는 로그인 없이도 홈 화면에서 볼 수 있어야 하는 공개 카탈로그.
+      allow read: if true;
+
+      // 업로더 본인(auth.uid)만 자기 이름으로 코스를 만들 수 있다. likeCount는 항상 0으로
+      // 시작(좋아요 기능이 없어 클라이언트가 임의의 초기값을 넣을 이유가 없음), createdAt은
+      // 서버 시각(serverTimestamp())과 정확히 같아야 한다 — usernames의 createdAt 검증과 동일한 이유.
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.uploaderId
+                    && request.resource.data.keys().hasOnly([
+                         'name', 'coordinates', 'category', 'difficulty', 'distanceKm',
+                         'uploaderId', 'uploaderName', 'likeCount', 'createdAt'
+                       ])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 40
+                    && request.resource.data.coordinates is list
+                    && request.resource.data.coordinates.size() > 0
+                    && request.resource.data.category is string
+                    && request.resource.data.difficulty is int
+                    && request.resource.data.difficulty >= 1
+                    && request.resource.data.difficulty <= 5
+                    && request.resource.data.distanceKm is number
+                    && request.resource.data.distanceKm > 0
+                    && request.resource.data.uploaderName is string
+                    && request.resource.data.likeCount == 0
+                    && request.resource.data.createdAt == request.time;
+
+      // 좋아요 토글 전용: likeCount 하나만, 정확히 ±1만 바뀌는 쓰기만 허용한다. 그리고 그
+      // ±1이 "이 요청을 보낸 유저 본인의 likes/{uid_courseId} 문서가 같은 batch 안에서
+      // 새로 생기거나(+1) 없어지는(-1) 경우"에만 성립하도록 exists()/existsAfter()로 묶는다
+      // — 그래야 클라이언트가 likeCount만 단독으로 반복 증가시키는 걸 막을 수 있다
+      // (아래 likes 컬렉션 규칙 참고). 그 외 필드 수정/삭제는 여전히 차단.
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+                    && request.resource.data.likeCount is int
+                    && (
+                         (request.resource.data.likeCount == resource.data.likeCount + 1
+                           && !exists(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId))
+                           && existsAfter(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId)))
+                         ||
+                         (request.resource.data.likeCount == resource.data.likeCount - 1
+                           && resource.data.likeCount > 0
+                           && exists(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId))
+                           && !existsAfter(/databases/$(database)/documents/likes/$(request.auth.uid + '_' + courseId)))
+                       );
+      allow delete: if false;
+    }
+
+    match /likes/{likeId} {
+      // "내가 좋아요한 코스" 구독(where('uid','==', uid))이 runLogs.read와 동일한 패턴으로
+      // get/list 둘 다 통과하도록 resource.data.uid로 검사한다.
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      // 문서 ID를 uid_courseId로 고정해 같은 유저가 같은 코스에 좋아요 문서를 두 개 만들 수
+      // 없게 한다 — usernames 컬렉션의 create 원자성 트릭과 동일한 이유(10~12번째 줄 주석 참고).
+      // [제안] 좋아요 기록 '단독' 생성을 막는다. 측정 결과 courses 쪽만 likes와 결박돼 있어
+      // (기록 없이 카운트 변경 불가) 반대 방향은 열려 있었다 — 기록만 만들어두고 나중에
+      // 취소 batch로 카운트만 1 깎는 연쇄가 가능했다(10 → 9 → 8 → 7 실측 확인).
+      // 같은 batch 안에서 courses.likeCount가 정확히 +1 되는 경우에만 생성을 허용해 양방향으로 묶는다.
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.uid
+                    && likeId == request.auth.uid + '_' + request.resource.data.courseId
+                    && request.resource.data.keys().hasOnly(['uid', 'courseId', 'createdAt'])
+                    && request.resource.data.courseId is string
+                    && request.resource.data.createdAt == request.time
+                    && getAfter(/databases/$(database)/documents/courses/$(request.resource.data.courseId)).data.likeCount
+                       == get(/databases/$(database)/documents/courses/$(request.resource.data.courseId)).data.likeCount + 1;
+
+      allow update: if false;
+
+      // [제안] 삭제도 같은 batch에서 카운트가 정확히 -1 될 때만 허용한다.
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.uid
+                    && getAfter(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.likeCount
+                       == get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.likeCount - 1;
+    }
+
+    match /runLogs/{logId} {
+      // 러닝 기록은 본인 것만 조회 가능 (다른 유저의 러닝 기록은 비공개).
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId
+                    && request.resource.data.keys().hasOnly([
+                         'userId', 'trajectory', 'startedAt', 'durationSec', 'paceSecPerKm',
+                         'courseName', 'distanceKm', 'cadenceSpm', 'avgHeartRateBpm',
+                         'elevationSeries', 'paceSeries', 'heartRateSeries', 'difficulty', 'isUploaded',
+                         'runMateName'
+                       ])
+                    && request.resource.data.trajectory is list
+                    && request.resource.data.trajectory.size() > 0
+                    && request.resource.data.courseName is string
+                    && request.resource.data.distanceKm is number
+                    && request.resource.data.difficulty is int
+                    && request.resource.data.difficulty >= 1
+                    && request.resource.data.difficulty <= 5
+                    && request.resource.data.isUploaded is bool
+                    // 커뮤니티 매칭을 수락하고 함께 뛴 경우에만 있는 선택 필드 — 없으면 통과,
+                    // 있으면 문자열이어야 한다.
+                    && (!('runMateName' in request.resource.data) || request.resource.data.runMateName is string);
+
+      // "나중에 업로드" 재시도 흐름(uploadRunLog) 전용 — 본인 문서에 한해 courseName/isUploaded
+      // 두 필드만 바꾸는 것을 허용한다. 그 외 필드(trajectory, userId 등)는 수정 불가.
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.userId
+                    && request.auth.uid == request.resource.data.userId
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['courseName', 'isUploaded']);
+
+      // "내 러닝 기록" 화면의 스와이프 삭제 전용 — 본인 소유 문서만 삭제 가능.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    match /users/{uid} {
+      // 프로필 사진(base64)은 Firebase Storage가 유료(Blaze) 플랜 전용이라 대신 여기 저장한다
+      // (CLAUDE.md 11번 체크리스트 참고). 다른 유저 사진을 보여주는 화면이 아직 없어 본인만
+      // 읽기/쓰기 허용 — 최소 권한 기본값.
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // photoBase64는 Firestore 문서 크기 제한(1MiB)에 여유를 두고 900,000바이트 미만으로만
+      // 허용 — lib/userProfile.ts, components/profile/AvatarCropScreen.tsx의 값과 동일하게 유지할 것.
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['photoBase64', 'updatedAt'])
+                    && request.resource.data.photoBase64 is string
+                    && request.resource.data.photoBase64.size() < 900000
+                    && request.resource.data.updatedAt == request.time;
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['photoBase64', 'updatedAt'])
+                    && request.resource.data.photoBase64 is string
+                    && request.resource.data.photoBase64.size() < 900000
+                    && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    // 명시적으로 연 usernames/courses/runLogs/users 외에는 모두 차단 (향후 컬렉션 추가 시 실수로 열리는 것 방지)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
